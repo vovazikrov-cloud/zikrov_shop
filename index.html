@@ -3,246 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zikrov Shop</title>
+    <title>Zikrov Shop Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg: var(--tg-theme-bg-color, #ffffff);
-            --text: var(--tg-theme-text-color, #000000);
-            --hint: var(--tg-theme-hint-color, #999999);
-            --button: var(--tg-theme-button-color, #3390ec);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
-            --secondary: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #222222);
+            --hint-color: var(--tg-theme-hint-color, #8e8e93);
+            --button-color: var(--tg-theme-button-color, #007aff);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
         }
 
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
-        
-        /* Вкладки */
-        .tab-bar { display: flex; position: fixed; bottom: 0; width: 100%; background: var(--secondary); border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
-        .tab-item { flex: 1; padding: 15px; text-align: center; font-size: 12px; font-weight: bold; color: var(--hint); cursor: pointer; }
-        .tab-item.active { color: var(--button); }
-        .page { display: none; padding: 15px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding-bottom: 90px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ТАБ БАР */
+        .tab-bar {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .tab-item svg { width: 24px; height: 24px; fill: var(--hint-color); margin-bottom: 4px; }
+        .tab-item span { font-size: 11px; color: var(--hint-color); }
+        .tab-item.active svg { fill: var(--button-color); }
+        .tab-item.active span { color: var(--button-color); font-weight: bold; }
+
+        /* СТРАНИЦЫ */
+        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Категории (Папки) */
-        .category-card {
-            background: var(--secondary); border-radius: 15px; padding: 20px; margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.05);
+        /* КАТЕГОРИИ И ТОВАРЫ */
+        .category-item {
+            background-color: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .category-info { display: flex; align-items: center; gap: 15px; }
-        .category-icon { font-size: 24px; }
-        .category-name { font-weight: bold; font-size: 16px; }
 
-        /* Товары */
-        .back-btn { color: var(--button); font-weight: bold; margin-bottom: 15px; display: inline-block; cursor: pointer; }
-        .product-card { background: var(--secondary); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .product-card {
+            background-color: var(--secondary-bg);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* Кнопки */
-        .btn { width: 100%; background: var(--button); color: var(--button-text); border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn:disabled { background: var(--hint); opacity: 0.6; }
+        /* МОДАЛЬНОЕ ОКНО ЦЕНТР */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
 
-        /* Модалка */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; }
-        .modal-content { position: absolute; bottom: 0; width: 100%; background: var(--bg); border-radius: 20px 20px 0 0; padding: 25px; box-sizing: border-box; }
+        .modal-overlay.active { display: flex; }
 
-        .requisites-box { background: var(--secondary); padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px dashed var(--button); font-family: monospace; text-align: center; }
-        .upload-area { border: 2px dashed var(--hint); border-radius: 10px; padding: 20px; text-align: center; margin: 15px 0; position: relative; }
-        .upload-area input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        #preview { width: 120px; margin: 10px auto; border-radius: 5px; display: none; }
+        .modal-card {
+            background-color: var(--bg-color);
+            width: 90%;
+            max-width: 360px;
+            border-radius: 24px;
+            padding: 24px;
+            box-sizing: border-box;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header { font-size: 20px; font-weight: 800; margin-bottom: 15px; text-align: center; }
+
+        /* РЕКВИЗИТЫ */
+        .requisite-item {
+            background-color: var(--secondary-bg);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .req-label { font-size: 10px; color: var(--hint-color); text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .req-value { font-size: 15px; font-weight: 700; font-family: monospace; }
+        .copy-btn {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: var(--button-color); color: white; border: none;
+            padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: bold;
+        }
+
+        /* КНОПКИ */
+        .main-btn {
+            width: 100%; background-color: var(--button-color); color: var(--button-text-color);
+            border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700;
+            cursor: pointer; margin-top: 10px;
+        }
+        .main-btn:disabled { background-color: var(--hint-color); opacity: 0.6; }
+        .secondary-btn { width: 100%; background: none; color: var(--hint-color); border: none; padding: 10px; font-size: 14px; }
+
+        /* ЗАГРУЗКА */
+        .upload-box {
+            border: 2px dashed var(--button-color); border-radius: 16px;
+            padding: 20px; text-align: center; margin: 15px 0; cursor: pointer;
+        }
+        #preview-img { width: 100%; max-height: 150px; object-fit: contain; display: none; margin-top: 10px; border-radius: 8px; }
+
+        /* ПРОФИЛЬ */
+        .user-avatar { width: 70px; height: 70px; background: var(--button-color); border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: bold; }
+        .history-card { background: var(--secondary-bg); padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
 <div id="shop-page" class="page active">
-    <div id="categories-screen">
-        <h3 style="margin-bottom: 20px;">Категории товаров</h3>
+    <div id="cat-screen">
+        <h2 style="margin-bottom: 20px;">Категории</h2>
         <div id="categories-list"></div>
     </div>
-
-    <div id="products-screen" style="display: none;">
-        <div class="back-btn" onclick="showCategories()">← Назад к категориям</div>
-        <h3 id="current-category-name">Товары</h3>
+    <div id="prod-screen" style="display: none;">
+        <div style="color: var(--button-color); font-weight: 600; margin-bottom: 15px; cursor: pointer;" onclick="showCategories()">← Назад</div>
+        <h2 id="current-cat-name" style="margin-bottom: 20px;">Товары</h2>
         <div id="products-list"></div>
     </div>
 </div>
 
 <div id="profile-page" class="page">
-    <div style="text-align: center; padding: 20px; background: var(--secondary); border-radius: 15px;">
-        <div id="user-pic" style="width:60px; height:60px; background:var(--button); border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; font-weight:bold;">?</div>
-        <b id="user-name">User</b>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div id="u-avatar" class="user-avatar">?</div>
+        <h2 id="u-name" style="margin: 0;">Пользователь</h2>
     </div>
+    <h3 style="font-size: 18px;">🕒 История покупок</h3>
+    <div id="history-list"><p style="color: var(--hint-color); text-align: center;">История пуста</p></div>
 </div>
 
-<div id="pay-modal" class="modal">
-    <div class="modal-content">
+<div id="pay-modal" class="modal-overlay">
+    <div class="modal-card">
         <div id="step-1">
-            <b style="font-size:18px">Способ оплаты</b>
-            <button class="btn" onclick="goToStep2('Карта СБП')">💳 Карта / СБП</button>
-            <button class="btn" onclick="goToStep2('Криптовалюта')">💎 Криптовалюта</button>
-            <button class="btn" style="background:var(--hint)" onclick="closeModal()">Отмена</button>
+            <div class="modal-header">Оплата</div>
+            <button class="main-btn" onclick="goStep(2, 'Карта')">💳 Карта / СБП</button>
+            <button class="main-btn" style="background:#f7931a" onclick="goStep(2, 'Крипта')">₿ Криптовалюта</button>
+            <button class="secondary-btn" onclick="closeModal()">Отмена</button>
         </div>
+
         <div id="step-2" style="display:none">
-            <b>Оплата: <span id="pay-sum">0</span> ₽</b>
-            <div class="requisites-box" id="req-text">Загрузка...</div>
-            <button class="btn" onclick="goToStep3()">✅ Я оплатил(а)</button>
-        </div>
-        <div id="step-3" style="display:none">
-            <b>Загрузите чек</b>
-            <div class="upload-area">
-                <span id="up-text">Выбрать фото</span>
-                <input type="file" accept="image/*" onchange="uploadImage(this)">
-                <img id="preview" src="">
+            <div class="modal-header">Реквизиты</div>
+            <div style="text-align:center; margin-bottom:15px">Сумма: <b><span id="p-sum">0</span> ₽</b></div>
+            
+            <div class="requisite-item">
+                <span class="req-label">Номер карты</span>
+                <span class="req-value" id="val-card">2202 2081 1283 8199</span>
+                <button class="copy-btn" onclick="copyText('val-card')">Копия</button>
             </div>
-            <button id="final-btn" class="btn" disabled onclick="redirectToChat()">🚀 Отправить и написать</button>
+
+            <div class="requisite-item">
+                <span class="req-label">Банк и Получатель</span>
+                <span class="req-value">СБЕР | ВЛАДИМИР К.</span>
+            </div>
+
+            <button class="main-btn" onclick="goStep(3)">Я оплатил(а)</button>
+            <button class="secondary-btn" onclick="goStep(1)">Назад</button>
+        </div>
+
+        <div id="step-3" style="display:none">
+            <div class="modal-header">Подтверждение</div>
+            <div class="upload-box" onclick="document.getElementById('f-in').click()">
+                <span id="up-stat">Прикрепите фото чека</span>
+                <input type="file" id="f-in" accept="image/*" style="display:none" onchange="uploadFile(this)">
+                <img id="preview-img">
+            </div>
+            <button id="finish-btn" class="main-btn" disabled onclick="sendToAdmin()">Отправить чек</button>
         </div>
     </div>
 </div>
 
 <div class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('shop-page', this)">🛍 Магазин</div>
-    <div class="tab-item" onclick="switchTab('profile-page', this)">👤 Профиль</div>
+    <div class="tab-item active" onclick="switchTab('shop', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 7h-4V5c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z"/></svg>
+        <span>Магазин</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/></svg>
+        <span>Профиль</span>
+    </div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // --- НАСТРОЙКИ ---
-    const IMGBB_API_KEY = "806a814f6abcc1de40b719b65d354722"; 
-    const MY_USERNAME = "z1krov"; 
-    const REQUISITES = {
-        "Карта СБП": "2202 2081 1283 8199 (Сбер)(Владимир К.)",
-        "Криптовалюта": "TExxxxxxxxxxxxxxx (USDT TRC20)"
-    };
+    // ТВОИ ДАННЫЕ
+    const IMGBB_KEY = "806a814f6abcc1de40b719b65d354722";
+    const ADMIN_USER = "Z1KROV"; // Без @
 
-    // --- ДАННЫЕ ТОВАРОВ ПО КАТЕГОРИЯМ ---
     const data = [
-        {
-            id: "accs",
-            name: "TG Аккаунты",
-            icon: "👤",
-            items: [
-                { name: "Германия +49", price: 300 },
-                { name: "Казахстан +7", price: 230 },
-                { name: "Бразилия +55", price: 100 },
-                { name: "Турция +90", price: 160 },
-                { name: "Вьетнам +84", price: 80 }
-            ]
-        },
-        {
-            id: "subs",
-            name: "Подписки",
-            icon: "💎",
-            items: [
-                { name: "Telegram Premium 1 мес", price: 450 },
-                { name: "Discord Nitro Full", price: 900 }
-            ]
-        }
+        { id: 'accs', name: 'TG Аккаунты', icon: '👤', items: [
+            { name: 'Германия +49', price: 300 },
+            { name: 'Казахстан +7', price: 230 },
+            { name: 'Бразилия +55', price: 100 },
+            { name: 'Турция +90', price: 160 },
+            { name: 'Вьетнам +84', price: 80 },
+            { name: 'США +1', price: 60 }
+        ]},
+        { id: 'subs', name: 'Подписки', icon: '💎', items: [
+            { name: 'TG Premium 1 мес', price: 450 },
+            { name: 'Discord Nitro', price: 800 }
+        ]}
     ];
 
-    let state = { product: null, method: "", imageUrl: "" };
+    let current = { item: null, img: null };
 
-    // Инициализация юзера
-    const user = tg.initDataUnsafe?.user;
+    const user = tg.initDataUnsafe.user;
     if(user) {
-        document.getElementById('user-name').innerText = user.first_name;
-        document.getElementById('user-pic').innerText = user.first_name.charAt(0);
+        document.getElementById('u-name').innerText = user.first_name;
+        document.getElementById('u-avatar').innerText = user.first_name.charAt(0);
     }
 
-    // Отрисовка категорий
+    function switchTab(t, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(t + '-page').classList.add('active');
+        el.classList.add('active');
+        if(t === 'profile') renderHistory();
+    }
+
     function renderCategories() {
         const list = document.getElementById('categories-list');
-        list.innerHTML = data.map(cat => `
-            <div class="category-card" onclick="showProducts('${cat.id}')">
-                <div class="category-info">
-                    <span class="category-icon">${cat.icon}</span>
-                    <span class="category-name">${cat.name}</span>
-                </div>
-                <span style="color: var(--hint)">→</span>
+        list.innerHTML = data.map(c => `
+            <div class="category-item" onclick="showProducts('${c.id}')">
+                <span>${c.icon} ${c.name}</span>
+                <span>→</span>
             </div>
         `).join('');
     }
 
-    function showProducts(catId) {
-        const category = data.find(c => c.id === catId);
-        document.getElementById('current-category-name').innerText = category.name;
-        const list = document.getElementById('products-list');
-        
-        list.innerHTML = category.items.map(p => `
+    function showProducts(id) {
+        const cat = data.find(c => c.id === id);
+        document.getElementById('current-cat-name').innerText = cat.name;
+        document.getElementById('products-list').innerHTML = cat.items.map(i => `
             <div class="product-card">
-                <div><b>${p.name}</b><br><small>${p.price} ₽</small></div>
-                <button class="btn" style="width:auto; padding:8px 15px; margin:0;" onclick="openPay('${p.name}', ${p.price})">Купить</button>
+                <div><b>${i.name}</b><br><small>${i.price} ₽</small></div>
+                <button class="buy-button" onclick="openPay('${i.name}', ${i.price})">Купить</button>
             </div>
         `).join('');
-
-        document.getElementById('categories-screen').style.display = 'none';
-        document.getElementById('products-screen').style.display = 'block';
+        document.getElementById('cat-screen').style.display = 'none';
+        document.getElementById('prod-screen').style.display = 'block';
     }
 
     function showCategories() {
-        document.getElementById('categories-screen').style.display = 'block';
-        document.getElementById('products-screen').style.display = 'none';
+        document.getElementById('cat-screen').style.display = 'block';
+        document.getElementById('prod-screen').style.display = 'none';
     }
 
-    // Логика оплаты
     function openPay(name, price) {
-        state.product = { name, price };
-        document.getElementById('pay-modal').style.display = 'block';
-        showStep(1);
+        current.item = { name, price };
+        document.getElementById('p-sum').innerText = price;
+        document.getElementById('pay-modal').classList.add('active');
+        goStep(1);
     }
 
-    function goToStep2(method) {
-        state.method = method;
-        document.getElementById('pay-sum').innerText = state.product.price;
-        document.getElementById('req-text').innerText = REQUISITES[method];
-        showStep(2);
+    function goStep(s) {
+        [1,2,3].forEach(n => document.getElementById('step-'+n).style.display = s === n ? 'block' : 'none');
     }
 
-    function goToStep3() { showStep(3); }
+    function closeModal() { document.getElementById('pay-modal').classList.remove('active'); }
 
-    function showStep(step) {
-        document.getElementById('step-1').style.display = step === 1 ? 'block' : 'none';
-        document.getElementById('step-2').style.display = step === 2 ? 'block' : 'none';
-        document.getElementById('step-3').style.display = step === 3 ? 'block' : 'none';
+    function copyText(id) {
+        const text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text);
+        tg.showAlert("Скопировано!");
     }
 
-    async function uploadImage(input) {
-        if (!input.files[0]) return;
-        document.getElementById('up-text').innerText = "Загрузка...";
-        const formData = new FormData();
-        formData.append("image", input.files[0]);
-        try {
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
-            const result = await res.json();
-            if(result.success) {
-                state.imageUrl = result.data.url;
-                document.getElementById('preview').src = state.imageUrl;
-                document.getElementById('preview').style.display = "block";
-                document.getElementById('up-text').innerText = "Чек загружен ✅";
-                document.getElementById('final-btn').disabled = false;
-            }
-        } catch (e) { tg.showAlert("Ошибка загрузки"); }
+    async function uploadFile(input) {
+        if(!input.files[0]) return;
+        document.getElementById('up-stat').innerText = "Загрузка...";
+        const form = new FormData();
+        form.append("image", input.files[0]);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: form });
+        const json = await res.json();
+        if(json.success) {
+            current.img = json.data.url;
+            document.getElementById('preview-img').src = current.img;
+            document.getElementById('preview-img').style.display = 'block';
+            document.getElementById('up-stat').style.display = 'none';
+            document.getElementById('finish-btn').disabled = false;
+        }
     }
 
-    function redirectToChat() {
-        const text = `Здравствуйте! Купил у вас товар: ${state.product.name} за ${state.product.price}₽.\nЧек: ${state.imageUrl}`;
-        tg.openTelegramLink(`https://t.me/${MY_USERNAME}?text=${encodeURIComponent(text)}`);
+    function sendToAdmin() {
+        const history = JSON.parse(localStorage.getItem('my_orders') || '[]');
+        history.unshift({ name: current.item.name, price: current.item.price, date: new Date().toLocaleDateString() });
+        localStorage.setItem('my_orders', JSON.stringify(history));
+
+        const text = `Здравствуйте! Купил ${current.item.name} за ${current.item.price}₽.\nЧек: ${current.img}`;
+        tg.openTelegramLink(`https://t.me/${ADMIN_USER}?text=${encodeURIComponent(text)}`);
         tg.close();
     }
 
-    function switchTab(id, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        el.classList.add('active');
-        if(id === 'shop-page') showCategories();
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('my_orders') || '[]');
+        const list = document.getElementById('history-list');
+        if(history.length > 0) {
+            list.innerHTML = history.map(h => `
+                <div class="history-card">
+                    <div><b>${h.name}</b><br><small>${h.date}</small></div>
+                    <b>${h.price} ₽</b>
+                </div>
+            `).join('');
+        }
     }
-
-    function closeModal() { document.getElementById('pay-modal').style.display = 'none'; }
 
     renderCategories();
 </script>
 </body>
 </html>
-
