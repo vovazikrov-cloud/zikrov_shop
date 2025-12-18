@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zikrov Shop Premium</title>
+    <title>Zikrov Shop Custom</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
+    <style id="custom-theme">
+        /* Динамические стили, которые можно менять */
         :root {
             --bg-color: var(--tg-theme-bg-color, #ffffff);
             --text-color: var(--tg-theme-text-color, #222222);
@@ -13,196 +14,179 @@
             --button-color: var(--tg-theme-button-color, #007aff);
             --button-text-color: var(--tg-theme-button-text-color, #ffffff);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
+            --border-radius: 16px;
+            --border-width: 0px;
+            --border-color: #007aff;
         }
-
+    </style>
+    <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding-bottom: 90px;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; padding-bottom: 90px;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
         /* ТАБ БАР */
         .tab-bar {
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            backdrop-filter: blur(10px);
+            display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+            background-color: var(--secondary-bg); border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000; backdrop-filter: blur(10px);
         }
-
-        .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .tab-item svg { width: 24px; height: 24px; fill: var(--hint-color); margin-bottom: 4px; }
-        .tab-item span { font-size: 11px; color: var(--hint-color); }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .tab-item svg { width: 22px; height: 22px; fill: var(--hint-color); margin-bottom: 4px; }
         .tab-item.active svg { fill: var(--button-color); }
+        .tab-item span { font-size: 10px; color: var(--hint-color); }
         .tab-item.active span { color: var(--button-color); font-weight: bold; }
 
-        /* СТРАНИЦЫ */
         .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* КАТЕГОРИИ И ТОВАРЫ */
-        .category-item {
+        /* ЭЛЕМЕНТЫ МЕНЮ */
+        .card {
             background-color: var(--secondary-bg);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: var(--border-radius);
+            padding: 15px; margin-bottom: 12px;
+            border: var(--border-width) solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .product-card {
-            background-color: var(--secondary-bg);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* МОДАЛЬНОЕ ОКНО ЦЕНТР */
+        /* МОДАЛКИ */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8); z-index: 2000;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
-
         .modal-overlay.active { display: flex; }
-
         .modal-card {
-            background-color: var(--bg-color);
-            width: 90%;
-            max-width: 360px;
-            border-radius: 24px;
-            padding: 24px;
-            box-sizing: border-box;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            background-color: var(--bg-color); width: 90%; max-width: 360px;
+            border-radius: 24px; padding: 24px; box-sizing: border-box;
         }
 
-        .modal-header { font-size: 20px; font-weight: 800; margin-bottom: 15px; text-align: center; }
-
-        /* РЕКВИЗИТЫ */
-        .requisite-item {
-            background-color: var(--secondary-bg);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-            position: relative;
-        }
-
-        .req-label { font-size: 10px; color: var(--hint-color); text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .req-value { font-size: 15px; font-weight: 700; font-family: monospace; }
-        .copy-btn {
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-            background: var(--button-color); color: white; border: none;
-            padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: bold;
-        }
+        /* СТАТИСТИКА В ПРОФИЛЕ */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: var(--secondary-bg); padding: 15px; border-radius: 15px; text-align: center; }
+        .stat-val { display: block; font-size: 20px; font-weight: 800; color: var(--button-color); }
+        .stat-lbl { font-size: 11px; color: var(--hint-color); }
 
         /* КНОПКИ */
         .main-btn {
             width: 100%; background-color: var(--button-color); color: var(--button-text-color);
-            border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700;
-            cursor: pointer; margin-top: 10px;
+            border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer;
         }
-        .main-btn:disabled { background-color: var(--hint-color); opacity: 0.6; }
-        .secondary-btn { width: 100%; background: none; color: var(--hint-color); border: none; padding: 10px; font-size: 14px; }
+        .copy-btn { background: var(--button-color); color: #fff; border: none; padding: 5px 10px; border-radius: 8px; font-size: 11px; }
 
-        /* ЗАГРУЗКА */
-        .upload-box {
-            border: 2px dashed var(--button-color); border-radius: 16px;
-            padding: 20px; text-align: center; margin: 15px 0; cursor: pointer;
-        }
-        #preview-img { width: 100%; max-height: 150px; object-fit: contain; display: none; margin-top: 10px; border-radius: 8px; }
-
-        /* ПРОФИЛЬ */
-        .user-avatar { width: 70px; height: 70px; background: var(--button-color); border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: bold; }
-        .history-card { background: var(--secondary-bg); padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        /* НАСТРОЙКИ ДИЗАЙНА */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: none; }
     </style>
 </head>
 <body>
 
 <div id="shop-page" class="page active">
     <div id="cat-screen">
-        <h2 style="margin-bottom: 20px;">Категории</h2>
+        <h2>Магазин</h2>
         <div id="categories-list"></div>
     </div>
     <div id="prod-screen" style="display: none;">
-        <div style="color: var(--button-color); font-weight: 600; margin-bottom: 15px; cursor: pointer;" onclick="showCategories()">← Назад</div>
-        <h2 id="current-cat-name" style="margin-bottom: 20px;">Товары</h2>
+        <div style="color: var(--button-color); margin-bottom: 15px; cursor: pointer;" onclick="showCategories()">← Назад</div>
+        <h2 id="current-cat-name">Товары</h2>
         <div id="products-list"></div>
     </div>
 </div>
 
 <div id="profile-page" class="page">
-    <div style="text-align: center; margin-bottom: 30px;">
-        <div id="u-avatar" class="user-avatar">?</div>
-        <h2 id="u-name" style="margin: 0;">Пользователь</h2>
+    <div style="text-align: center; margin-bottom: 25px;">
+        <div id="u-avatar" style="width:60px; height:60px; background:var(--button-color); border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; font-weight:bold;">?</div>
+        <h2 id="u-name" style="margin:0">Имя</h2>
     </div>
-    <h3 style="font-size: 18px;">🕒 История покупок</h3>
-    <div id="history-list"><p style="color: var(--hint-color); text-align: center;">История пуста</p></div>
+
+    <div class="stats-grid">
+        <div class="stat-box">
+            <span class="stat-val" id="stat-count">0</span>
+            <span class="stat-lbl">Сделок</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-val" id="stat-sum">0 ₽</span>
+            <span class="stat-lbl">Потрачено</span>
+        </div>
+    </div>
+
+    <button class="main-btn" onclick="openModal('history-modal')" style="margin-bottom: 10px;">📋 История заказов</button>
+    <button class="main-btn" style="background: var(--secondary-bg); color: var(--text-color);" onclick="openModal('settings-modal')">🎨 Настроить дизайн</button>
 </div>
 
 <div id="pay-modal" class="modal-overlay">
     <div class="modal-card">
         <div id="step-1">
-            <div class="modal-header">Оплата</div>
-            <button class="main-btn" onclick="goStep(2, 'Карта')">💳 Карта / СБП</button>
-            <button class="main-btn" style="background:#f7931a" onclick="goStep(2, 'Крипта')">₿ Криптовалюта</button>
-            <button class="secondary-btn" onclick="closeModal()">Отмена</button>
+            <h3 style="text-align:center">Оплата</h3>
+            <button class="main-btn" onclick="goStep(2)">💳 Карта / СБП (Сбер)</button>
+            <button class="secondary-btn" style="width:100%" onclick="closeModal()">Отмена</button>
         </div>
-
         <div id="step-2" style="display:none">
-            <div class="modal-header">Реквизиты</div>
-            <div style="text-align:center; margin-bottom:15px">Сумма: <b><span id="p-sum">0</span> ₽</b></div>
-            
-            <div class="requisite-item">
-                <span class="req-label">Номер карты</span>
-                <span class="req-value" id="val-card">2202 2081 1283 8199</span>
-                <button class="copy-btn" onclick="copyText('val-card')">Копия</button>
+            <h3>Реквизиты</h3>
+            <div style="background:var(--secondary-bg); padding:15px; border-radius:12px; margin-bottom:15px;">
+                <small style="color:var(--hint-color)">СУММА</small><br>
+                <b style="font-size:18px"><span id="p-sum">0</span> ₽</b><br><br>
+                <small style="color:var(--hint-color)">НОМЕР КАРТЫ</small><br>
+                <span id="card-num" style="font-family:monospace">2202 2081 1283 8199</span> 
+                <button class="copy-btn" onclick="copyText('card-num')">Копия</button><br><br>
+                <small style="color:var(--hint-color)">ПОЛУЧАТЕЛЬ</small><br>
+                <b>ВЛАДИМИР К. (СБЕР)</b>
             </div>
-
-            <div class="requisite-item">
-                <span class="req-label">Банк и Получатель</span>
-                <span class="req-value">СБЕР | ВЛАДИМИР К.</span>
-            </div>
-
             <button class="main-btn" onclick="goStep(3)">Я оплатил(а)</button>
-            <button class="secondary-btn" onclick="goStep(1)">Назад</button>
         </div>
-
         <div id="step-3" style="display:none">
-            <div class="modal-header">Подтверждение</div>
-            <div class="upload-box" onclick="document.getElementById('f-in').click()">
-                <span id="up-stat">Прикрепите фото чека</span>
-                <input type="file" id="f-in" accept="image/*" style="display:none" onchange="uploadFile(this)">
-                <img id="preview-img">
+            <h3>Чек</h3>
+            <div style="border:2px dashed var(--button-color); padding:20px; text-align:center; border-radius:15px;" onclick="document.getElementById('file-in').click()">
+                <span id="up-text">Нажмите для выбора фото</span>
+                <input type="file" id="file-in" accept="image/*" style="display:none" onchange="uploadFile(this)">
+                <img id="preview" style="width:100%; display:none; margin-top:10px; border-radius:10px;">
             </div>
-            <button id="finish-btn" class="main-btn" disabled onclick="sendToAdmin()">Отправить чек</button>
+            <button id="finish-btn" class="main-btn" disabled onclick="finishPurchase()">Отправить админу</button>
         </div>
+    </div>
+</div>
+
+<div id="history-modal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <h3>История заказов</h3>
+        <div id="history-list" style="max-height: 300px; overflow-y: auto;"></div>
+        <button class="main-btn" style="margin-top:15px" onclick="closeModal()">Закрыть</button>
+    </div>
+</div>
+
+<div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3>Дизайн меню</h3>
+        <div class="setting-row">
+            <span>Цвет кнопок</span>
+            <input type="color" id="color-btn" onchange="updateDesign()">
+        </div>
+        <div class="setting-row">
+            <span>Цвет фона</span>
+            <input type="color" id="color-bg" onchange="updateDesign()">
+        </div>
+        <div class="setting-row">
+            <span>Обводка (px)</span>
+            <input type="range" min="0" max="5" id="border-w" onchange="updateDesign()">
+        </div>
+        <div class="setting-row">
+            <span>Скругление</span>
+            <input type="range" min="0" max="30" id="border-r" onchange="updateDesign()">
+        </div>
+        <button class="main-btn" onclick="closeModal()">Сохранить</button>
+    </div>
+</div>
+
+<div id="resume-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3>У вас остался заказ!</h3>
+        <p id="resume-text"></p>
+        <button class="main-btn" onclick="resumeOrder()">Продолжить покупку</button>
+        <button class="secondary-btn" style="width:100%" onclick="cancelResume()">Отмена</button>
     </div>
 </div>
 
@@ -221,45 +205,63 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ТВОИ ДАННЫЕ
     const IMGBB_KEY = "806a814f6abcc1de40b719b65d354722";
-    const ADMIN_USER = "Z1KROV"; // Без @
+    const ADMIN = "Z1KROV";
 
-    const data = [
+    const shopData = [
         { id: 'accs', name: 'TG Аккаунты', icon: '👤', items: [
-            { name: 'Германия +49', price: 300 },
-            { name: 'Казахстан +7', price: 230 },
-            { name: 'Бразилия +55', price: 100 },
-            { name: 'Турция +90', price: 160 },
-            { name: 'Вьетнам +84', price: 80 },
-            { name: 'США +1', price: 60 }
+            { name: 'Германия +49', price: 300 }, { name: 'Казахстан +7', price: 230 }, { name: 'США +1', price: 60 }
         ]},
         { id: 'subs', name: 'Подписки', icon: '💎', items: [
-            { name: 'TG Premium 1 мес', price: 450 },
-            { name: 'Discord Nitro', price: 800 }
+            { name: 'Premium 1 мес', price: 450 }
         ]}
     ];
 
-    let current = { item: null, img: null };
+    let currentOrder = null;
 
+    // Инициализация данных юзера
     const user = tg.initDataUnsafe.user;
     if(user) {
         document.getElementById('u-name').innerText = user.first_name;
         document.getElementById('u-avatar').innerText = user.first_name.charAt(0);
     }
 
-    function switchTab(t, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(t + '-page').classList.add('active');
-        el.classList.add('active');
-        if(t === 'profile') renderHistory();
+    // --- ФУНКЦИИ ДИЗАЙНА ---
+    function updateDesign() {
+        const btnColor = document.getElementById('color-btn').value;
+        const bgColor = document.getElementById('color-bg').value;
+        const bWidth = document.getElementById('border-w').value + "px";
+        const bRadius = document.getElementById('border-r').value + "px";
+
+        const root = document.documentElement;
+        root.style.setProperty('--button-color', btnColor);
+        root.style.setProperty('--bg-color', bgColor);
+        root.style.setProperty('--border-width', bWidth);
+        root.style.setProperty('--border-radius', bRadius);
+
+        localStorage.setItem('zik_theme', JSON.stringify({ btnColor, bgColor, bWidth, bRadius }));
     }
 
+    function loadTheme() {
+        const theme = JSON.parse(localStorage.getItem('zik_theme'));
+        if(theme) {
+            const root = document.documentElement;
+            root.style.setProperty('--button-color', theme.btnColor);
+            root.style.setProperty('--bg-color', theme.bgColor);
+            root.style.setProperty('--border-width', theme.bWidth);
+            root.style.setProperty('--border-radius', theme.bRadius);
+            
+            document.getElementById('color-btn').value = theme.btnColor;
+            document.getElementById('color-bg').value = theme.bgColor;
+            document.getElementById('border-w').value = parseInt(theme.bWidth);
+            document.getElementById('border-r').value = parseInt(theme.bRadius);
+        }
+    }
+
+    // --- ЛОГИКА МАГАЗИНА ---
     function renderCategories() {
-        const list = document.getElementById('categories-list');
-        list.innerHTML = data.map(c => `
-            <div class="category-item" onclick="showProducts('${c.id}')">
+        document.getElementById('categories-list').innerHTML = shopData.map(c => `
+            <div class="card" onclick="showProducts('${c.id}')">
                 <span>${c.icon} ${c.name}</span>
                 <span>→</span>
             </div>
@@ -267,12 +269,12 @@
     }
 
     function showProducts(id) {
-        const cat = data.find(c => c.id === id);
+        const cat = shopData.find(c => c.id === id);
         document.getElementById('current-cat-name').innerText = cat.name;
         document.getElementById('products-list').innerHTML = cat.items.map(i => `
-            <div class="product-card">
+            <div class="card">
                 <div><b>${i.name}</b><br><small>${i.price} ₽</small></div>
-                <button class="buy-button" onclick="openPay('${i.name}', ${i.price})">Купить</button>
+                <button class="main-btn" style="width:auto; padding:8px 15px;" onclick="startPay('${i.name}', ${i.price})">Купить</button>
             </div>
         `).join('');
         document.getElementById('cat-screen').style.display = 'none';
@@ -284,65 +286,112 @@
         document.getElementById('prod-screen').style.display = 'none';
     }
 
-    function openPay(name, price) {
-        current.item = { name, price };
+    // --- ЛОГИКА ОПЛАТЫ ---
+    function startPay(name, price) {
+        currentOrder = { name, price, step: 1 };
+        localStorage.setItem('unfinished_order', JSON.stringify(currentOrder));
         document.getElementById('p-sum').innerText = price;
-        document.getElementById('pay-modal').classList.add('active');
+        openModal('pay-modal');
         goStep(1);
     }
 
     function goStep(s) {
+        currentOrder.step = s;
+        localStorage.setItem('unfinished_order', JSON.stringify(currentOrder));
         [1,2,3].forEach(n => document.getElementById('step-'+n).style.display = s === n ? 'block' : 'none');
-    }
-
-    function closeModal() { document.getElementById('pay-modal').classList.remove('active'); }
-
-    function copyText(id) {
-        const text = document.getElementById(id).innerText;
-        navigator.clipboard.writeText(text);
-        tg.showAlert("Скопировано!");
     }
 
     async function uploadFile(input) {
         if(!input.files[0]) return;
-        document.getElementById('up-stat').innerText = "Загрузка...";
+        document.getElementById('up-text').innerText = "Загрузка...";
         const form = new FormData();
         form.append("image", input.files[0]);
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: form });
         const json = await res.json();
         if(json.success) {
-            current.img = json.data.url;
-            document.getElementById('preview-img').src = current.img;
-            document.getElementById('preview-img').style.display = 'block';
-            document.getElementById('up-stat').style.display = 'none';
+            currentOrder.img = json.data.url;
+            document.getElementById('preview').src = json.data.url;
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('up-text').style.display = 'none';
             document.getElementById('finish-btn').disabled = false;
         }
     }
 
-    function sendToAdmin() {
-        const history = JSON.parse(localStorage.getItem('my_orders') || '[]');
-        history.unshift({ name: current.item.name, price: current.item.price, date: new Date().toLocaleDateString() });
-        localStorage.setItem('my_orders', JSON.stringify(history));
+    function finishPurchase() {
+        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
+        history.unshift({ name: currentOrder.name, price: currentOrder.price, date: new Date().toLocaleDateString() });
+        localStorage.setItem('zik_history', JSON.stringify(history));
+        localStorage.removeItem('unfinished_order');
 
-        const text = `Здравствуйте! Купил ${current.item.name} за ${current.item.price}₽.\nЧек: ${current.img}`;
-        tg.openTelegramLink(`https://t.me/${ADMIN_USER}?text=${encodeURIComponent(text)}`);
+        const text = `Здравствуйте! Купил ${currentOrder.name} за ${currentOrder.price}₽.\nЧек: ${currentOrder.img}`;
+        tg.openTelegramLink(`https://t.me/${ADMIN}?text=${encodeURIComponent(text)}`);
         tg.close();
     }
 
-    function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    // --- ПРОФИЛЬ И СТАТИСТИКА ---
+    function renderStats() {
+        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
+        const count = history.length;
+        const sum = history.reduce((acc, curr) => acc + curr.price, 0);
+        
+        document.getElementById('stat-count').innerText = count;
+        document.getElementById('stat-sum').innerText = sum + " ₽";
+        
         const list = document.getElementById('history-list');
-        if(history.length > 0) {
+        if(count > 0) {
             list.innerHTML = history.map(h => `
-                <div class="history-card">
-                    <div><b>${h.name}</b><br><small>${h.date}</small></div>
-                    <b>${h.price} ₽</b>
+                <div style="background:var(--secondary-bg); padding:10px; border-radius:10px; margin-bottom:5px;">
+                    <b>${h.name}</b> — ${h.price} ₽<br><small>${h.date}</small>
                 </div>
             `).join('');
+        } else {
+            list.innerHTML = "История пуста";
         }
     }
 
+    // --- СИСТЕМНЫЕ ФУНКЦИИ ---
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+
+    function switchTab(t, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(t + '-page').classList.add('active');
+        el.classList.add('active');
+        if(t === 'profile') renderStats();
+    }
+
+    function copyText(id) {
+        navigator.clipboard.writeText(document.getElementById(id).innerText);
+        tg.showAlert("Скопировано!");
+    }
+
+    // ПРОВЕРКА БРОШЕННОЙ КОРЗИНЫ
+    function checkUnfinished() {
+        const saved = JSON.parse(localStorage.getItem('unfinished_order'));
+        if(saved) {
+            currentOrder = saved;
+            document.getElementById('resume-text').innerText = `${saved.name} за ${saved.price} ₽`;
+            openModal('resume-modal');
+        }
+    }
+
+    function resumeOrder() {
+        closeModal();
+        document.getElementById('p-sum').innerText = currentOrder.price;
+        openModal('pay-modal');
+        goStep(currentOrder.step);
+    }
+
+    function cancelResume() {
+        localStorage.removeItem('unfinished_order');
+        closeModal();
+    }
+
+    // СТАРТ
     renderCategories();
+    loadTheme();
+    checkUnfinished();
 </script>
 </body>
 </html>
