@@ -15,112 +15,74 @@
             --secondary: var(--tg-theme-secondary-bg-color, #f4f4f5);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0; padding: 0;
-            padding-bottom: 80px;
-        }
-
-        /* Навигация (Нижняя) */
-        .tab-bar {
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: var(--secondary);
-            border-top: 1px solid rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .tab-item {
-            flex: 1;
-            padding: 15px 0;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--hint);
-            cursor: pointer;
-        }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+        
+        /* Вкладки */
+        .tab-bar { display: flex; position: fixed; bottom: 0; width: 100%; background: var(--secondary); border-top: 1px solid rgba(0,0,0,0.1); z-index: 1000; }
+        .tab-item { flex: 1; padding: 15px; text-align: center; font-size: 12px; font-weight: bold; color: var(--hint); cursor: pointer; }
         .tab-item.active { color: var(--button); }
-
-        /* Страницы */
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
 
         /* Профиль */
-        .profile-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background: var(--secondary);
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-        .user-photo {
-            width: 80px; height: 80px;
-            border-radius: 50%;
-            background: var(--button);
-            margin-bottom: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: white; border: 3px solid var(--bg);
-        }
-        .username { font-size: 20px; font-weight: bold; }
-
-        /* Кнопки в профиле */
-        .action-btn {
-            width: 100%;
-            background: var(--button);
-            color: var(--button-text);
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+        .profile-card { background: var(--secondary); border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .avatar { width: 60px; height: 60px; background: var(--button); border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; }
 
         /* Товары */
-        .product-card {
-            background: var(--secondary);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .price { color: var(--button); font-weight: bold; }
+        .category-title { font-size: 18px; font-weight: bold; margin: 15px 0 10px; color: var(--button); }
+        .product-card { background: var(--secondary); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Модальное окно истории */
-        #history-modal {
-            display: none;
-            position: fixed;
-            top: 10%; left: 5%;
-            width: 90%; height: 70%;
-            background: var(--bg);
-            border: 1px solid var(--hint);
-            border-radius: 15px;
-            z-index: 2000;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
+        /* Кнопки */
+        .btn { width: 100%; background: var(--button); color: var(--button-text); border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn:disabled { background: var(--hint); opacity: 0.6; }
+
+        /* Модалка */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; }
+        .modal-content { position: absolute; bottom: 0; width: 100%; background: var(--bg); border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; }
+
+        /* Загрузка чека */
+        .upload-area { border: 2px dashed var(--hint); border-radius: 10px; padding: 20px; text-align: center; margin: 15px 0; position: relative; }
+        .upload-area input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        #preview { width: 100px; margin: 10px auto; border-radius: 5px; display: none; }
+        
+        .loading-spinner { display: none; color: var(--button); font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div id="shop-page" class="page active">
+    <div class="category-title">📁 TG Аккаунты</div>
     <div id="accs-list"></div>
 </div>
 
 <div id="profile-page" class="page">
-    <div class="profile-header">
-        <div id="user-pic" class="user-photo">?</div>
-        <div id="user-full-name" class="username">User</div>
-        <div id="user-tag" style="color: var(--hint);">@username</div>
+    <div class="profile-card">
+        <div id="user-pic" class="avatar">?</div>
+        <b id="user-name">Username</b>
+        <p id="user-id" style="color: var(--hint); font-size: 12px;"></p>
     </div>
-    
-    <button class="action-btn" onclick="toggleHistory()">📦 Мои покупки</button>
+    <button class="btn" onclick="tg.showAlert('История будет доступна после первой оплаты!')">📋 Мои покупки</button>
+</div>
+
+<div id="pay-modal" class="modal">
+    <div class="modal-content">
+        <div id="step-1">
+            <b class="step-title">Выберите оплату</b>
+            <button class="btn" onclick="nextStep('Карта СБП')">💳 Карта / СБП</button>
+            <button class="btn" onclick="nextStep('Криптовалюта')">💎 Криптовалюта</button>
+            <button class="btn" style="background:var(--hint)" onclick="closeModal()">Отмена</button>
+        </div>
+        <div id="step-2" style="display:none">
+            <b class="step-title">Прикрепите чек оплаты</b>
+            <div class="upload-area">
+                <span id="up-text">Нажмите для выбора фото</span>
+                <input type="file" accept="image/*" onchange="uploadImage(this)">
+                <img id="preview" src="">
+            </div>
+            <div id="loading" class="loading-spinner">Загрузка изображения...</div>
+            <button id="submit-btn" class="btn" disabled onclick="sendReport()">✅ Отправить отчет</button>
+        </div>
+    </div>
 </div>
 
 <div class="tab-bar">
@@ -128,27 +90,14 @@
     <div class="tab-item" onclick="switchTab('profile-page', this)">👤 Профиль</div>
 </div>
 
-<div id="history-modal">
-    <h3>История заказов</h3>
-    <div id="history-content" style="font-size: 14px; overflow-y: auto; height: 80%;">Пусто</div>
-    <button class="action-btn" onclick="toggleHistory()" style="background: var(--hint);">Закрыть</button>
-</div>
-
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Заполнение данных пользователя
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        document.getElementById('user-full-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        document.getElementById('user-tag').innerText = user.username ? '@' + user.username : 'ID: ' + user.id;
-        document.getElementById('user-pic').innerText = user.first_name.charAt(0);
-        // Если у юзера есть фото, в реальном боте оно подгружается через Bot API, 
-        // здесь мы используем инициал как в Telegram по умолчанию.
-    }
+    // !!! ВСТАВЬТЕ СВОЙ КЛЮЧ ОТ IMGBB НИЖЕ !!!
+    const IMGBB_API_KEY = "806a814f6abcc1de40b719b65d354722";
 
-    const accsProducts = [
+    const products = [
         { name: "Германия +49", price: 300 },
         { name: "Казахстан +7", price: 230 },
         { name: "Бразилия +55", price: 100 },
@@ -164,56 +113,92 @@
         { name: "США +1", price: 60 }
     ];
 
-    let cart = [];
+    let state = { product: null, method: "", imageUrl: "" };
 
-    function switchTab(pageId, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        el.classList.add('active');
+    const user = tg.initDataUnsafe?.user;
+    if(user) {
+        document.getElementById('user-name').innerText = user.first_name;
+        document.getElementById('user-id').innerText = "@" + (user.username || user.id);
+        document.getElementById('user-pic').innerText = user.first_name.charAt(0);
     }
 
     function render() {
-        const list = document.getElementById('accs-list');
-        list.innerHTML = accsProducts.map((p, i) => `
+        document.getElementById('accs-list').innerHTML = products.map((p, i) => `
             <div class="product-card">
-                <div><b>${p.name}</b><br><span class="price">${p.price} ₽</span></div>
-                <button class="action-btn" style="width: auto; margin:0;" onclick="buy(${i})">Купить</button>
+                <div><b>${p.name}</b><br><small>${p.price} ₽</small></div>
+                <button class="btn" style="width:auto; padding:8px 15px; margin:0;" onclick="openPay(${i})">Купить</button>
             </div>
         `).join('');
     }
 
-    function buy(index) {
-        const p = accsProducts[index];
-        cart = [p]; // В данном примере один товар за раз
-        
-        tg.showConfirm(`Оплатить ${p.name} за ${p.price} ₽?`, (ok) => {
-            if (ok) {
-                // ИНСТРУКЦИЯ ОПЛАТЫ
-                tg.showAlert(`✅ ИНСТРУКЦИЯ ОПЛАТЫ:\n1. Переведите ${p.price}₽ на карту/крипту (уточните у @zikrov).\n2. Нажмите кнопку "Отправить отчет" в боте.\n3. После этого данные будут отправлены админу.`);
-                
-                // Сохраняем в историю
-                let history = JSON.parse(localStorage.getItem('my_orders') || '[]');
-                history.push(`${new Date().toLocaleDateString()} - ${p.name}`);
-                localStorage.setItem('my_orders', JSON.stringify(history));
+    function openPay(i) {
+        state.product = products[i];
+        document.getElementById('pay-modal').style.display = 'block';
+        document.getElementById('step-1').style.display = 'block';
+        document.getElementById('step-2').style.display = 'none';
+    }
 
-                // Отправка отчета вам в бот
-                const report = `📄 ОТЧЕТ О ЗАКАЗЕ\n👤 Юзер: @${user?.username || 'скрыт'}\n📦 Товар: ${p.name}\n💰 Цена: ${p.price} ₽\n📝 Статус: Ожидает подтверждения оплаты`;
-                tg.sendData(report);
+    function nextStep(m) {
+        state.method = m;
+        document.getElementById('step-1').style.display = 'none';
+        document.getElementById('step-2').style.display = 'block';
+    }
+
+    async function uploadImage(input) {
+        if (!input.files[0]) return;
+        
+        const loader = document.getElementById('loading');
+        const btn = document.getElementById('submit-btn');
+        const upText = document.getElementById('up-text');
+        
+        loader.style.display = "block";
+        upText.innerText = "Обработка...";
+
+        const formData = new FormData();
+        formData.append("image", input.files[0]);
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+            
+            if(result.success) {
+                state.imageUrl = result.data.url;
+                document.getElementById('preview').src = state.imageUrl;
+                document.getElementById('preview').style.display = "block";
+                upText.innerText = "Чек загружен ✅";
+                btn.disabled = false;
             }
-        });
+        } catch (e) {
+            tg.showAlert("Ошибка загрузки. Попробуйте другой файл.");
+        } finally {
+            loader.style.display = "none";
+        }
     }
 
-    function toggleHistory() {
-        const modal = document.getElementById('history-modal');
-        const content = document.getElementById('history-content');
-        const history = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    function sendReport() {
+        const text = `💰 ОТЧЕТ ОБ ОПЛАТЕ\n\n` +
+                     `👤 Клиент: @${user?.username || 'user'}\n` +
+                     `📦 Товар: ${state.product.name}\n` +
+                     `💳 Метод: ${state.method}\n` +
+                     `🔗 ЧЕК (ФОТО): ${state.imageUrl}`;
         
-        content.innerHTML = history.length > 0 ? history.map(h => `• ${h}<br>`).join('') : "Покупок еще нет";
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        tg.sendData(text);
     }
+
+    function switchTab(id, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('pay-modal').style.display = 'none'; }
 
     render();
 </script>
 </body>
 </html>
+
