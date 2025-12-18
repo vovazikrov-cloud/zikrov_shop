@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zikrov Shop Luxury</title>
+    <title>Zikrov Shop - Full Inventory</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style id="dynamic-theme">
         :root {
@@ -20,101 +20,67 @@
     </style>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 0;
+            margin: 0; padding-bottom: 100px;
             transition: background 0.3s ease;
-            padding-bottom: 100px;
         }
 
-        /* --- UI ЭЛЕМЕНТЫ --- */
         .container { padding: 20px; }
-        
-        .header-title { font-size: 28px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; }
+        .header-title { font-size: 26px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; }
 
         .card {
             background-color: var(--secondary-bg);
             border-radius: var(--card-border-radius);
             border: var(--card-border-width) solid var(--card-border-color);
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: transform 0.1s ease;
+            padding: 16px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .card:active { transform: scale(0.98); }
 
         .btn-main {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            padding: 16px 20px;
-            border-radius: var(--card-border-radius);
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: var(--button-color); color: var(--button-text-color);
+            border: none; padding: 16px; border-radius: var(--card-border-radius);
+            font-size: 16px; font-weight: 700; width: 100%; cursor: pointer;
         }
 
         .btn-cancel {
-            background: none;
-            border: none;
-            color: var(--hint-color);
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 500;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 8px;
-            text-decoration: none;
+            background: none; border: none; color: var(--hint-color);
+            padding: 12px; font-size: 15px; width: 100%; cursor: pointer;
         }
-        .btn-cancel:active { opacity: 0.6; }
 
-        /* --- ТАБ БАР --- */
+        /* Навигация */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: 75px; background: var(--secondary-bg);
-            display: flex; border-top: 1px solid rgba(0,0,0,0.05);
-            backdrop-filter: blur(15px); z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
+            background: var(--secondary-bg); display: flex;
+            border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(15px); z-index: 1000;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
-        .nav-item svg { width: 24px; height: 24px; fill: var(--hint-color); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-item svg { width: 22px; height: 22px; fill: var(--hint-color); }
         .nav-item.active svg { fill: var(--button-color); }
         .nav-item span { font-size: 10px; margin-top: 4px; color: var(--hint-color); }
         .nav-item.active span { color: var(--button-color); font-weight: 600; }
 
-        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        /* Модалки */
         .modal-box {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85); display: none;
             align-items: center; justify-content: center; z-index: 5000;
             backdrop-filter: blur(8px); padding: 20px;
         }
-        .modal-box.active { display: flex; animation: modalIn 0.3s ease; }
+        .modal-box.active { display: flex; }
         .modal-content {
             background: var(--bg-color); width: 100%; max-width: 400px;
-            border-radius: 28px; padding: 24px; box-sizing: border-box;
-            position: relative;
+            border-radius: 24px; padding: 24px; box-sizing: border-box;
         }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-        /* --- НАСТРОЙКИ ДИЗАЙНА --- */
-        .setting-group { margin-bottom: 20px; }
-        .setting-label { font-size: 13px; color: var(--hint-color); margin-bottom: 10px; display: block; text-transform: uppercase; }
-        .color-picker-wrapper { display: flex; gap: 10px; align-items: center; background: var(--secondary-bg); padding: 10px; border-radius: 12px; }
-        input[type="color"] { border: none; width: 40px; height: 40px; border-radius: 8px; background: none; }
-        input[type="range"] { width: 100%; accent-color: var(--button-color); }
-
-        /* --- ИСТОРИЯ --- */
-        .history-item { padding: 12px; border-bottom: 1px solid var(--secondary-bg); }
-        .history-item:last-child { border: none; }
+        /* Настройки */
+        .setting-group { margin-bottom: 15px; }
+        .setting-label { font-size: 12px; color: var(--hint-color); display: block; margin-bottom: 8px; }
+        .color-row { display: flex; gap: 10px; align-items: center; background: var(--secondary-bg); padding: 8px; border-radius: 12px; }
+        
+        .history-scroll { max-height: 350px; overflow-y: auto; }
+        .history-card { background: var(--secondary-bg); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -125,122 +91,102 @@
         <div id="list-categories"></div>
     </div>
     <div id="view-products" style="display: none;">
-        <div class="btn-cancel" style="text-align: left; padding: 0; width: auto;" onclick="renderCategories()">← К категориям</div>
+        <div class="btn-cancel" style="text-align: left; padding: 0; margin-bottom: 10px;" onclick="renderCategories()">← Назад</div>
         <h1 id="cat-title" class="header-title">Товары</h1>
         <div id="list-products"></div>
     </div>
 </div>
 
 <div id="page-profile" class="container" style="display: none;">
-    <h1 class="header-title">Профиль</h1>
-    <div class="card" style="justify-content: center; flex-direction: column; padding: 30px;">
-        <div id="user-icon" style="width: 80px; height: 80px; border-radius: 50%; background: var(--button-color); color: #fff; font-size: 32px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">?</div>
-        <b id="user-name" style="font-size: 20px;">Пользователь</b>
+    <h1 class="header-title">Мой профиль</h1>
+    <div class="card" style="flex-direction: column; text-align: center; padding: 25px;">
+        <div id="user-icon" style="width: 70px; height: 70px; border-radius: 50%; background: var(--button-color); color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">?</div>
+        <b id="user-name">Загрузка...</b>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-        <div class="card" style="flex-direction: column; align-items: center;">
-            <span id="stat-deals" style="font-size: 24px; font-weight: 800; color: var(--button-color);">0</span>
-            <span style="font-size: 12px; color: var(--hint-color);">Сделок</span>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+        <div class="card" style="flex-direction: column;">
+            <span id="stat-count" style="font-size: 20px; font-weight: 800; color: var(--button-color);">0</span>
+            <small>Покупок</small>
         </div>
-        <div class="card" style="flex-direction: column; align-items: center;">
-            <span id="stat-spent" style="font-size: 24px; font-weight: 800; color: var(--button-color);">0 ₽</span>
-            <span style="font-size: 12px; color: var(--hint-color);">Потрачено</span>
+        <div class="card" style="flex-direction: column;">
+            <span id="stat-sum" style="font-size: 20px; font-weight: 800; color: var(--button-color);">0 ₽</span>
+            <small>Траты</small>
         </div>
     </div>
 
-    <button class="btn-main" onclick="openModal('modal-history')">🕒 История заказов</button>
-    <button class="btn-cancel" onclick="openModal('modal-settings')">🎨 Настроить внешний вид</button>
+    <button class="btn-main" style="margin-top: 15px;" onclick="openModal('modal-history')">📋 История заказов</button>
+    <button class="btn-cancel" onclick="openModal('modal-settings')">⚙️ Настроить дизайн</button>
 </div>
 
 <div id="modal-pay" class="modal-box">
     <div class="modal-content">
         <div id="pay-s1">
             <h2 style="margin-top: 0;">Оплата</h2>
-            <button class="btn-main" onclick="nextPayStep(2)">Сбербанк / СБП</button>
-            <button class="btn-cancel" onclick="closeAllModals()">Отмена</button>
+            <button class="btn-main" onclick="nextStep(2)">Сбербанк / СБП</button>
+            <button class="btn-cancel" onclick="closeModals()">Отмена</button>
         </div>
         <div id="pay-s2" style="display: none;">
             <h2 style="margin-top: 0;">Реквизиты</h2>
             <div style="background: var(--secondary-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px;">
-                <small style="color: var(--hint-color);">СУММА</small>
-                <div style="font-size: 22px; font-weight: 800; margin-bottom: 15px;"><span id="pay-sum-val">0</span> ₽</div>
-                
-                <small style="color: var(--hint-color);">КАРТА</small>
+                <small>К ОПЛАТЕ</small>
+                <div style="font-size: 20px; font-weight: 800; margin-bottom: 10px;"><span id="sum-val">0</span> ₽</div>
+                <small>КАРТА</small>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <b id="val-card">2202 2081 1283 8199</b>
-                    <button onclick="copy('val-card')" style="background: var(--button-color); color: #fff; border: none; border-radius: 8px; padding: 4px 8px; font-size: 10px;">КОПИЯ</button>
+                    <b id="card-val">2202 2081 1283 8199</b>
+                    <button onclick="copy('card-val')" style="background: var(--button-color); color: #fff; border: none; padding: 5px; border-radius: 5px; font-size: 10px;">COPY</button>
                 </div>
-                <div style="margin-top: 10px;">
-                    <small style="color: var(--hint-color);">ПОЛУЧАТЕЛЬ</small>
-                    <div>ВЛАДИМИР К.</div>
-                </div>
+                <small>ПОЛУЧАТЕЛЬ: ВЛАДИМИР К.</small>
             </div>
-            <button class="btn-main" onclick="nextPayStep(3)">Я оплатил(а)</button>
-            <button class="btn-cancel" onclick="nextPayStep(1)">Назад</button>
+            <button class="btn-main" onclick="nextStep(3)">Я оплатил(а)</button>
+            <button class="btn-cancel" onclick="nextStep(1)">Назад</button>
         </div>
         <div id="pay-s3" style="display: none;">
-            <h2 style="margin-top: 0;">Чек</h2>
-            <div id="upload-zone" style="border: 2px dashed var(--button-color); padding: 30px; text-align: center; border-radius: 20px; cursor: pointer;" onclick="document.getElementById('file-input').click()">
-                <span id="up-label">Нажмите, чтобы выбрать скриншот</span>
-                <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="processFile(this)">
-                <img id="up-preview" style="width: 100%; display: none; margin-top: 15px; border-radius: 12px;">
+            <h2 style="margin-top: 0;">Подтверждение</h2>
+            <div style="border: 2px dashed var(--button-color); padding: 20px; text-align: center; border-radius: 15px;" onclick="document.getElementById('file-in').click()">
+                <span id="file-label">Загрузить скриншот чека</span>
+                <input type="file" id="file-in" style="display: none;" onchange="handleFile(this)">
+                <img id="file-prev" style="width: 100%; display: none; margin-top: 10px; border-radius: 10px;">
             </div>
-            <button id="btn-finish" class="btn-main" style="margin-top: 20px;" disabled onclick="finalizeOrder()">Отправить данные</button>
-            <button class="btn-cancel" onclick="nextPayStep(2)">Назад</button>
+            <button id="btn-done" class="btn-main" style="margin-top: 15px;" disabled onclick="sendOrder()">Завершить</button>
         </div>
+    </div>
+</div>
+
+<div id="modal-history" class="modal-box">
+    <div class="modal-content">
+        <h2 style="margin-top: 0;">История</h2>
+        <div id="history-list" class="history-scroll"></div>
+        <button class="btn-main" style="margin-top: 15px;" onclick="closeModals()">Закрыть</button>
     </div>
 </div>
 
 <div id="modal-settings" class="modal-box">
     <div class="modal-content">
         <h2 style="margin-top: 0;">Дизайн</h2>
-        
         <div class="setting-group">
-            <span class="setting-label">Цвет кнопок и акцентов</span>
-            <div class="color-picker-wrapper">
-                <input type="color" id="cfg-color-btn" oninput="applyDesign()">
-                <span id="cfg-hex-btn">#007aff</span>
-            </div>
+            <span class="setting-label">Цвет кнопок</span>
+            <div class="color-row"><input type="color" id="cfg-btn" oninput="applyStyle()"></div>
         </div>
-
         <div class="setting-group">
-            <span class="setting-label">Цвет фона приложения</span>
-            <div class="color-picker-wrapper">
-                <input type="color" id="cfg-color-bg" oninput="applyDesign()">
-                <span id="cfg-hex-bg">#ffffff</span>
-            </div>
+            <span class="setting-label">Цвет фона</span>
+            <div class="color-row"><input type="color" id="cfg-bg" oninput="applyStyle()"></div>
         </div>
-
         <div class="setting-group">
-            <span class="setting-label">Скругление углов</span>
-            <input type="range" id="cfg-radius" min="0" max="30" value="16" oninput="applyDesign()">
+            <span class="setting-label">Скругление (px)</span>
+            <input type="range" id="cfg-rad" min="0" max="30" oninput="applyStyle()">
         </div>
-
-        <div class="setting-group">
-            <span class="setting-label">Обводка карточек</span>
-            <input type="range" id="cfg-border" min="0" max="4" value="0" oninput="applyDesign()">
-        </div>
-
-        <button class="btn-main" onclick="closeAllModals()">Сохранить настройки</button>
-    </div>
-</div>
-
-<div id="modal-history" class="modal-box">
-    <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
-        <h2 style="margin-top: 0;">Мои заказы</h2>
-        <div id="history-container"></div>
-        <button class="btn-main" style="margin-top: 20px;" onclick="closeAllModals()">Закрыть</button>
+        <button class="btn-main" onclick="closeModals()">Сохранить</button>
     </div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" id="tab-shop" onclick="nav('shop')">
+    <div class="nav-item active" id="tab-shop" onclick="tab('shop')">
         <svg viewBox="0 0 24 24"><path d="M12 3L4 9v12h16V9l-8-6zm6 16H6v-9l6-4.5 6 4.5v9z"/></svg>
         <span>Магазин</span>
     </div>
-    <div class="nav-item" id="tab-profile" onclick="nav('profile')">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+    <div class="nav-item" id="tab-profile" onclick="tab('profile')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/></svg>
         <span>Профиль</span>
     </div>
 </div>
@@ -250,43 +196,90 @@
     tg.expand();
 
     const IMGBB_KEY = "806a814f6abcc1de40b719b65d354722";
-    const ADMIN = "Z1KROV";
+    const ADMIN_USER = "Z1KROV";
 
     const shopData = [
-        { id: 'accs', name: 'TG Аккаунты', icon: '👤', items: [
-            { name: 'Германия +49', price: 300 }, { name: 'США +1', price: 60 }, { name: 'Казахстан +7', price: 230 }
-        ]},
-        { id: 'premium', name: 'Telegram Premium', icon: '💎', items: [
-            { name: 'Premium 1 месяц', price: 450 }, { name: 'Premium 12 месяцев', price: 3400 }
-        ]}
+        {
+            id: 'accs_standard',
+            name: 'TG Аккаунты',
+            icon: '👤',
+            items: [
+                { name: 'Германия +49', price: 300 },
+                { name: 'Казахстан +7', price: 230 },
+                { name: 'Бразилия +55', price: 100 },
+                { name: 'Турция +90', price: 160 },
+                { name: 'Вьетнам +84', price: 80 },
+                { name: 'Колумбия +57', price: 140 },
+                { name: 'Мексика +52', price: 140 },
+                { name: 'Тайланд +66', price: 190 },
+                { name: 'Канада +1', price: 70 },
+                { name: 'Бангладеш +880', price: 90 },
+                { name: 'Украина +380', price: 230 },
+                { name: 'Индия +91', price: 60 },
+                { name: 'США +1', price: 60 }
+            ]
+        },
+        {
+            id: 'accs_aged',
+            name: 'TG Аккаунты (Отлега)',
+            icon: '⏳',
+            items: [
+                { name: 'Германия 30+ дней', price: 340 },
+                { name: 'Германия 7+ дней', price: 320 },
+                { name: 'Казахстан 30+ дней', price: 270 },
+                { name: 'Казахстан 7+ дней', price: 250 },
+                { name: 'Украина 30+ дней', price: 280 },
+                { name: 'Украина 7+ дней', price: 260 },
+                { name: 'Тайланд 30+ дней', price: 260 },
+                { name: 'Тайланд 7+ дней', price: 230 },
+                { name: 'Турция 30+ дней', price: 200 },
+                { name: 'Турция 7+ дней', price: 180 },
+                { name: 'Мексика 30+ дней', price: 180 },
+                { name: 'Мексика 7+ дней', price: 160 },
+                { name: 'Колумбия 30+ дней', price: 180 },
+                { name: 'Колумбия 7+ дней', price: 160 },
+                { name: 'Бразилия 30+ дней', price: 140 },
+                { name: 'Бразилия 7+ дней', price: 120 },
+                { name: 'Бангладеш 30+ дней', price: 130 },
+                { name: 'Бангладеш 7+ дней', price: 110 },
+                { name: 'Вьетнам 30+ дней', price: 120 },
+                { name: 'Вьетнам 7+ дней', price: 100 },
+                { name: 'Индия 30+ дней', price: 100 },
+                { name: 'Индия 7+ дней', price: 80 },
+                { name: 'США 30+ дней', price: 100 },
+                { name: 'США 7+ дней', price: 80 }
+            ]
+        },
+        {
+            id: 'subs',
+            name: 'Подписки',
+            icon: '💎',
+            items: [
+                { name: 'Premium 1 мес', price: 450 },
+                { name: 'Premium 12 мес', price: 3400 }
+            ]
+        }
     ];
 
-    let currentOrder = null;
-
-    // --- СЕРВИСНЫЕ ФУНКЦИИ ---
-    function genID() { return Math.floor(10000000 + Math.random() * 90000000); }
+    let order = null;
 
     function copy(id) {
         navigator.clipboard.writeText(document.getElementById(id).innerText);
-        tg.HapticFeedback.notificationOccurred('success');
         tg.showAlert("Скопировано!");
     }
 
-    // --- НАВИГАЦИЯ ---
-    function nav(p) {
+    function tab(p) {
         document.getElementById('page-shop').style.display = p === 'shop' ? 'block' : 'none';
         document.getElementById('page-profile').style.display = p === 'profile' ? 'block' : 'none';
         document.getElementById('tab-shop').classList.toggle('active', p === 'shop');
         document.getElementById('tab-profile').classList.toggle('active', p === 'profile');
-        if(p === 'profile') refreshStats();
+        if(p === 'profile') loadStats();
     }
 
-    // --- МАГАЗИН ---
     function renderCategories() {
         document.getElementById('view-categories').style.display = 'block';
         document.getElementById('view-products').style.display = 'none';
-        const list = document.getElementById('list-categories');
-        list.innerHTML = shopData.map(c => `
+        document.getElementById('list-categories').innerHTML = shopData.map(c => `
             <div class="card" onclick="renderProducts('${c.id}')">
                 <span>${c.icon} ${c.name}</span>
                 <span>→</span>
@@ -294,130 +287,94 @@
         `).join('');
     }
 
-    function renderProducts(cid) {
-        const cat = shopData.find(c => c.id === cid);
+    function renderProducts(id) {
+        const cat = shopData.find(x => x.id === id);
         document.getElementById('cat-title').innerText = cat.name;
-        const list = document.getElementById('list-products');
-        list.innerHTML = cat.items.map(i => `
+        document.getElementById('list-products').innerHTML = cat.items.map(i => `
             <div class="card">
                 <div><b>${i.name}</b><br><small>${i.price} ₽</small></div>
-                <button class="btn-main" style="width: auto; padding: 10px 15px;" onclick="initPay('${i.name}', ${i.price})">Купить</button>
+                <button class="btn-main" style="width: auto; padding: 10px;" onclick="pay('${i.name}', ${i.price})">Купить</button>
             </div>
         `).join('');
         document.getElementById('view-categories').style.display = 'none';
         document.getElementById('view-products').style.display = 'block';
     }
 
-    // --- ОПЛАТА ---
-    function initPay(n, p) {
-        currentOrder = { id: genID(), name: n, price: p, step: 1 };
-        document.getElementById('pay-sum-val').innerText = p;
+    function pay(n, p) {
+        order = { id: Math.floor(10000000 + Math.random() * 90000000), name: n, price: p };
+        document.getElementById('sum-val').innerText = p;
         openModal('modal-pay');
-        nextPayStep(1);
+        nextStep(1);
     }
 
-    function nextPayStep(s) {
+    function nextStep(s) {
         [1,2,3].forEach(n => document.getElementById('pay-s'+n).style.display = s === n ? 'block' : 'none');
     }
 
-    async function processFile(input) {
+    async function handleFile(input) {
         if(!input.files[0]) return;
-        const label = document.getElementById('up-label');
-        const preview = document.getElementById('up-preview');
-        label.innerText = "Загрузка чека...";
-        
+        document.getElementById('file-label').innerText = "Загрузка...";
         const form = new FormData();
         form.append("image", input.files[0]);
-        
-        try {
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: form });
-            const json = await res.json();
-            if(json.success) {
-                currentOrder.img = json.data.url;
-                preview.src = json.data.url;
-                preview.style.display = 'block';
-                label.style.display = 'none';
-                document.getElementById('btn-finish').disabled = false;
-            }
-        } catch(e) { tg.showAlert("Ошибка сети!"); label.innerText = "Ошибка! Попробуйте снова"; }
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: form });
+        const json = await res.json();
+        if(json.success) {
+            order.img = json.data.url;
+            document.getElementById('file-prev').src = order.img;
+            document.getElementById('file-prev').style.display = 'block';
+            document.getElementById('file-label').style.display = 'none';
+            document.getElementById('btn-done').disabled = false;
+        }
     }
 
-    function finalizeOrder() {
-        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
-        history.unshift({ ...currentOrder, date: new Date().toLocaleString() });
-        localStorage.setItem('zik_history', JSON.stringify(history));
+    function sendOrder() {
+        const history = JSON.parse(localStorage.getItem('h_zik') || '[]');
+        history.unshift({ ...order, date: new Date().toLocaleString() });
+        localStorage.setItem('h_zik', JSON.stringify(history));
 
-        const msg = `📦 ЗАКАЗ #${currentOrder.id}\nТовар: ${currentOrder.name}\nСумма: ${currentOrder.price}₽\nЧек: ${currentOrder.img}`;
-        tg.openTelegramLink(`https://t.me/${ADMIN}?text=${encodeURIComponent(msg)}`);
+        const msg = `📦 ЗАКАЗ #${order.id}\nТовар: ${order.name}\nСумма: ${order.price}₽\nЧек: ${order.img}`;
+        tg.openTelegramLink(`https://t.me/${ADMIN_USER}?text=${encodeURIComponent(msg)}`);
         tg.close();
     }
 
-    // --- НАСТРОЙКИ ---
-    function applyDesign() {
-        const cBtn = document.getElementById('cfg-color-btn').value;
-        const cBg = document.getElementById('cfg-color-bg').value;
-        const radius = document.getElementById('cfg-radius').value;
-        const border = document.getElementById('cfg-border').value;
-
-        document.getElementById('cfg-hex-btn').innerText = cBtn;
-        document.getElementById('cfg-hex-bg').innerText = cBg;
-
-        const root = document.documentElement;
-        root.style.setProperty('--button-color', cBtn);
-        root.style.setProperty('--bg-color', cBg);
-        root.style.setProperty('--card-border-radius', radius + 'px');
-        root.style.setProperty('--card-border-width', border + 'px');
-
-        localStorage.setItem('zik_config', JSON.stringify({ cBtn, cBg, radius, border }));
+    function loadStats() {
+        const history = JSON.parse(localStorage.getItem('h_zik') || '[]');
+        document.getElementById('stat-count').innerText = history.length;
+        document.getElementById('stat-sum').innerText = history.reduce((a,b) => a + b.price, 0) + " ₽";
+        document.getElementById('history-list').innerHTML = history.map(h => `
+            <div class="history-card">
+                <b>#${h.id}</b> | ${h.name}<br>
+                <small>${h.date} — ${h.price} ₽</small>
+            </div>
+        `).join('') || "Заказов нет";
     }
 
-    function loadDesign() {
-        const cfg = JSON.parse(localStorage.getItem('zik_config'));
-        if(cfg) {
-            document.getElementById('cfg-color-btn').value = cfg.cBtn;
-            document.getElementById('cfg-color-bg').value = cfg.cBg;
-            document.getElementById('cfg-radius').value = cfg.radius;
-            document.getElementById('cfg-border').value = cfg.border;
-            applyDesign();
-        }
+    function applyStyle() {
+        const btn = document.getElementById('cfg-btn').value;
+        const bg = document.getElementById('cfg-bg').value;
+        const rad = document.getElementById('cfg-rad').value;
+        document.documentElement.style.setProperty('--button-color', btn);
+        document.documentElement.style.setProperty('--bg-color', bg);
+        document.documentElement.style.setProperty('--card-border-radius', rad + 'px');
+        localStorage.setItem('cfg_zik', JSON.stringify({ btn, bg, rad }));
     }
 
-    // --- ПРОФИЛЬ ---
-    function refreshStats() {
-        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
-        const spent = history.reduce((a, b) => a + b.price, 0);
-        document.getElementById('stat-deals').innerText = history.length;
-        document.getElementById('stat-spent').innerText = spent + " ₽";
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModals() { document.querySelectorAll('.modal-box').forEach(m => m.style.display = 'none'); }
 
-        const container = document.getElementById('history-container');
-        if(history.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:var(--hint-color);'>Заказов нет</p>";
-        } else {
-            container.innerHTML = history.map(h => `
-                <div class="history-item">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>#${h.id}</b>
-                        <b style="color:var(--button-color);">${h.price} ₽</b>
-                    </div>
-                    <div style="font-size:13px; margin-top:4px;">${h.name}</div>
-                    <div style="font-size:11px; color:var(--hint-color); margin-top:4px;">${h.date}</div>
-                </div>
-            `).join('');
-        }
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeAllModals() { document.querySelectorAll('.modal-box').forEach(m => m.classList.remove('active')); }
-
-    // Инициализация
+    // Init
     const u = tg.initDataUnsafe.user;
-    if(u) {
-        document.getElementById('user-name').innerText = u.first_name;
-        document.getElementById('user-icon').innerText = u.first_name.charAt(0);
+    if(u) { document.getElementById('user-name').innerText = u.first_name; document.getElementById('user-icon').innerText = u.first_name.charAt(0); }
+    
+    const savedCfg = JSON.parse(localStorage.getItem('cfg_zik'));
+    if(savedCfg) {
+        document.getElementById('cfg-btn').value = savedCfg.btn;
+        document.getElementById('cfg-bg').value = savedCfg.bg;
+        document.getElementById('cfg-rad').value = savedCfg.rad;
+        applyStyle();
     }
 
     renderCategories();
-    loadDesign();
 </script>
 </body>
 </html>
