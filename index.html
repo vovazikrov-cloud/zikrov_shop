@@ -3,243 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zikrov Shop - Premium Edition</title>
+    <title>Zikrov Shop - Ultimate Automation Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style id="dynamic-theme">
-        /* Эти переменные будут меняться через JS редактор */
         :root {
-            --bg-color: #ffffff;
-            --secondary-bg: #f4f4f7;
-            --text-color: #000000;
+            --bg-color: #000000;
+            --secondary-bg: #1c1c1e;
+            --text-color: #ffffff;
             --hint-color: #8e8e93;
-            --button-color: #007aff;
+            --button-color: #0a84ff;
             --button-text-color: #ffffff;
-            --card-radius: 16px;
-            --card-border-width: 0px;
-            --card-border-color: #007aff;
+            --card-radius: 20px;
+            --card-border-width: 1px;
+            --card-border-color: rgba(255,255,255,0.1);
+            --accent-success: #32d74b;
+            --accent-error: #ff453a;
         }
     </style>
 
     <style>
-        /* БАЗОВЫЕ СТИЛИ ПРИЛОЖЕНИЯ */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 100px; /* Отступ под таб-бар */
+            margin: 0; padding: 0;
+            padding-bottom: 100px;
             transition: all 0.3s ease;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            overflow-x: hidden;
         }
 
-        .container {
-            padding: 20px;
-        }
+        .container { padding: 20px; }
 
-        h1, h2, h3 {
-            margin-top: 0;
-            font-weight: 800;
-        }
+        h1, h2, h3 { margin-top: 0; font-weight: 800; letter-spacing: -0.5px; }
 
-        /* КАРТОЧКИ И КНОПКИ */
+        /* КАРТОЧКИ */
         .card {
             background-color: var(--secondary-bg);
             border-radius: var(--card-radius);
-            padding: 18px;
-            margin-bottom: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
             border: var(--card-border-width) solid var(--card-border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: transform 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .card:active {
-            transform: scale(0.97);
-        }
+        .card:active { transform: scale(0.97); opacity: 0.8; }
 
+        /* КНОПКИ */
         .btn-main {
             background-color: var(--button-color);
             color: var(--button-text-color);
             border: none;
-            padding: 16px 24px;
+            padding: 18px 24px;
             border-radius: var(--card-radius);
             font-size: 16px;
             font-weight: 700;
             width: 100%;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s;
         }
 
-        .btn-main:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn-main:disabled { background-color: #48484a; color: #8e8e93; cursor: not-allowed; box-shadow: none; }
 
         .btn-secondary {
-            background: none;
-            border: none;
-            color: var(--hint-color);
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 10px;
+            background: none; border: none; color: var(--hint-color);
+            padding: 12px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer;
         }
 
-        /* НИЖНЕЕ МЕНЮ */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 75px;
-            background-color: var(--secondary-bg);
-            display: flex;
-            border-top: 1px solid rgba(0,0,0,0.08);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .nav-item svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--hint-color);
-            transition: fill 0.2s;
-        }
-
-        .nav-item.active svg {
-            fill: var(--button-color);
-        }
-
-        .nav-item span {
+        /* АДМИН ПАНЕЛЬ СПЕЦИАЛЬНЫЕ СТИЛИ */
+        .admin-badge {
+            background: var(--accent-error);
+            color: white;
             font-size: 10px;
-            margin-top: 4px;
-            color: var(--hint-color);
-        }
-
-        .nav-item.active span {
-            color: var(--button-color);
-            font-weight: bold;
-        }
-
-        /* МОДАЛЬНЫЕ ОКНА */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(8px);
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--bg-color);
-            width: 100%;
-            max-width: 400px;
-            border-radius: 28px;
-            padding: 25px;
-            box-sizing: border-box;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* РЕКВИЗИТЫ */
-        .req-box {
-            background: var(--secondary-bg);
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-
-        .req-label {
-            font-size: 11px;
-            color: var(--hint-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: inline-block;
         }
 
-        .req-value {
-            font-family: 'Courier New', monospace;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        /* ЗАГРУЗКА ЧЕКА */
-        .upload-area {
-            border: 2px dashed var(--button-color);
-            padding: 30px;
-            text-align: center;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-
-        /* РЕДАКТОР ДИЗАЙНА */
-        .setting-item {
-            margin-bottom: 18px;
-        }
-
-        .setting-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .color-input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--secondary-bg);
-            padding: 8px 12px;
+        .limit-input-group {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
             border-radius: 12px;
+            margin-bottom: 10px;
         }
 
-        input[type="color"] {
-            border: none;
-            width: 35px;
-            height: 35px;
-            cursor: pointer;
-            background: none;
+        .limit-input-group label { display: block; font-size: 12px; color: var(--hint-color); margin-bottom: 5px; }
+        .limit-input-group input {
+            width: 100%; background: none; border: none; color: var(--button-color);
+            font-size: 18px; font-weight: 800; outline: none;
         }
 
-        input[type="range"] {
-            width: 100%;
-            accent-color: var(--button-color);
+        /* НАВИГАЦИЯ */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
+            background-color: rgba(28, 28, 30, 0.85);
+            display: flex; border-top: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px); z-index: 1000;
         }
 
-        /* СТРАНИЦЫ */
-        .page {
-            display: none;
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .nav-item svg { width: 24px; height: 24px; fill: var(--hint-color); transition: 0.2s; }
+        .nav-item.active svg { fill: var(--button-color); }
+        .nav-item span { font-size: 10px; margin-top: 5px; color: var(--hint-color); }
+        .nav-item.active span { color: var(--button-color); font-weight: bold; }
+
+        /* МОДАЛКИ */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9); display: none;
+            align-items: center; justify-content: center; z-index: 2000;
+            backdrop-filter: blur(15px); padding: 20px;
         }
 
-        .page.active {
-            display: block;
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background-color: var(--secondary-bg);
+            width: 100%; max-width: 450px;
+            border-radius: 30px; padding: 30px;
+            box-sizing: border-box; max-height: 90vh; overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
         }
+
+        /* АНИМАЦИЯ ЗАГРУЗКИ (МАРКЕТ) */
+        .loader-market {
+            width: 40px; height: 40px; border: 4px solid var(--button-color);
+            border-radius: 50%; border-top-color: transparent;
+            animation: spin 1s infinite linear; margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -247,13 +151,14 @@
 <div id="shop-page" class="page active">
     <div class="container">
         <div id="category-view">
-            <h1 style="font-size: 32px;">Магазин</h1>
+            <h1 style="font-size: 34px; margin-bottom: 5px;">Zikrov Market</h1>
+            <p style="color: var(--hint-color); margin-bottom: 25px;">Автоматизированная выдача 24/7</p>
             <div id="category-list"></div>
         </div>
 
         <div id="product-view" style="display: none;">
-            <div class="btn-secondary" style="text-align: left; padding-left: 0; width: auto;" onclick="showCategories()">← Ко всем категориям</div>
-            <h1 id="selected-category-name" style="margin-bottom: 20px;">Товары</h1>
+            <div class="btn-secondary" style="text-align: left; padding-left: 0; width: auto;" onclick="showCategories()">← Назад</div>
+            <h1 id="selected-category-name">Товары</h1>
             <div id="product-list"></div>
         </div>
     </div>
@@ -261,156 +166,92 @@
 
 <div id="profile-page" class="page">
     <div class="container">
-        <h1 style="font-size: 32px;">Профиль</h1>
+        <h1>Система</h1>
         
-        <div class="card" style="flex-direction: column; align-items: center; padding: 30px;">
-            <div id="user-avatar" style="width: 80px; height: 80px; background: var(--button-color); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; margin-bottom: 15px;">?</div>
-            <h2 id="user-full-name" style="margin-bottom: 5px;">Пользователь</h2>
-            <span id="user-tag" style="color: var(--hint-color);">@username</span>
+        <div class="card" style="flex-direction: column; align-items: flex-start; padding: 25px;">
+            <div id="user-avatar" style="width: 60px; height: 60px; background: var(--button-color); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin-bottom: 15px;">👤</div>
+            <h2 id="user-full-name" style="margin-bottom: 2px;">Загрузка...</h2>
+            <span id="user-tag" style="color: var(--hint-color); font-family: monospace;">@username</span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <div class="card" style="flex-direction: column; margin-bottom: 0;">
-                <span id="stat-orders" style="font-size: 24px; font-weight: 800; color: var(--button-color);">0</span>
-                <small style="color: var(--hint-color);">Сделок</small>
+            <div class="card" style="flex-direction: column; margin-bottom: 0; align-items: flex-start;">
+                <span id="stat-orders" style="font-size: 28px; font-weight: 800; color: var(--accent-success);">0</span>
+                <small style="color: var(--hint-color); text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Покупок</small>
             </div>
-            <div class="card" style="flex-direction: column; margin-bottom: 0;">
-                <span id="stat-money" style="font-size: 24px; font-weight: 800; color: var(--button-color);">0 ₽</span>
-                <small style="color: var(--hint-color);">Потрачено</small>
+            <div class="card" style="flex-direction: column; margin-bottom: 0; align-items: flex-start;">
+                <span id="stat-money" style="font-size: 28px; font-weight: 800; color: var(--button-color);">0 ₽</span>
+                <small style="color: var(--hint-color); text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Оборорт</small>
             </div>
         </div>
 
-        <button class="btn-main" style="margin-bottom: 12px;" onclick="openHistory()">📜 История заказов</button>
-        <button class="btn-main" style="background-color: var(--secondary-bg); color: var(--text-color);" onclick="openDesignEditor()">🎨 Редактор дизайна</button>
+        <button class="btn-main" style="margin-bottom: 12px;" onclick="openHistory()">📋 Мои покупки</button>
+        
+        <div id="admin-root-ui" style="display: none;">
+            <div class="admin-badge">Root Access</div>
+            <button class="btn-main" style="background-color: var(--accent-error); margin-bottom: 12px;" onclick="openAdminPanel()">⚙️ Управление Lolz Market</button>
+            <button class="btn-main" style="background-color: #333; margin-bottom: 12px;" onclick="openDesignEditor()">🎨 Смена дизайна</button>
+        </div>
     </div>
 </div>
 
 <div id="payment-modal" class="modal-overlay">
     <div class="modal-content">
         <div id="pay-step-1">
-            <h2 style="text-align: center;">Оплата</h2>
-            <p style="text-align: center; color: var(--hint-color);">Выберите удобный способ оплаты заказа</p>
-            <button class="btn-main" style="margin-bottom: 10px;" onclick="setPayStep(2)">💳 Карта / СБП (Сбер)</button>
-            <button class="btn-main" style="background-color: #f7931a; color: white;" onclick="setPayStep(2)">₿ Криптовалюта</button>
+            <h2 style="text-align: center;">Оплата товара</h2>
+            <div id="order-summary" class="card" style="background: rgba(255,255,255,0.03);">
+                <div>
+                    <div id="modal-item-title" style="font-weight: 800;">-</div>
+                    <div style="color: var(--button-color); font-weight: 900; font-size: 20px;"><span id="modal-price">0</span> ₽</div>
+                </div>
+            </div>
+            <p style="font-size: 14px; color: var(--hint-color); line-height: 1.5;">Переведите точную сумму на реквизиты ниже. После оплаты прикрепите чек для автоматического выкупа аккаунта с Lolz.</p>
+            
+            <div style="background: #000; padding: 15px; border-radius: 15px; margin: 15px 0;">
+                <small style="color: var(--hint-color);">СБЕРБАНК / СБП</small>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <b id="card-num" style="font-family: monospace; font-size: 17px;">2202 2081 1283 8199</b>
+                    <button onclick="copyData('card-num')" style="background: var(--button-color); border:none; color:white; border-radius:8px; padding: 5px 10px; font-size: 10px;">COPY</button>
+                </div>
+            </div>
+
+            <div class="upload-area" id="drop-zone" onclick="document.getElementById('receipt-input').click()" style="border: 2px dashed var(--button-color); padding: 30px; text-align: center; border-radius: 20px; margin-bottom: 15px;">
+                <span id="upload-status">Нажмите, чтобы загрузить чек</span>
+                <input type="file" id="receipt-input" style="display: none;" accept="image/*" onchange="handleFileUpload(this)">
+            </div>
+
+            <button id="lolz-buy-btn" class="btn-main" disabled onclick="startLolzAutomation()">ВЫКУПИТЬ АККАУНТ</button>
             <button class="btn-secondary" onclick="closeModal()">Отмена</button>
         </div>
 
-        <div id="pay-step-2" style="display: none;">
-            <h2 style="text-align: center;">Перевод</h2>
-            <div class="req-box">
-                <div class="req-label">Сумма к оплате</div>
-                <div style="font-size: 24px; font-weight: 800; margin-bottom: 15px;"><span id="modal-price">0</span> ₽</div>
-                
-                <div class="req-label">Номер карты (Сбербанк)</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span id="card-num" class="req-value">2202 2081 1283 8199</span>
-                    <button onclick="copyData('card-num')" style="background: var(--button-color); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: bold;">COPY</button>
-                </div>
-
-                <div class="req-label">Получатель</div>
-                <div class="req-value">ВЛАДИМИР К.</div>
-            </div>
-            <button class="btn-main" onclick="setPayStep(3)">Я оплатил(а), отправить чек</button>
-            <button class="btn-secondary" onclick="setPayStep(1)">Назад</button>
-        </div>
-
-        <div id="pay-step-3" style="display: none;">
-            <h2 style="text-align: center;">Подтверждение</h2>
-            <p style="text-align: center; font-size: 14px; color: var(--hint-color);">Загрузите скриншот чека для проверки администратором</p>
-            
-            <div class="upload-area" onclick="document.getElementById('receipt-input').click()">
-                <span id="upload-text">Нажмите, чтобы выбрать фото</span>
-                <input type="file" id="receipt-input" style="display: none;" accept="image/*" onchange="handleFileUpload(this)">
-                <img id="receipt-preview" style="width: 100%; display: none; margin-top: 15px; border-radius: 12px;">
-            </div>
-
-            <button id="finalize-btn" class="btn-main" disabled onclick="completeOrder()">Завершить заказ</button>
-            <button class="btn-secondary" onclick="setPayStep(2)">Назад</button>
+        <div id="pay-step-loader" style="display: none; text-align: center;">
+            <div class="loader-market"></div>
+            <h2 id="market-status-text">Связь с Lolz Market...</h2>
+            <p id="market-desc-text" style="color: var(--hint-color); font-size: 13px;">Ищем подходящий аккаунт по вашим критериям</p>
         </div>
     </div>
 </div>
 
-<div id="design-modal" class="modal-overlay">
+<div id="admin-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px;">Настройки дизайна</h2>
+        <h2>Лимиты Закупки</h2>
+        <p style="color: var(--hint-color); font-size: 13px; margin-bottom: 20px;">Укажите максимальную цену (pmax) для Lolz Market под каждый товар. Скрипт не купит аккаунт дороже этой суммы.</p>
         
-        <div class="setting-item">
-            <div class="setting-header">
-                <span>Цвет кнопок</span>
-                <div class="color-input-wrapper">
-                    <input type="color" id="editor-btn-color" oninput="liveUpdate()">
-                    <code id="hex-btn">#007aff</code>
-                </div>
-            </div>
-        </div>
-
-        <div class="setting-item">
-            <div class="setting-header">
-                <span>Цвет фона</span>
-                <div class="color-input-wrapper">
-                    <input type="color" id="editor-bg-color" oninput="liveUpdate()">
-                    <code id="hex-bg">#ffffff</code>
-                </div>
-            </div>
-        </div>
-
-        <div class="setting-item">
-            <div class="setting-header">
-                <span>Цвет текста</span>
-                <div class="color-input-wrapper">
-                    <input type="color" id="editor-text-color" oninput="liveUpdate()">
-                    <code id="hex-text">#000000</code>
-                </div>
-            </div>
-        </div>
-
-        <div class="setting-item">
-            <div class="setting-header">
-                <span>Скругление углов</span>
-                <span id="val-radius">16px</span>
-            </div>
-            <input type="range" id="editor-radius" min="0" max="40" value="16" oninput="liveUpdate()">
-        </div>
-
-        <div class="setting-item">
-            <div class="setting-header">
-                <span>Обводка карт</span>
-                <span id="val-border">0px</span>
-            </div>
-            <input type="range" id="editor-border" min="0" max="5" value="0" oninput="liveUpdate()">
-        </div>
-
-        <button class="btn-main" onclick="saveDesign()">Сохранить настройки</button>
-        <button class="btn-secondary" onclick="resetDesign()">Сбросить по умолчанию</button>
-    </div>
-</div>
-
-<div id="history-modal" class="modal-overlay">
-    <div class="modal-content">
-        <h2 style="margin-bottom: 15px;">Мои заказы</h2>
-        <div id="history-items-container">
-            </div>
-        <button class="btn-main" style="margin-top: 20px;" onclick="closeModal()">Закрыть</button>
-    </div>
-</div>
-
-<div id="resume-modal" class="modal-overlay">
-    <div class="modal-content">
-        <h2 style="text-align: center;">Неоконченный заказ</h2>
-        <p style="text-align: center;">У вас остался неоплаченный заказ на товар: <br><b id="resume-item-name">...</b></p>
-        <button class="btn-main" onclick="resumeOrder()">Продолжить покупку</button>
-        <button class="btn-secondary" onclick="discardOrder()">Отменить заказ</button>
+        <div id="admin-limit-list"></div>
+        
+        <button class="btn-main" onclick="saveAdminLimits()" style="background-color: var(--accent-success); margin-top: 20px;">Сохранить конфигурацию</button>
+        <button class="btn-secondary" onclick="closeModal()">Закрыть</button>
     </div>
 </div>
 
 <div class="nav-bar">
     <div class="nav-item active" id="nav-shop" onclick="switchPage('shop')">
-        <svg viewBox="0 0 24 24"><path d="M20 7h-4V5c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM9 5h6v2H9V5zm11 15H4V9h16v11z"/></svg>
-        <span>Магазин</span>
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>МАРКЕТ</span>
     </div>
     <div class="nav-item" id="nav-profile" onclick="switchPage('profile')">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        <span>Профиль</span>
+        <span>СИСТЕМА</span>
     </div>
 </div>
 
@@ -418,85 +259,64 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // КОНФИГУРАЦИЯ
-    const IMGBB_API_KEY = "806a814f6abcc1de40b719b65d354722";
-    const ADMIN_USERNAME = "Z1KROV";
-
-    // БАЗА ДАННЫХ ТОВАРОВ
+    // --- КОНФИГУРАЦИЯ БЕЗОПАСНОСТИ ---
+    const MY_ADMIN_ID = 1577146268; // ЗАМЕНИ НА СВОЙ ID (узнай в @userinfobot)
+    const IMGBB_KEY = "806a814f6abcc1de40b719b65d354722";
+    
+    // БАЗА ТОВАРОВ С ПАРАМЕТРАМИ ЛОЛЗА
     const shopData = [
         {
-            id: 'tg_accs',
-            name: 'TG Аккаунты',
-            icon: '👤',
+            id: 'tg_reg',
+            name: 'Telegram (Регистрация)',
+            icon: '📱',
             items: [
-                { name: 'Германия +49', price: 300 },
-                { name: 'Казахстан +7', price: 230 },
-                { name: 'Бразилия +55', price: 100 },
-                { name: 'Турция +90', price: 160 },
-                { name: 'Вьетнам +84', price: 80 },
-                { name: 'Колумбия +57', price: 140 },
-                { name: 'Мексика +52', price: 140 },
-                { name: 'Тайланд +66', price: 190 },
-                { name: 'Канада +1', price: 70 },
-                { name: 'Бангладеш +880', price: 90 },
-                { name: 'Украина +380', price: 230 },
-                { name: 'Индия +91', price: 60 },
-                { name: 'США +1', price: 60 }
+                { id: 'lzt_49', name: 'Германия +49', price: 300, lzt_cat: 24, lzt_query: 'Germany' },
+                { id: 'lzt_7', name: 'Казахстан +7', price: 230, lzt_cat: 24, lzt_query: 'Kazakhstan' },
+                { id: 'lzt_1_usa', name: 'США +1', price: 90, lzt_cat: 24, lzt_query: 'USA' },
+                { id: 'lzt_91', name: 'Индия +91', price: 65, lzt_cat: 24, lzt_query: 'India' }
             ]
         },
         {
-            id: 'tg_accs_aged',
-            name: 'TG Аккаунты (Отлега)',
+            id: 'tg_aged',
+            name: 'Telegram (Отлега)',
             icon: '⏳',
             items: [
-                { name: 'Германия 30+ дней', price: 340 },
-                { name: 'Германия 7+ дней', price: 320 },
-                { name: 'Казахстан 30+ дней', price: 270 },
-                { name: 'Казахстан 7+ дней', price: 250 },
-                { name: 'Бразилия 30+ дней', price: 140 },
-                { name: 'Бразилия 7+ дней', price: 120 },
-                { name: 'Турция 30+ дней', price: 200 },
-                { name: 'Турция 7+ дней', price: 180 },
-                { name: 'Вьетнам 30+ дней', price: 120 },
-                { name: 'Вьетнам 7+ дней', price: 100 },
-                { name: 'Колумбия 30+ дней', price: 180 },
-                { name: 'Колумбия 7+ дней', price: 160 },
-                { name: 'Мексика 30+ дней', price: 180 },
-                { name: 'Мексика 7+ дней', price: 160 },
-                { name: 'Тайланд 30+ дней', price: 260 },
-                { name: 'Тайланд 7+ дней', price: 230 },
-                { name: 'Бангладеш 30+ дней', price: 130 },
-                { name: 'Бангладеш 7+ дней', price: 110 },
-                { name: 'Украина 30+ дней', price: 280 },
-                { name: 'Украина 7+ дней', price: 260 },
-                { name: 'Индия 30+ дней', price: 100 },
-                { name: 'Индия 7+ дней', price: 80 },
-                { name: 'США 30+ дней', price: 100 },
-                { name: 'США 7+ дней', price: 80 }
+                { id: 'lzt_49_aged', name: 'Германия 30д+', price: 450, lzt_cat: 24, lzt_query: 'Germany aged' },
+                { id: 'lzt_7_aged', name: 'Казахстан 30д+', price: 350, lzt_cat: 24, lzt_query: 'Kazakhstan aged' }
             ]
         }
     ];
 
     let currentOrder = null;
+    let buyLimits = JSON.parse(localStorage.getItem('zik_buy_limits') || '{}');
 
     // --- ИНИЦИАЛИЗАЦИЯ ---
-    function initApp() {
+    function init() {
         renderCategories();
-        loadTheme();
-        loadUser();
-        checkAbandonedCart();
+        loadUserData();
+        
+        // Авто-создание лимитов по умолчанию, если их нет
+        shopData.forEach(cat => {
+            cat.items.forEach(item => {
+                if(!buyLimits[item.id]) buyLimits[item.id] = Math.floor(item.price * 0.6); // По умолчанию закупка 60%
+            });
+        });
     }
 
-    function loadUser() {
-        const u = tg.initDataUnsafe.user;
-        if(u) {
-            document.getElementById('user-full-name').innerText = u.first_name + (u.last_name ? ' ' + u.last_name : '');
-            document.getElementById('user-tag').innerText = u.username ? '@' + u.username : 'id: ' + u.id;
-            document.getElementById('user-avatar').innerText = u.first_name.charAt(0);
+    function loadUserData() {
+        const user = tg.initDataUnsafe.user;
+        if(user) {
+            document.getElementById('user-full-name').innerText = user.first_name;
+            document.getElementById('user-tag').innerText = user.username ? '@' + user.username : 'ID: ' + user.id;
+            
+            // ПРОВЕРКА НА АДМИНА
+            if(user.id === MY_ADMIN_ID) {
+                document.getElementById('admin-root-ui').style.display = 'block';
+            }
         }
     }
 
-    // --- МАГАЗИН ---
+    // --- ЛОГИКА МАГАЗИНА ---
     function renderCategories() {
         const list = document.getElementById('category-list');
         list.innerHTML = '';
@@ -507,9 +327,9 @@
             div.innerHTML = `
                 <div style="display:flex; align-items:center; gap:15px;">
                     <span style="font-size:24px;">${cat.icon}</span>
-                    <span style="font-weight:700; font-size:18px;">${cat.name}</span>
+                    <span style="font-weight:700;">${cat.name}</span>
                 </div>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg>
             `;
             list.appendChild(div);
         });
@@ -529,11 +349,10 @@
                     <div style="font-weight:700;">${item.name}</div>
                     <div style="color:var(--button-color); font-weight:800; margin-top:4px;">${item.price} ₽</div>
                 </div>
-                <button class="btn-main" style="width:auto; padding:8px 15px;" onclick="startPurchase('${item.name}', ${item.price})">Купить</button>
+                <button class="btn-main" style="width:auto; padding:10px 20px;" onclick="openPayModal('${item.id}')">Купить</button>
             `;
             list.appendChild(div);
         });
-
         document.getElementById('category-view').style.display = 'none';
         document.getElementById('product-view').style.display = 'block';
     }
@@ -543,250 +362,162 @@
         document.getElementById('product-view').style.display = 'none';
     }
 
-    // --- ЛОГИКА ОПЛАТЫ ---
-    function startPurchase(name, price) {
-        currentOrder = {
-            orderId: Math.floor(10000000 + Math.random() * 90000000),
-            name: name,
-            price: price,
-            step: 1,
-            image: null
-        };
-        saveAbandonedCart();
-        document.getElementById('modal-price').innerText = price;
-        openModal('payment-modal');
-        setPayStep(1);
-    }
+    // --- ОПЛАТА И АВТОМАТИЗАЦИЯ ---
+    function openPayModal(itemId) {
+        let item;
+        shopData.forEach(c => {
+            const found = c.items.find(i => i.id === itemId);
+            if(found) item = found;
+        });
 
-    function setPayStep(step) {
-        if(currentOrder) {
-            currentOrder.step = step;
-            saveAbandonedCart();
-        }
-        for(let i=1; i<=3; i++) {
-            document.getElementById('pay-step-' + i).style.display = (i === step) ? 'block' : 'none';
-        }
+        currentOrder = { ...item, receipt: null };
+        document.getElementById('modal-item-title').innerText = item.name;
+        document.getElementById('modal-price').innerText = item.price;
+        
+        // Reset UI
+        document.getElementById('pay-step-1').style.display = 'block';
+        document.getElementById('pay-step-loader').style.display = 'none';
+        document.getElementById('lolz-buy-btn').disabled = true;
+        document.getElementById('upload-status').innerText = "Нажмите, чтобы загрузить чек";
+        
+        openModal('payment-modal');
     }
 
     async function handleFileUpload(input) {
         if(!input.files[0]) return;
-        const status = document.getElementById('upload-text');
-        const preview = document.getElementById('receipt-preview');
-        const btn = document.getElementById('finalize-btn');
-
+        const status = document.getElementById('upload-status');
         status.innerText = "⏳ Загрузка чека...";
-        btn.disabled = true;
-
+        
         const formData = new FormData();
         formData.append("image", input.files[0]);
 
         try {
-            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
                 method: "POST",
                 body: formData
             });
-            const data = await response.json();
+            const data = await res.json();
             if(data.success) {
-                currentOrder.image = data.data.url;
-                preview.src = data.data.url;
-                preview.style.display = 'block';
-                status.style.display = 'none';
-                btn.disabled = false;
-                saveAbandonedCart();
+                currentOrder.receipt = data.data.url;
+                status.innerText = "✅ Чек принят! Можно выкупать.";
+                document.getElementById('lolz-buy-btn').disabled = false;
+                tg.HapticFeedback.notificationOccurred('success');
             }
         } catch(e) {
-            status.innerText = "❌ Ошибка. Попробуйте снова.";
+            status.innerText = "❌ Ошибка загрузки";
         }
     }
 
-    function completeOrder() {
-        // Сохраняем в историю
-        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
-        history.unshift({
-            id: currentOrder.orderId,
-            name: currentOrder.name,
-            price: currentOrder.price,
-            date: new Date().toLocaleString()
-        });
-        localStorage.setItem('zik_history', JSON.stringify(history));
+    function startLolzAutomation() {
+        document.getElementById('pay-step-1').style.display = 'none';
+        document.getElementById('pay-step-loader').style.display = 'block';
         
-        // Удаляем брошенную корзину
-        localStorage.removeItem('abandoned_cart');
-
-        // Отправка в ТГ
-        const text = `📦 ЗАКАЗ #${currentOrder.orderId}\n` +
-                     `Товар: ${currentOrder.name}\n` +
-                     `Сумма: ${currentOrder.price}₽\n` +
-                     `Чек: ${currentOrder.image}`;
+        const statusText = document.getElementById('market-status-text');
+        const descText = document.getElementById('market-desc-text');
         
-        tg.openTelegramLink(`https://t.me/${ADMIN_USERNAME}?text=${encodeURIComponent(text)}`);
-        tg.close();
+        // Имитация этапов (в реальности тут fetch на ваш сервер-посредник)
+        const stages = [
+            { t: "Поиск на Lolz...", d: `Фильтр: pmax=${buyLimits[currentOrder.id]} RUB`, time: 2000 },
+            { t: "Аккаунт найден!", d: "Проверка валидности через API...", time: 1500 },
+            { t: "Выкуп аккаунта...", d: "Списание средств с вашего баланса Lolz...", time: 2000 },
+            { t: "Загрузка данных...", d: "Получение tdata / session файла...", time: 1000 }
+        ];
+
+        let i = 0;
+        const interval = setInterval(() => {
+            if(i < stages.length) {
+                statusText.innerText = stages[i].t;
+                descText.innerText = stages[i].d;
+                tg.HapticFeedback.selectionChanged();
+                i++;
+            } else {
+                clearInterval(interval);
+                finishOrder();
+            }
+        }, 1800);
     }
 
-    // --- КОРЗИНА ---
-    function saveAbandonedCart() {
-        localStorage.setItem('abandoned_cart', JSON.stringify(currentOrder));
-    }
-
-    function checkAbandonedCart() {
-        const saved = localStorage.getItem('abandoned_cart');
-        if(saved) {
-            const data = JSON.parse(saved);
-            document.getElementById('resume-item-name').innerText = data.name;
-            currentOrder = data;
-            openModal('resume-modal');
-        }
-    }
-
-    function resumeOrder() {
-        closeModal();
-        document.getElementById('modal-price').innerText = currentOrder.price;
-        openModal('payment-modal');
-        setPayStep(currentOrder.step);
-    }
-
-    function discardOrder() {
-        localStorage.removeItem('abandoned_cart');
-        currentOrder = null;
-        closeModal();
-    }
-
-    // --- ДИЗАЙН РЕДАКТОР ---
-    function openDesignEditor() {
-        const styles = getComputedStyle(document.documentElement);
-        document.getElementById('editor-btn-color').value = rgbToHex(styles.getPropertyValue('--button-color').trim());
-        document.getElementById('editor-bg-color').value = rgbToHex(styles.getPropertyValue('--bg-color').trim());
-        document.getElementById('editor-text-color').value = rgbToHex(styles.getPropertyValue('--text-color').trim());
-        
-        openModal('design-modal');
-    }
-
-    function liveUpdate() {
-        const btn = document.getElementById('editor-btn-color').value;
-        const bg = document.getElementById('editor-bg-color').value;
-        const text = document.getElementById('editor-text-color').value;
-        const radius = document.getElementById('editor-radius').value;
-        const border = document.getElementById('editor-border').value;
-
-        document.getElementById('hex-btn').innerText = btn;
-        document.getElementById('hex-bg').innerText = bg;
-        document.getElementById('hex-text').innerText = text;
-        document.getElementById('val-radius').innerText = radius + 'px';
-        document.getElementById('val-border').innerText = border + 'px';
-
-        const root = document.documentElement;
-        root.style.setProperty('--button-color', btn);
-        root.style.setProperty('--bg-color', bg);
-        root.style.setProperty('--text-color', text);
-        root.style.setProperty('--card-radius', radius + 'px');
-        root.style.setProperty('--card-border-width', border + 'px');
-    }
-
-    function saveDesign() {
-        const config = {
-            btn: document.getElementById('editor-btn-color').value,
-            bg: document.getElementById('editor-bg-color').value,
-            text: document.getElementById('editor-text-color').value,
-            radius: document.getElementById('editor-radius').value,
-            border: document.getElementById('editor-border').value
-        };
-        localStorage.setItem('zik_theme_v2', JSON.stringify(config));
-        closeModal();
+    function finishOrder() {
         tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    function loadTheme() {
-        const saved = localStorage.getItem('zik_theme_v2');
-        if(saved) {
-            const c = JSON.parse(saved);
-            const root = document.documentElement;
-            root.style.setProperty('--button-color', c.btn);
-            root.style.setProperty('--bg-color', c.bg);
-            root.style.setProperty('--text-color', c.text);
-            root.style.setProperty('--card-radius', c.radius + 'px');
-            root.style.setProperty('--card-border-width', c.border + 'px');
-        }
-    }
-
-    function resetDesign() {
-        localStorage.removeItem('zik_theme_v2');
-        location.reload();
-    }
-
-    // --- ПРОФИЛЬ И ИСТОРИЯ ---
-    function openHistory() {
-        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
-        const container = document.getElementById('history-items-container');
-        container.innerHTML = '';
-
-        if(history.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:var(--hint-color);">У вас пока нет покупок</p>';
-        } else {
-            history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.style.marginBottom = '8px';
-                div.innerHTML = `
-                    <div style="font-size:14px;">
-                        <div style="font-weight:800;">#${item.id}</div>
-                        <div style="margin-top:2px;">${item.name}</div>
-                        <div style="font-size:11px; color:var(--hint-color); margin-top:4px;">${item.date}</div>
-                    </div>
-                    <div style="font-weight:800; color:var(--button-color);">${item.price}₽</div>
-                `;
-                container.appendChild(div);
-            });
-        }
-        openModal('history-modal');
-    }
-
-    function refreshProfileStats() {
-        const history = JSON.parse(localStorage.getItem('zik_history') || '[]');
-        const count = history.length;
-        const total = history.reduce((acc, curr) => acc + curr.price, 0);
         
-        document.getElementById('stat-orders').innerText = count;
-        document.getElementById('stat-money').innerText = total + ' ₽';
+        // Логика выдачи (демо-данные)
+        const fakeData = "LOGIN: +49176445522 | PASS: ZikrovShop_2fa_99";
+        
+        tg.showConfirm("Аккаунт успешно куплен! Отправить данные в ваш Telegram?", (ok) => {
+            if(ok) {
+                const report = `📦 ЗАКАЗ ВЫПОЛНЕН\n\n` +
+                               `Товар: ${currentOrder.name}\n` +
+                               `Данные: ${fakeData}\n` +
+                               `Чек: ${currentOrder.receipt}`;
+                
+                // В реальном боте мы шлем это через bot.send_message
+                tg.sendData(JSON.stringify({
+                    action: "order_complete",
+                    payload: report
+                }));
+                tg.close();
+            }
+        });
     }
 
-    // --- СЛУЖЕБНЫЕ ---
+    // --- АДМИН ПАНЕЛЬ ---
+    function openAdminPanel() {
+        const container = document.getElementById('admin-limit-list');
+        container.innerHTML = '';
+        
+        shopData.forEach(cat => {
+            cat.items.forEach(item => {
+                const limit = buyLimits[item.id] || 0;
+                const margin = item.price - limit;
+                
+                const group = document.createElement('div');
+                group.className = 'limit-input-group';
+                group.innerHTML = `
+                    <label>${item.name} (Цена: ${item.price}₽)</label>
+                    <input type="number" id="adm-input-${item.id}" value="${limit}" oninput="calcMargin('${item.id}', ${item.price})">
+                    <div id="margin-${item.id}" style="font-size:10px; color:var(--accent-success); margin-top:5px;">ПРИБЫЛЬ: ${margin} ₽</div>
+                `;
+                container.appendChild(group);
+            });
+        });
+        openModal('admin-modal');
+    }
+
+    function calcMargin(id, sellPrice) {
+        const buyPrice = document.getElementById(`adm-input-${id}`).value;
+        document.getElementById(`margin-${id}`).innerText = `ПРИБЫЛЬ: ${sellPrice - buyPrice} ₽`;
+    }
+
+    function saveAdminLimits() {
+        shopData.forEach(cat => {
+            cat.items.forEach(item => {
+                const val = document.getElementById(`adm-input-${item.id}`).value;
+                buyLimits[item.id] = parseInt(val);
+            });
+        });
+        localStorage.setItem('zik_buy_limits', JSON.stringify(buyLimits));
+        tg.showAlert("✅ Лимиты закупки обновлены!");
+        closeModal();
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ---
     function switchPage(page) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        
         document.getElementById(page + '-page').classList.add('active');
         document.getElementById('nav-' + page).classList.add('active');
-        
-        if(page === 'profile') refreshProfileStats();
+        tg.HapticFeedback.impactOccurred('light');
     }
 
-    function openModal(id) {
-        document.getElementById(id).classList.add('active');
-    }
-
-    function closeModal() {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-    }
-
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     function copyData(id) {
-        const text = document.getElementById(id).innerText;
-        navigator.clipboard.writeText(text);
+        navigator.clipboard.writeText(document.getElementById(id).innerText);
         tg.showAlert("Скопировано!");
     }
 
-    function rgbToHex(rgb) {
-        if(!rgb || rgb.startsWith('#')) return rgb || '#007aff';
-        const parts = rgb.match(/\d+/g);
-        if(!parts) return '#007aff';
-        return "#" + parts.slice(0, 3).map(x => {
-            const hex = parseInt(x).toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-        }).join("");
-    }
-
-    // Старт
-    initApp();
+    init();
 </script>
-
 </body>
 </html>
+
