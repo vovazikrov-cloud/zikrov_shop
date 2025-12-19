@@ -3,765 +3,670 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zikrov Market OS v20.0 | Full API Integration</title>
+    <title>Zikrov Elite Market v3.0</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
     <style>
         /* ================================================================
-           1. CSS ARCHITECTURE: THEME & DESIGN SYSTEM
+           1. CSS DESIGN SYSTEM (DEEP DARK ENTERPRISE)
            ================================================================
         */
         :root {
-            --bg-color: #050505;
-            --surface-color: #121214;
-            --surface-lighter: #1c1c1f;
-            --accent-primary: #007aff;
-            --accent-glow: rgba(0, 122, 255, 0.4);
+            --bg-base: #000000;
+            --bg-surface: #0a0a0b;
+            --bg-card: #111113;
+            --bg-elevated: #1c1c1e;
+            
+            --accent: #007aff;
+            --accent-gradient: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
+            --accent-soft: rgba(0, 122, 255, 0.15);
+            
+            --success: #32d74b;
+            --warning: #ffd60a;
+            --error: #ff453a;
+            
             --text-main: #ffffff;
-            --text-dim: #a0a0a5;
-            --text-darker: #636366;
-            --status-success: #32d74b;
-            --status-error: #ff453a;
-            --status-warning: #ffd60a;
-            --border-style: 1px solid rgba(255, 255, 255, 0.08);
-            --radius-xl: 24px;
-            --radius-lg: 16px;
-            --radius-md: 12px;
-            --safe-area-bottom: env(safe-area-inset-bottom);
-            --font-main: 'Montserrat', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --text-secondary: #8e8e93;
+            --text-muted: #48484a;
+            
+            --border: rgba(255, 255, 255, 0.06);
+            --border-bright: rgba(255, 255, 255, 0.12);
+            
+            --radius-xs: 8px;
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+            
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Reset & Base */
+        /* Reset & Global */
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: var(--font-main);
+            font-family: 'Inter', -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-base);
             color: var(--text-main);
-            line-height: 1.5;
             overflow-x: hidden;
-            -webkit-user-select: none;
-            user-select: none;
+            width: 100%;
+            min-height: 100vh;
+            padding-bottom: calc(100px + var(--safe-bottom));
         }
 
-        .container {
-            padding: 0 16px;
-            max-width: 650px;
-            margin: 0 auto;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 0; }
 
+        /* Typography */
+        h1 { font-size: 34px; font-weight: 850; letter-spacing: -1.5px; line-height: 1.1; }
+        h2 { font-size: 22px; font-weight: 750; letter-spacing: -0.5px; }
+        h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+        p { font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+
+        /* Layout Helpers */
+        .container { padding: 0 20px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .flex-row { display: flex; align-items: center; justify-content: space-between; }
         .hidden { display: none !important; }
+        .anim-fade { animation: fadeIn 0.4s ease-out; }
 
-        /* Animations */
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes pulse-border {
-            0% { border-color: rgba(0, 122, 255, 0.2); }
-            50% { border-color: rgba(0, 122, 255, 0.8); }
-            100% { border-color: rgba(0, 122, 255, 0.2); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ================================================================
-           2. UI COMPONENTS: BUTTONS, INPUTS, CARDS
+           2. UI COMPONENTS
            ================================================================
         */
-        .header {
-            padding: 40px 16px 20px;
-            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+
+        /* Buttons */
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; border: none; border-radius: var(--radius-md);
+            padding: 18px; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
         }
 
-        .header h1 {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
+        .btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3); }
+        .btn-secondary { background: var(--bg-elevated); color: white; border: 1px solid var(--border-bright); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); padding: 10px; }
+        .btn-danger { background: var(--error); color: white; }
 
-        /* Category Grid */
-        .cat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 10px;
-        }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
 
-        .cat-item {
-            background: var(--surface-color);
-            border: var(--border-style);
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 24px 16px;
-            text-align: center;
-            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .cat-item:active {
-            transform: scale(0.95);
-            background: var(--surface-lighter);
-        }
-
-        .cat-item .emoji {
-            font-size: 40px;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .cat-item .label {
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        /* Product Cards */
-        .product-list { margin-top: 20px; }
-        .product-card {
-            background: var(--surface-color);
-            border: var(--border-style);
-            border-radius: var(--radius-lg);
-            padding: 18px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .prod-meta h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-        .prod-details { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .price-tag {
-            font-size: 19px;
-            font-weight: 800;
-            color: var(--accent-primary);
-        }
-
-        /* Navigation Bar */
-        .nav-bar {
-            position: fixed;
-            bottom: 0; width: 100%;
-            background: rgba(10, 10, 12, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: var(--border-style);
-            display: flex;
-            padding: 12px 0 calc(12px + var(--safe-area-bottom));
-            z-index: 1000;
-        }
-
-        .nav-link {
-            flex: 1;
-            text-align: center;
-            color: var(--text-darker);
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 700;
-            transition: 0.2s;
-        }
-
-        .nav-link.active { color: var(--accent-primary); }
-        .nav-link svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
-
-        /* ================================================================
-           3. SPECIAL VIEWS: ADMIN PANEL & PAYMENT MODAL
-           ================================================================
-        */
-        .admin-view { padding-bottom: 100px; }
-        .admin-section {
-            background: var(--surface-color);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid rgba(255, 69, 58, 0.2);
-        }
-
-        .input-box { margin-bottom: 16px; }
-        .input-box label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-dim);
-            margin-bottom: 6px;
-            margin-left: 4px;
-        }
-
-        .input-box input, .input-box select, .input-box textarea {
-            width: 100%;
-            background: #1a1a1c;
-            border: var(--border-style);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-        }
-
-        .input-box input:focus { border-color: var(--accent-primary); }
-
-        .btn-action {
-            width: 100%;
-            padding: 16px;
-            background: var(--accent-primary);
-            border: none;
-            border-radius: var(--radius-md);
-            color: #fff;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 8px 20px var(--accent-glow);
-        }
-
-        /* Payment Modal */
-        .overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 2000;
-            display: none;
-            align-items: flex-end;
-            backdrop-filter: blur(8px);
-        }
-
-        .overlay.active { display: flex; }
-
-        .bottom-sheet {
-            width: 100%;
-            background: var(--surface-color);
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-            padding: 30px 20px calc(40px + var(--safe-area-bottom));
-            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* Screenshot Area */
-        .upload-area {
-            border: 2px dashed #2c2c2e;
-            border-radius: var(--radius-lg);
-            padding: 40px 20px;
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
+            padding: 24px;
+            margin-bottom: 16px;
             transition: 0.3s;
         }
 
-        .upload-area.hover { border-color: var(--accent-primary); background: rgba(0,122,255,0.05); }
-        .upload-area input { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; }
-        .upload-area img { width: 100%; border-radius: 8px; margin-top: 15px; display: none; }
+        .card-active:active { background: var(--bg-elevated); border-color: var(--accent); }
 
-        /* Logs Console */
-        .console {
-            background: #000;
-            font-family: var(--font-mono);
-            font-size: 10px;
-            padding: 15px;
-            border-radius: 12px;
-            color: #00ff41;
-            height: 150px;
-            overflow-y: auto;
-            margin-top: 20px;
-            border: 1px solid #1a1a1a;
+        /* Inputs */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-left: 4px; }
+        .input-field {
+            width: 100%; background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 16px; color: white;
+            font-size: 15px; outline: none; transition: 0.2s;
+        }
+        .input-field:focus { border-color: var(--accent); background: #151517; }
+
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(85px + var(--safe-bottom));
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around;
+            padding: 10px 10px var(--safe-bottom);
+            z-index: 1000;
         }
 
-        /* ================================================================
-           4. SKELETONS & LOADERS
-           ================================================================
-        */
-        .loader {
-            width: 48px; height: 48px;
-            border: 5px solid #FFF;
-            border-bottom-color: var(--accent-primary);
-            border-radius: 50%;
-            display: inline-block;
-            animation: rotation 1s linear infinite;
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); text-decoration: none; width: 20%;
+            transition: 0.2s;
         }
 
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .nav-item.active { color: var(--accent); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 6px; fill: currentColor; }
+        .nav-item span { font-size: 10px; font-weight: 700; }
+
+        /* Badges */
+        .badge {
+            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
+        .badge-success { background: rgba(50, 215, 75, 0.1); color: var(--success); }
+        .badge-blue { background: var(--accent-soft); color: var(--accent); }
+
+        /* Bottom Sheet (Payment Modal) */
+        .sheet-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            display: none; align-items: flex-end;
+        }
+        .sheet-overlay.active { display: flex; }
+        .sheet {
+            background: var(--bg-card); width: 100%; border-radius: 32px 32px 0 0;
+            padding: 32px 24px calc(40px + var(--safe-bottom));
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .sheet-overlay.active .sheet { transform: translateY(0); }
 
     </style>
 </head>
 <body>
 
-    <main id="screen-market" class="view anim-fade">
-        <header class="header">
-            <h1>Магазин</h1>
-            <p style="color: var(--text-dim); font-size: 13px;">Аккаунты Telegram с автовыдачей</p>
+    <div id="view-market" class="view anim-fade">
+        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
+            <p id="welcome-text">Premium Accounts</p>
+            <h1>Elite Market</h1>
         </header>
-        
+
         <div class="container">
-            <div id="cat-grid" class="cat-grid">
+            <div id="cat-render-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px;">
                 </div>
 
             <div id="product-view" class="hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-                    <h2 id="cat-title" style="font-size: 20px; font-weight: 700;">Товары</h2>
-                    <button onclick="Router.showCats()" style="background:none; border:none; color:var(--accent-primary); font-weight:700;">← Назад</button>
+                <div class="flex-row" style="margin-bottom: 20px;">
+                    <h2 id="current-cat-name">Category</h2>
+                    <button class="btn-ghost" onclick="Router.back()">← Назад</button>
                 </div>
-                <div id="product-list" class="product-list"></div>
+                <div id="product-render-list">
+                    </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <section id="screen-profile" class="view hidden">
-        <header class="header">
-            <h1>Профиль</h1>
+    <div id="view-profile" class="view hidden anim-fade">
+        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
+            <h1>Мой Кабинет</h1>
         </header>
+
         <div class="container">
-            <div class="cat-item" style="display: flex; align-items: center; gap: 15px; text-align: left; width: 100%;">
-                <div id="u-avatar" style="width:60px; height:60px; border-radius:50%; background:var(--accent-primary); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800;">?</div>
+            <div class="card" style="display: flex; gap: 20px; align-items: center;">
+                <div id="u-avatar" style="width: 70px; height: 70px; border-radius: 24px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: white;">?</div>
                 <div>
                     <h2 id="u-name">User</h2>
-                    <p style="color:var(--text-dim); font-size:12px;">UID: <span id="u-id">0</span></p>
+                    <p id="u-id-display">ID: 000000</p>
                 </div>
             </div>
 
-            <div style="margin-top:20px;">
-                <button class="btn-action" style="background:#1c1c1e; box-shadow:none; margin-bottom:10px;" onclick="Logic.showHistory()">🕒 История заказов</button>
-                <button id="admin-btn" class="btn-action hidden" style="background: #ff453a; box-shadow: 0 8px 20px rgba(255, 69, 58, 0.3);" onclick="Router.go('admin')">⚙️ Админ-панель</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="card" style="margin-bottom: 0; padding: 20px;">
+                    <h3 style="font-size: 11px; text-transform: uppercase; margin-bottom: 5px;">Сделок</h3>
+                    <div id="stat-deals" style="font-size: 24px; font-weight: 850;">0</div>
+                </div>
+                <div class="card" style="margin-bottom: 0; padding: 20px;">
+                    <h3 style="font-size: 11px; text-transform: uppercase; margin-bottom: 5px;">Потрачено</h3>
+                    <div id="stat-spent" style="font-size: 24px; font-weight: 850; color: var(--accent);">0 ₽</div>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="Logic.showHistory()" style="margin-bottom: 12px;">🕒 История покупок</button>
+            <button class="btn btn-secondary" onclick="TG.openTelegramLink('https://t.me/Z1KROV')">🆘 Поддержка</button>
+
+            <div id="admin-access" class="hidden" style="margin-top: 40px;">
+                <div style="background: rgba(255, 69, 58, 0.1); border: 1px dashed var(--error); padding: 20px; border-radius: 20px;">
+                    <h3 style="color: var(--error); margin-bottom: 10px;">ROOT ACCESS DETECTED</h3>
+                    <button class="btn btn-danger" onclick="Router.go('admin')">ВОЙТИ В АДМИН-ПАНЕЛЬ</button>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section id="screen-admin" class="view hidden">
-        <header class="header">
-            <h1 style="color: var(--status-error);">Admin Panel</h1>
+    <div id="view-admin" class="view hidden anim-fade">
+        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
+            <button class="btn-ghost" onclick="Router.go('profile')" style="margin-left: -10px;">← Назад</button>
+            <h1 style="color: var(--error);">Console v3.0</h1>
         </header>
-        <div class="container admin-view">
-            <button onclick="Router.go('profile')" style="background:none; border:none; color:var(--text-dim); font-weight:700; margin-bottom:15px;">← Выйти из админки</button>
+
+        <div class="container" style="padding-bottom: 50px;">
             
-            <div class="admin-section">
-                <h3 style="margin-bottom:15px;">Настройки API</h3>
-                <div class="input-box">
+            <div class="card">
+                <h2>Конфигурация</h2>
+                <div class="input-group" style="margin-top: 20px;">
                     <label>LOLZ MARKET TOKEN</label>
-                    <input type="password" id="adm-lolz-token" placeholder="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJzdWIiOjU3NzQxOTcsImlzcyI6Imx6dCIsImlhdCI6MTc2NjE1Mjg1MiwianRpIjoiODk4NTUzIiwic2NvcGUiOiJiYXNpYyByZWFkIHBvc3QgY29udmVyc2F0ZSBwYXltZW50IGludm9pY2UgY2hhdGJveCBtYXJrZXQiLCJleHAiOjE5MjM4MzI4NTJ9.tnYGD1LYkhLXKS3-OKqN28hirnz9782jiHU2eo6kotkE4-eAappDadFRnX4vLsSBc0zihc2M1oZt9EYx_Fex17Wxue9Vu7sLz61P8ujeSjUb-CWpPYVXPBIfcMJyJ_RBYXvdjJQTlxCxtiIS1l1EJIbukgJhe78RTxhuLy4lFRE">
+                    <input type="password" id="adm-lolz-token" class="input-field" placeholder="api_key_here">
                 </div>
-                <div class="input-box">
-                    <label>TELEGRAM BOT TOKEN (Для уведомлений)</label>
-                    <input type="password" id="adm-bot-token" placeholder="8376191518:AAGKsCRld5dFXqF0Ltr4x5KbHoUZamiUesk">
+                <div class="input-group">
+                    <label>Текст оплаты (Крипта)</label>
+                    <textarea id="adm-pay-crypto" class="input-field" style="height: 80px;">Переведите USDT на адрес ниже...</textarea>
                 </div>
-                <div class="input-box">
-                    <label>ADMIN CHAT ID</label>
-                    <input type="text" id="adm-chat-id" placeholder="1577146268">
+                <div class="input-group">
+                    <label>Текст оплаты (Карта)</label>
+                    <textarea id="adm-pay-card" class="input-field" style="height: 80px;">Переведите на карту Тинькофф...</textarea>
                 </div>
-                <button class="btn-action" style="padding:10px; font-size:14px;" onclick="Admin.saveConfig()">Сохранить конфиг</button>
+                <button class="btn btn-primary" onclick="Admin.saveGlobalConfig()">Сохранить настройки</button>
             </div>
 
-            <div class="admin-section">
-                <h3 style="margin-bottom:15px;">Добавить товар</h3>
-                <div class="input-box">
-                    <label>Название товара</label>
-                    <input type="text" id="p-name" placeholder="TG | Авторег | RU">
+            <div class="card">
+                <h2>Добавить Категорию</h2>
+                <div class="input-group" style="margin-top: 15px;">
+                    <input type="text" id="adm-cat-name" class="input-field" placeholder="Название (напр. Telegram RU)">
                 </div>
-                <div class="input-box">
+                <button class="btn btn-secondary" onclick="Admin.addCategory()">Создать категорию</button>
+            </div>
+
+            <div class="card">
+                <h2>Новый Товар (LOLZ SYNC)</h2>
+                <div class="input-group" style="margin-top: 15px;">
+                    <label>Название в магазине</label>
+                    <input type="text" id="adm-p-name" class="input-field" placeholder="TG Авторег 2FA">
+                </div>
+                <div class="input-group">
+                    <label>Категория</label>
+                    <select id="adm-p-cat-select" class="input-field"></select>
+                </div>
+                <div class="input-group">
                     <label>Ваша цена (Фикс в рублях)</label>
-                    <input type="number" id="p-price" placeholder="150">
+                    <input type="number" id="adm-p-price" class="input-field" placeholder="150">
                 </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+                <p style="font-size: 11px; color: var(--accent); font-weight: 800; margin-bottom: 10px;">ПАРАМЕТРЫ ПАРСИНГА LOLZ</p>
                 
-                <hr style="opacity:0.1; margin: 15px 0;">
-                <p style="font-size:10px; color:var(--accent-primary); margin-bottom:10px; font-weight:800;">ПАРАМЕТРЫ LOLZ MARKET</p>
-                
-                <div class="input-box">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="input-group">
+                        <label>Мин. цена Lolz</label>
+                        <input type="number" id="adm-lz-min" class="input-field" placeholder="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Макс. цена Lolz</label>
+                        <input type="number" id="adm-lz-max" class="input-field" placeholder="100">
+                    </div>
+                </div>
+
+                <div class="input-group">
                     <label>Происхождение</label>
-                    <select id="p-lz-origin">
+                    <select id="adm-lz-origin" class="input-field">
                         <option value="autoreg">Авторег</option>
                         <option value="brute">Брут</option>
                         <option value="owner">Личный</option>
                         <option value="resale">Перепродажа</option>
                     </select>
                 </div>
-                <div class="input-box">
-                    <label>Поисковый запрос (Заголовок на Лолзе)</label>
-                    <input type="text" id="p-lz-query" placeholder="Telegram">
+
+                <div class="input-group">
+                    <label>Ключевое слово в заголовке</label>
+                    <input type="text" id="adm-lz-query" class="input-field" placeholder="Telegram">
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <div class="input-box">
-                        <label>Мин. цена Lolz</label>
-                        <input type="number" id="p-lz-min" placeholder="10">
-                    </div>
-                    <div class="input-box">
-                        <label>Макс. цена Lolz</label>
-                        <input type="number" id="p-lz-max" placeholder="100">
-                    </div>
-                </div>
-                
-                <button class="btn-action" style="background:var(--status-success);" onclick="Admin.addProduct()">СОЗДАТЬ ТОВАР</button>
+
+                <button class="btn btn-primary" onclick="Admin.addProduct()">Опубликовать товар</button>
             </div>
 
-            <div class="console" id="admin-log">
-                > System ready. Version 20.0
-            </div>
+            <button class="btn btn-secondary" onclick="Admin.resetAllData()" style="color: var(--error);">⚠️ СБРОСИТЬ ВСЕ ДАННЫЕ</button>
         </div>
-    </section>
+    </div>
 
-    <div id="pay-overlay" class="overlay">
-        <div class="bottom-sheet">
-            <h2 id="pay-title" style="font-size: 24px; font-weight: 800; margin-bottom: 5px;">Оплата</h2>
-            <p id="pay-price" style="font-size: 28px; font-weight: 900; color: var(--accent-primary);">0 ₽</p>
+    <div id="pay-sheet-overlay" class="sheet-overlay" onclick="UI.closePaymentSheet()">
+        <div class="sheet" onclick="event.stopPropagation()">
+            <div style="width: 40px; height: 5px; background: var(--text-muted); border-radius: 10px; margin: 0 auto 25px;"></div>
+            <h2 id="pay-sheet-title">Выбор оплаты</h2>
+            <p id="pay-sheet-price" style="font-size: 28px; font-weight: 900; color: var(--accent); margin: 10px 0 25px;">0 ₽</p>
             
-            <div style="background:#1a1a1c; padding:15px; border-radius:12px; margin: 20px 0;">
-                <p style="font-size:12px; color:var(--text-dim); margin-bottom:4px;">Реквизиты для оплаты (Карта):</p>
-                <p style="font-size:18px; font-weight:700; letter-spacing:1px;">2202 2022 0000 1111</p>
-                <p style="font-size:10px; color:var(--accent-primary); margin-top:5px;">Нажмите, чтобы скопировать</p>
+            <div id="pay-step-1">
+                <button class="btn btn-secondary" style="margin-bottom: 12px; justify-content: flex-start; padding-left: 20px;" onclick="Logic.selectPaymentMethod('card')">
+                    <span style="font-size: 24px;">💳</span> 
+                    <div style="text-align: left;">
+                        <div style="font-weight: 700;">Банковская карта</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">РФ / СНГ / Мир</div>
+                    </div>
+                </button>
+                <button class="btn btn-secondary" style="justify-content: flex-start; padding-left: 20px;" onclick="Logic.selectPaymentMethod('crypto')">
+                    <span style="font-size: 24px;">💎</span>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 700;">Криптовалюта</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">USDT / BTC / TON</div>
+                    </div>
+                </button>
             </div>
 
-            <p style="font-size:13px; font-weight:600;">Загрузите скриншот чека:</p>
-            <div class="upload-area" id="drop-area">
-                <span id="upload-label">Выбрать файл</span>
-                <input type="file" id="screenshot-input" accept="image/*" onchange="Payment.handleFile(this)">
-                <img id="screenshot-preview" src="#">
-            </div>
-
-            <div id="pay-actions">
-                <button class="btn-action" onclick="Payment.sendForVerification()">ОТПРАВИТЬ ЧЕК</button>
-                <button class="btn-action" style="background:none; box-shadow:none; color:var(--text-darker);" onclick="Router.closeModal()">Отмена</button>
-            </div>
-
-            <div id="pay-status" class="hidden" style="text-align:center;">
-                <span class="loader"></span>
-                <p style="margin-top:15px; font-weight:700; color:var(--status-warning);">Ждем подтверждения от админа...</p>
-                <p style="font-size:12px; color:var(--text-dim); margin-top:5px;">Это обычно занимает 1-5 минут</p>
+            <div id="pay-step-2" class="hidden">
+                <div id="pay-instruction-text" style="background: var(--bg-surface); padding: 15px; border-radius: 15px; font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+                    Инструкция...
+                </div>
+                <button class="btn btn-primary" onclick="Logic.submitPaymentVerification()">Я ОПЛАТИЛ</button>
+                <button class="btn btn-ghost" onclick="Logic.resetPaymentSteps()">← Назад</button>
             </div>
         </div>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-link active" onclick="Router.go('market')">
+        <a href="javascript:void(0)" class="nav-item active" onclick="Router.go('market')">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            МАРКЕТ
-        </div>
-        <div class="nav-link" onclick="Router.go('profile')">
+            <span>МАРКЕТ</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="Router.go('profile')">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            ПРОФИЛЬ
-        </div>
+            <span>ПРОФИЛЬ</span>
+        </a>
     </nav>
 
     <script>
+        const TG = window.Telegram.WebApp;
+
         /**
-         * GLOBAL STATE
+         * DB & STATE MANAGEMENT
          */
-        const State = {
-            categories: [
-                { id: 'tg_accs', name: 'Telegram Аккаунты', emoji: '📱', lz_cat: 2 }
-            ],
-            products: JSON.parse(localStorage.getItem('zk_products')) || [],
-            history: JSON.parse(localStorage.getItem('zk_history')) || [],
-            config: JSON.parse(localStorage.getItem('zk_config')) || {
+        const App = {
+            Config: JSON.parse(localStorage.getItem('z_cfg')) || {
+                admin_id: 1577146268, // ЗАМЕНИТЕ НА СВОЙ ID
                 lolz_token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJzdWIiOjU3NzQxOTcsImlzcyI6Imx6dCIsImlhdCI6MTc2NjE1Mjg1MiwianRpIjoiODk4NTUzIiwic2NvcGUiOiJiYXNpYyByZWFkIHBvc3QgY29udmVyc2F0ZSBwYXltZW50IGludm9pY2UgY2hhdGJveCBtYXJrZXQiLCJleHAiOjE5MjM4MzI4NTJ9.tnYGD1LYkhLXKS3-OKqN28hirnz9782jiHU2eo6kotkE4-eAappDadFRnX4vLsSBc0zihc2M1oZt9EYx_Fex17Wxue9Vu7sLz61P8ujeSjUb-CWpPYVXPBIfcMJyJ_RBYXvdjJQTlxCxtiIS1l1EJIbukgJhe78RTxhuLy4lFRE',
-                bot_token: '8376191518:AAGKsCRld5dFXqF0Ltr4x5KbHoUZamiUesk',
-                admin_chat_id: '-1003358354858',
-                admin_uid: 1577146268 // ВАШ ID
+                pay_crypto: 'Переведите USDT TRC-20 на адрес: TXxxxxx...',
+                pay_card: 'Переведите на карту: 4400 1122 3344 5566'
             },
-            user: window.Telegram.WebApp.initDataUnsafe.user || { id: 0, first_name: 'Tester' },
-            activeProduct: null,
-            pollingInterval: null
+            Data: {
+                categories: JSON.parse(localStorage.getItem('z_cats')) || [],
+                products: JSON.parse(localStorage.getItem('z_prods')) || [],
+                orders: JSON.parse(localStorage.getItem('z_orders')) || []
+            },
+            State: {
+                user: TG.initDataUnsafe.user || { id: 0, first_name: 'Tester' },
+                activeCat: null,
+                activeProd: null,
+                activeMethod: null
+            }
         };
 
         /**
          * ROUTER SYSTEM
          */
         const Router = {
-            go(screen) {
+            go(view) {
                 document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-                document.getElementById(`screen-${screen}`).classList.remove('hidden');
+                document.getElementById('view-' + view).classList.remove('hidden');
                 
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                if(screen === 'market') document.querySelectorAll('.nav-link')[0].classList.add('active');
-                if(screen === 'profile') document.querySelectorAll('.nav-link')[1].classList.add('active');
+                // Nav UI
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                if(view === 'market') document.querySelectorAll('.nav-item')[0].classList.add('active');
+                if(view === 'profile') document.querySelectorAll('.nav-item')[1].classList.add('active');
                 
-                window.Telegram.WebApp.HapticFeedback.selectionChanged();
+                TG.HapticFeedback.selectionChanged();
+                window.scrollTo(0,0);
             },
-
-            showCats() {
-                document.getElementById('cat-grid').classList.remove('hidden');
+            back() {
+                document.getElementById('cat-render-grid').classList.remove('hidden');
                 document.getElementById('product-view').classList.add('hidden');
-            },
-
-            openModal() { document.getElementById('pay-overlay').classList.add('active'); },
-            closeModal() { 
-                document.getElementById('pay-overlay').classList.remove('active'); 
-                clearInterval(State.pollingInterval);
             }
         };
 
         /**
-         * LOLZ MARKET & TELEGRAM API BRIDGE
+         * LOLZ API SERVICE
          */
-        const API = {
-            // Реальная отправка скриншота админу через Бот API
-            async sendScreenshotToAdmin(photoFile, price, prodName) {
-                if(!State.config.bot_token || !State.config.admin_chat_id) {
-                    window.Telegram.WebApp.showAlert("Ошибка: Бот не настроен в админке!");
-                    return false;
-                }
-
-                const formData = new FormData();
-                formData.append('chat_id', State.config.admin_chat_id);
-                formData.append('photo', photoFile);
-                formData.append('caption', 
-                    `💰 НОВЫЙ ЗАКАЗ\n\n` +
-                    `👤 Клиент: ${State.user.first_name} (@${State.user.username || 'n/a'})\n` +
-                    `📦 Товар: ${prodName}\n` +
-                    `💵 Сумма: ${price} ₽\n\n` +
-                    `👇 Нажми кнопку в боте, чтобы выдать товар.`
-                );
-
-                try {
-                    const res = await fetch(`https://api.telegram.org/bot${State.config.bot_token}/sendPhoto`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    return res.ok;
-                } catch (e) {
-                    console.error(e);
-                    return false;
-                }
-            },
-
-            // Имитация API поиска на Lolz
-            async searchAndBuyOnLolz(params) {
-                Admin.log(`Searching Lolz Market (Cat: 2, Query: ${params.query})...`);
-                
-                // В реальности тут fetch к https://api.lzt.market/list...
-                // С токеном из State.config.lolz_token
-                
+        const LolzAPI = {
+            async searchItem(params) {
+                // Имитация запроса к маркету (реально через ваш прокси/сервер)
                 return new Promise(resolve => {
                     setTimeout(() => {
                         resolve({
-                            success: true,
-                            item_id: Math.floor(Math.random() * 100000),
-                            data: "SESSION_STRING_AUTH:" + Math.random().toString(36).substring(7).toUpperCase()
+                            item_id: Math.floor(Math.random() * 999999),
+                            title: params.query,
+                            price: params.min,
+                            creds: "LOG:PASS:2FA_TOKEN_" + Math.random().toString(36).substr(2, 5).toUpperCase()
                         });
-                    }, 2000);
+                    }, 1500);
                 });
             }
         };
 
         /**
-         * PAYMENT LOGIC
+         * LOGIC CONTROLLER
          */
-        const Payment = {
-            handleFile(input) {
-                const file = input.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const preview = document.getElementById('screenshot-preview');
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                        document.getElementById('upload-label').style.display = 'none';
-                        document.getElementById('drop-area').classList.add('hover');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            },
-
-            async sendForVerification() {
-                const fileInput = document.getElementById('screenshot-input');
-                if(!fileInput.files[0]) {
-                    window.Telegram.WebApp.showAlert("Прикрепите фото чека!");
-                    return;
-                }
-
-                document.getElementById('pay-actions').classList.add('hidden');
-                document.getElementById('pay-status').classList.remove('hidden');
-
-                const success = await API.sendScreenshotToAdmin(
-                    fileInput.files[0], 
-                    State.activeProduct.price, 
-                    State.activeProduct.name
-                );
-
-                if(success) {
-                    // Начинаем "опрос" сервера/бота на предмет кнопки "Принять"
-                    this.startStatusPolling();
-                } else {
-                    window.Telegram.WebApp.showAlert("Ошибка отправки. Проверьте настройки бота.");
-                    document.getElementById('pay-actions').classList.remove('hidden');
-                    document.getElementById('pay-status').classList.add('hidden');
-                }
-            },
-
-            startStatusPolling() {
-                // Имитация ожидания нажатия кнопки админом
-                // В реальности вы бы проверяли БД или Webhook
-                State.pollingInterval = setTimeout(async () => {
-                    const result = await API.searchAndBuyOnLolz(State.activeProduct);
-                    if(result.success) {
-                        this.finalizeOrder(result.data);
-                    }
-                }, 5000);
-            },
-
-            finalizeOrder(creds) {
-                const order = {
-                    id: Date.now(),
-                    name: State.activeProduct.name,
-                    price: State.activeProduct.price,
-                    date: new Date().toLocaleString(),
-                    creds: creds
-                };
-
-                State.history.unshift(order);
-                localStorage.setItem('zk_history', JSON.stringify(State.history));
-                
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                Router.closeModal();
-                
-                window.Telegram.WebApp.showConfirm(`Оплата принята!\n\nДанные аккаунта:\n${creds}`, (ok) => {
-                    if(ok) {
-                        navigator.clipboard.writeText(creds);
-                        window.Telegram.WebApp.showAlert("Данные скопированы!");
-                    }
-                    Router.go('profile');
-                });
-            }
-        };
-
-        /**
-         * ADMIN LOGIC
-         */
-        const Admin = {
-            log(msg) {
-                const el = document.getElementById('admin-log');
-                el.innerHTML += `<br>> [${new Date().toLocaleTimeString()}] ${msg}`;
-                el.scrollTop = el.scrollHeight;
-            },
-
-            saveConfig() {
-                State.config.lolz_token = document.getElementById('adm-lolz-token').value;
-                State.config.bot_token = document.getElementById('adm-bot-token').value;
-                State.config.admin_chat_id = document.getElementById('adm-chat-id').value;
-                
-                localStorage.setItem('zk_config', JSON.stringify(State.config));
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                this.log("Configuration saved successfully.");
-                window.Telegram.WebApp.showAlert("Настройки сохранены!");
-            },
-
-            addProduct() {
-                const name = document.getElementById('p-name').value;
-                const price = document.getElementById('p-price').value;
-                const origin = document.getElementById('p-lz-origin').value;
-                const query = document.getElementById('p-lz-query').value;
-                const min = document.getElementById('p-lz-min').value;
-                const max = document.getElementById('p-lz-max').value;
-
-                if(!name || !price) return window.Telegram.WebApp.showAlert("Заполните имя и цену!");
-
-                const product = {
-                    id: Date.now(),
-                    name, price: Number(price),
-                    origin, query, min, max
-                };
-
-                State.products.push(product);
-                localStorage.setItem('zk_products', JSON.stringify(State.products));
-                
-                this.log(`Added: ${name} (Fixed: ${price} RUB)`);
-                UI.renderProducts();
-                window.Telegram.WebApp.showAlert("Товар добавлен!");
-            }
-        };
-
-        /**
-         * UI RENDERER
-         */
-        const UI = {
+        const Logic = {
             init() {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
+                TG.ready();
+                TG.expand();
                 
                 this.renderCategories();
                 this.updateProfile();
                 
-                // Авто-заполнение админки
-                document.getElementById('adm-lolz-token').value = State.config.lolz_token;
-                document.getElementById('adm-bot-token').value = State.config.bot_token;
-                document.getElementById('adm-chat-id').value = State.config.admin_chat_id;
+                // Проверка админа
+                if(App.State.user.id == App.Config.admin_id) {
+                    document.getElementById('admin-access').classList.remove('hidden');
+                }
+
+                // Загрузка настроек в админку
+                document.getElementById('adm-lolz-token').value = App.Config.lolz_token;
+                document.getElementById('adm-pay-crypto').value = App.Config.pay_crypto;
+                document.getElementById('adm-pay-card').value = App.Config.pay_card;
             },
 
             renderCategories() {
-                const grid = document.getElementById('cat-grid');
-                grid.innerHTML = State.categories.map(c => `
-                    <div class="cat-item" onclick="UI.openCategory('${c.id}')">
-                        <span class="emoji">${c.emoji}</span>
-                        <span class="label">${c.name}</span>
+                const grid = document.getElementById('cat-render-grid');
+                if(App.Data.categories.length === 0) {
+                    grid.innerHTML = '<p style="grid-column: 1/3; text-align: center; padding: 40px;">Товаров пока нет...</p>';
+                    return;
+                }
+                grid.innerHTML = App.Data.categories.map(c => `
+                    <div class="card card-active" style="padding: 30px 15px; text-align: center; margin-bottom: 0;" onclick="Logic.openCategory('${c.id}')">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
+                        <div style="font-weight: 800; font-size: 15px;">${c.name}</div>
                     </div>
                 `).join('');
+                Admin.updateCatSelect();
             },
 
             openCategory(id) {
-                const cat = State.categories.find(c => c.id === id);
-                document.getElementById('cat-title').innerText = cat.name;
-                document.getElementById('cat-grid').classList.add('hidden');
+                const cat = App.Data.categories.find(x => x.id == id);
+                App.State.activeCat = cat;
+                
+                document.getElementById('current-cat-name').innerText = cat.name;
+                document.getElementById('cat-render-grid').classList.add('hidden');
                 document.getElementById('product-view').classList.remove('hidden');
-                this.renderProducts();
+                
+                this.renderProducts(id);
+                TG.HapticFeedback.impactOccurred('medium');
             },
 
-            renderProducts() {
-                const list = document.getElementById('product-list');
-                list.innerHTML = State.products.map(p => `
-                    <div class="product-card" onclick="UI.selectProduct(${p.id})">
-                        <div class="prod-meta">
-                            <h3>${p.name}</h3>
-                            <div class="prod-details">${p.origin} • LOZ SYNC</div>
+            renderProducts(catId) {
+                const list = document.getElementById('product-render-list');
+                const prods = App.Data.products.filter(p => p.catId == catId);
+                
+                if(prods.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; padding: 30px;">Нет товаров в этой категории</p>';
+                    return;
+                }
+
+                list.innerHTML = prods.map(p => `
+                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 18px;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 16px; margin-bottom: 4px;">${p.name}</div>
+                            <div class="badge badge-blue">Lolz Sync</div>
                         </div>
-                        <div class="price-tag">${p.price} ₽</div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 18px; font-weight: 900; color: var(--accent);">${p.price} ₽</div>
+                            <button class="btn btn-primary" style="padding: 8px 15px; font-size: 12px; margin-top: 8px;" onclick="Logic.openPayment('${p.id}')">Купить</button>
+                        </div>
                     </div>
                 `).join('');
             },
 
-            selectProduct(id) {
-                const p = State.products.find(x => x.id === id);
-                State.activeProduct = p;
+            openPayment(id) {
+                const prod = App.Data.products.find(x => x.id == id);
+                App.State.activeProd = prod;
                 
-                document.getElementById('pay-title').innerText = p.name;
-                document.getElementById('pay-price').innerText = p.price + ' ₽';
+                document.getElementById('pay-sheet-price').innerText = prod.price + ' ₽';
+                UI.openPaymentSheet();
+            },
+
+            selectPaymentMethod(method) {
+                App.State.activeMethod = method;
+                document.getElementById('pay-step-1').classList.add('hidden');
+                document.getElementById('pay-step-2').classList.remove('hidden');
                 
-                // Сброс загрузки
-                document.getElementById('screenshot-preview').style.display = 'none';
-                document.getElementById('upload-label').style.display = 'block';
-                document.getElementById('drop-area').classList.remove('hover');
-                document.getElementById('pay-actions').classList.remove('hidden');
-                document.getElementById('pay-status').classList.add('hidden');
-                
-                Router.openModal();
+                const text = method === 'card' ? App.Config.pay_card : App.Config.pay_crypto;
+                document.getElementById('pay-instruction-text').innerText = text;
+                TG.HapticFeedback.impactOccurred('light');
+            },
+
+            resetPaymentSteps() {
+                document.getElementById('pay-step-1').classList.remove('hidden');
+                document.getElementById('pay-step-2').classList.add('hidden');
+            },
+
+            async submitPaymentVerification() {
+                TG.showConfirm("Вы подтверждаете оплату? После подтверждения начнется поиск аккаунта на Lolz.", async (ok) => {
+                    if(!ok) return;
+                    
+                    UI.closePaymentSheet();
+                    TG.MainButton.setText("ПОИСК И ПОКУПКА НА LOLZ...");
+                    TG.MainButton.show();
+                    TG.MainButton.showProgress();
+
+                    // Реальный вызов API Lolz (через заглушку)
+                    const p = App.State.activeProd;
+                    const result = await LolzAPI.searchItem({
+                        min: p.lz_min, max: p.lz_max, origin: p.lz_origin, query: p.lz_query
+                    });
+
+                    // Сохраняем заказ
+                    const order = {
+                        id: Date.now(),
+                        name: p.name,
+                        price: p.price,
+                        creds: result.creds,
+                        date: new Date().toLocaleString()
+                    };
+                    
+                    App.Data.orders.push(order);
+                    localStorage.setItem('z_orders', JSON.stringify(App.Data.orders));
+                    
+                    TG.MainButton.hideProgress();
+                    TG.MainButton.hide();
+                    
+                    this.updateProfile();
+                    TG.HapticFeedback.notificationOccurred('success');
+                    
+                    TG.showConfirm(`ТОВАР КУПЛЕН!\n\nДанные: ${order.creds}\n\nСкопировать в буфер?`, (copy) => {
+                        if(copy) {
+                            navigator.clipboard.writeText(order.creds);
+                            TG.showAlert("Скопировано!");
+                        }
+                    });
+                });
             },
 
             updateProfile() {
-                document.getElementById('u-name').innerText = State.user.first_name;
-                document.getElementById('u-id').innerText = State.user.id;
-                document.getElementById('u-avatar').innerText = State.user.first_name[0];
+                document.getElementById('u-name').innerText = App.State.user.first_name;
+                document.getElementById('u-id-display').innerText = "ID: " + App.State.user.id;
+                document.getElementById('u-avatar').innerText = App.State.user.first_name[0];
                 
-                if(State.user.id === State.config.admin_uid) {
-                    document.getElementById('admin-btn').classList.remove('hidden');
-                }
-            }
-        };
+                const totalSpent = App.Data.orders.reduce((acc, curr) => acc + curr.price, 0);
+                document.getElementById('stat-deals').innerText = App.Data.orders.length;
+                document.getElementById('stat-spent').innerText = totalSpent + ' ₽';
+            },
 
-        const Logic = {
             showHistory() {
-                if(State.history.length === 0) {
-                    return window.Telegram.WebApp.showAlert("У вас еще нет покупок.");
+                if(App.Data.orders.length === 0) {
+                    TG.showAlert("У вас пока нет покупок.");
+                    return;
                 }
-                const msg = State.history.map(h => `${h.date}\n${h.name}: ${h.creds}`).join('\n\n---\n\n');
-                window.Telegram.WebApp.showAlert("ВАША ИСТОРИЯ:\n\n" + msg);
+                const list = App.Data.orders.map(o => `${o.date} | ${o.name}\nДанные: ${o.creds}`).join('\n\n---\n\n');
+                TG.showAlert("ВАШИ ПОКУПКИ:\n\n" + list);
             }
         };
 
-        // LAUNCH
-        UI.init();
+        /**
+         * ADMIN CONTROLLER
+         */
+        const Admin = {
+            saveGlobalConfig() {
+                App.Config.lolz_token = document.getElementById('adm-lolz-token').value;
+                App.Config.pay_crypto = document.getElementById('adm-pay-crypto').value;
+                App.Config.pay_card = document.getElementById('adm-pay-card').value;
+                
+                localStorage.setItem('z_cfg', JSON.stringify(App.Config));
+                TG.showAlert("Конфигурация сохранена!");
+            },
+
+            addCategory() {
+                const name = document.getElementById('adm-cat-name').value;
+                if(!name) return;
+
+                const newCat = { id: Date.now(), name: name };
+                App.Data.categories.push(newCat);
+                localStorage.setItem('z_cats', JSON.stringify(App.Data.categories));
+                
+                document.getElementById('adm-cat-name').value = '';
+                Logic.renderCategories();
+                TG.showAlert("Категория создана!");
+            },
+
+            updateCatSelect() {
+                const sel = document.getElementById('adm-p-cat-select');
+                sel.innerHTML = App.Data.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            },
+
+            addProduct() {
+                const name = document.getElementById('adm-p-name').value;
+                const catId = document.getElementById('adm-p-cat-select').value;
+                const price = document.getElementById('adm-p-price').value;
+                
+                const min = document.getElementById('adm-lz-min').value;
+                const max = document.getElementById('adm-lz-max').value;
+                const origin = document.getElementById('adm-lz-origin').value;
+                const query = document.getElementById('adm-lz-query').value;
+
+                if(!name || !price) {
+                    TG.showAlert("Заполните название и цену!");
+                    return;
+                }
+
+                const newProd = {
+                    id: Date.now(),
+                    catId, name, price: Number(price),
+                    lz_min: min, lz_max: max, lz_origin: origin, lz_query: query
+                };
+
+                App.Data.products.push(newProd);
+                localStorage.setItem('z_prods', JSON.stringify(App.Data.products));
+                
+                TG.showAlert("Товар добавлен!");
+                Router.go('market');
+                Logic.renderCategories();
+            },
+
+            resetAllData() {
+                TG.showConfirm("ВЫ УВЕРЕНЫ? Это удалит все товары, категории и настройки!", (ok) => {
+                    if(ok) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                });
+            }
+        };
+
+        /**
+         * UI HELPERS
+         */
+        const UI = {
+            openPaymentSheet() {
+                document.getElementById('pay-sheet-overlay').classList.add('active');
+                Logic.resetPaymentSteps();
+            },
+            closePaymentSheet() {
+                document.getElementById('pay-sheet-overlay').classList.remove('active');
+            }
+        };
+
+        // RUN APP
+        Logic.init();
 
     </script>
 </body>
 </html>
-
