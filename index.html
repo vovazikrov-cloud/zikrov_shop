@@ -3,324 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zikrov Market OS v12.0</title>
+    <title>Zikrov Market OS v15.0 | Premium Enterprise</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* =========================================
-           1. ДИЗАЙН-СИСТЕМА (ULTIMATE DARK)
-           =========================================
+        /* ================================================================
+           1. CSS ПЕРЕМЕННЫЕ И ДИЗАЙН-СИСТЕМА (SF PRO / INTER)
+           ================================================================
         */
         :root {
-            --bg: #000000;
-            --card: #111111;
-            --card-hover: #1c1c1e;
-            --accent: #007aff;
-            --accent-gradient: linear-gradient(135deg, #007aff, #00c6ff);
-            --success: #32d74b;
-            --error: #ff453a;
-            --text: #ffffff;
-            --text-secondary: #8e8e93;
-            --border: rgba(255, 255, 255, 0.08);
-            --radius: 16px;
+            --pure-black: #000000;
+            --bg-main: #09090b;
+            --bg-card: #141417;
+            --bg-card-hover: #1c1c21;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(255, 255, 255, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
             --safe-bottom: env(safe-area-inset-bottom);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding-bottom: calc(100px + var(--safe-bottom));
-            overflow-x: hidden;
-        }
-
-        /* УТИЛИТЫ */
-        .hidden { display: none !important; }
-        .container { padding: 0 16px; max-width: 600px; margin: 0 auto; }
-
-        /* =========================================
-           2. КОМПОНЕНТЫ
-           =========================================
+        /* ================================================================
+           2. ГЛОБАЛЬНЫЕ СТИЛИ И СБРОС
+           ================================================================
         */
-        .header { padding: 30px 16px 15px; }
-        .header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
-
-        /* Категории (Только ТГ) */
-        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .cat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 25px 15px;
-            text-align: center;
-            transition: 0.3s;
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', -apple-system, sans-serif;
         }
-        .cat-card:active { transform: scale(0.95); background: var(--card-hover); }
-        .cat-card .icon { font-size: 40px; margin-bottom: 10px; display: block; }
-        .cat-card .name { font-weight: 700; font-size: 16px; }
 
-        /* Список товаров */
-        .product-item {
-            background: var(--card);
-            border-radius: var(--radius);
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            width: 100%;
+            min-height: 100vh;
+            padding-bottom: calc(100px + var(--safe-bottom));
+        }
+
+        .container { padding: 0 20px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        /* Кастомный скролл */
+        ::-webkit-scrollbar { width: 0; }
+
+        /* ================================================================
+           3. АНИМАЦИИ
+           ================================================================
+        */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        .anim-fade { animation: fadeIn 0.3s ease-out; }
+        .anim-slide { animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        /* ================================================================
+           4. ТИПОГРАФИКА И ШАПКА
+           ================================================================
+        */
+        .header { padding: 40px 20px 20px; position: sticky; top: 0; background: var(--bg-main); z-index: 100; }
+        .header h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; }
+        .header p { color: var(--text-secondary); font-size: 14px; margin-top: 5px; }
+
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+        /* ================================================================
+           5. КАРТОЧКИ И ГРИДЫ
+           ================================================================
+        */
+        .grid-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px; }
+        
+        .cat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 16px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cat-card:active { transform: scale(0.96); background: var(--bg-card-hover); border-color: var(--accent); }
+        .cat-card .icon { font-size: 44px; display: block; margin-bottom: 12px; }
+        .cat-card .name { font-weight: 700; font-size: 16px; display: block; }
+        
+        /* Продуктовые карточки */
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 10px;
-            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: var(--transition);
         }
 
-        .prod-meta h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-        .prod-price { font-weight: 800; color: var(--accent); font-size: 18px; }
+        .product-card:active { border-color: var(--accent); background: var(--bg-card-hover); }
+        
+        .prod-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .prod-tags { display: flex; gap: 6px; }
+        .tag { font-size: 10px; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); text-transform: uppercase; }
 
-        /* Админка и Кнопки */
+        .prod-price-box { text-align: right; }
+        .price { font-size: 18px; font-weight: 800; color: var(--accent); }
+        .stock { font-size: 11px; color: var(--success); font-weight: 600; margin-top: 2px; }
+
+        /* ================================================================
+           6. КНОПКИ И ВВОД
+           ================================================================
+        */
         .btn {
-            background: var(--accent);
-            color: white; border: none; padding: 16px;
-            border-radius: var(--radius); font-weight: 700;
-            width: 100%; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; border: none; border-radius: var(--radius-md);
+            padding: 18px; font-weight: 700; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; transition: var(--transition);
         }
+
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-secondary { background: var(--bg-card-hover); color: white; border: 1px solid var(--border); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid transparent; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-error { background: var(--error); color: white; }
+
         .btn:active { transform: scale(0.98); opacity: 0.9; }
-        .btn-admin { background: #222; border: 1px solid #444; margin-top: 15px; }
-        .btn-ghost { background: transparent; color: var(--text-secondary); }
 
-        /* Поля ввода */
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; margin-left: 5px; }
-        .input-group input, .input-group select {
-            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
-            padding: 14px; border-radius: 12px; color: white; outline: none;
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; margin-left: 4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; background: #1a1a1e; border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: 14px 16px; color: white;
+            font-size: 15px; transition: var(--transition); outline: none;
+        }
+        .input-group input:focus { border-color: var(--accent); background: #222226; }
+
+        /* ================================================================
+           7. ТАБ-БАР (NAVIGATION)
+           ================================================================
+        */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(85px + var(--safe-bottom));
+            background: rgba(14, 14, 17, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around;
+            padding: 10px 10px var(--safe-bottom);
+            z-index: 1000;
         }
 
-        /* Таб-Бар */
-        .nav {
-            position: fixed; bottom: 0; width: 100%;
-            background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border); display: flex;
-            padding: 10px 0 calc(10px + var(--safe-bottom)); z-index: 1000;
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-secondary); text-decoration: none; width: 20%;
+            transition: var(--transition); position: relative;
         }
-        .nav-item { flex: 1; text-align: center; color: var(--text-secondary); font-size: 10px; font-weight: 600; }
+
         .nav-item.active { color: var(--accent); }
-        .nav-item svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 5px; fill: currentColor; }
+        .nav-item span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Окно оплаты */
-        .modal {
+        /* ================================================================
+           8. МОДАЛЬНЫЕ ОКНА (ULTIMATE MODALS)
+           ================================================================
+        */
+        .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9); z-index: 2000;
-            display: none; align-items: flex-end;
+            background: rgba(0,0,0,0.9); display: none; align-items: flex-end;
+            z-index: 2000; backdrop-filter: blur(15px);
         }
-        .modal.active { display: flex; }
-        .modal-content {
-            background: #111; width: 100%; border-radius: 24px 24px 0 0;
-            padding: 30px 20px calc(30px + var(--safe-bottom));
-            max-height: 90vh; overflow-y: auto;
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-sheet {
+            background: var(--bg-card); width: 100%; border-radius: 30px 30px 0 0;
+            padding: 35px 24px calc(40px + var(--safe-bottom));
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            max-height: 95vh; overflow-y: auto; border-top: 1px solid var(--border-active);
         }
+
+        .modal-overlay.active .modal-sheet { transform: translateY(0); }
 
         /* Загрузка скриншота */
-        .upload-zone {
-            border: 2px dashed #333; border-radius: 16px;
-            padding: 30px; text-align: center; margin: 20px 0;
-            position: relative;
+        .screenshot-box {
+            border: 2px dashed var(--border); border-radius: var(--radius-md);
+            padding: 40px 20px; text-align: center; margin: 20px 0;
+            position: relative; transition: var(--transition);
         }
-        .upload-zone.previewed { border-color: var(--success); }
-        .upload-zone input { position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; }
-        #screenshot-preview { width: 100%; border-radius: 10px; margin-top: 10px; display: none; }
+        .screenshot-box.has-file { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .screenshot-box input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        #preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 1px solid var(--border); }
 
-        /* Лог админа */
-        .admin-log {
-            background: #000; padding: 10px; border-radius: 8px;
-            font-family: monospace; font-size: 11px; color: #0f0;
-            height: 150px; overflow-y: auto; border: 1px solid #222; margin-top: 10px;
+        /* ================================================================
+           9. СПЕЦИФИЧЕСКИЕ ЭЛЕМЕНТЫ (ADMIN & TERMINAL)
+           ================================================================
+        */
+        .admin-log-console {
+            background: #000; border-radius: 12px; padding: 15px;
+            font-family: 'Courier New', monospace; font-size: 11px; color: #00ff00;
+            height: 180px; overflow-y: auto; border: 1px solid #333; margin: 15px 0;
+            line-height: 1.6;
         }
+
+        .history-item {
+            background: rgba(255,255,255,0.02); border-radius: 12px;
+            padding: 15px; margin-bottom: 10px; border: 1px solid var(--border);
+        }
+
+        .loader-ring {
+            width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%; border-top-color: var(--accent);
+            animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
-    <div id="view-market" class="view">
+    <div id="view-market" class="view anim-fade">
         <div class="header">
-            <h1>Telegram Store</h1>
+            <h1>Zikrov Market</h1>
+            <p>Enterprise Account Gateway</p>
         </div>
+        
         <div class="container">
-            <div id="cat-render" class="cat-grid"></div>
-            <div id="prod-render" class="hidden" style="margin-top: 20px;">
-                <button class="btn-ghost" onclick="Router.showCats()">← Назад</button>
-                <div id="prod-list" style="margin-top: 15px;"></div>
+            <div id="category-grid" class="grid-categories">
+                </div>
+
+            <div id="product-list-view" class="hidden">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h2 id="cat-view-title" class="section-title">Товары</h2>
+                    <button class="btn-ghost" style="width: auto; padding: 5px 12px; font-size: 13px;" onclick="Router.backToCats()">← Назад</button>
+                </div>
+                <div id="products-render-container"></div>
             </div>
         </div>
     </div>
 
-    <div id="view-profile" class="view hidden">
-        <div class="header"><h1>Профиль</h1></div>
+    <div id="view-profile" class="view hidden anim-fade">
+        <div class="header">
+            <h1>Кабинет</h1>
+            <p>Управление и история</p>
+        </div>
         <div class="container">
-            <div class="cat-card" style="width: 100%; text-align: left; display: flex; gap: 15px; align-items: center;">
-                <div id="u-avatar" style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">?</div>
+            <div class="cat-card" style="width: 100%; text-align: left; display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+                <div id="u-ava" style="width: 70px; height: 70px; border-radius: 24px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: white;">?</div>
                 <div>
-                    <h3 id="u-name">User</h3>
-                    <p style="color: var(--text-secondary); font-size: 12px;">ID: <span id="u-id">0</span></p>
+                    <h2 id="u-name">User</h2>
+                    <p style="color: var(--text-secondary); font-size: 13px;">ID: <span id="u-id">000000</span></p>
+                    <div style="margin-top: 8px;" id="u-badge"><span class="tag" style="background: var(--accent); color: white;">Premium User</span></div>
                 </div>
             </div>
-            
-            <button class="btn btn-admin" style="margin-top: 20px;" onclick="Logic.showHistory()">🕒 История заказов</button>
-            <button id="admin-entry" class="btn btn-admin hidden" onclick="Router.go('admin')">⚙️ Админ-панель</button>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px;">
+                <div class="cat-card" style="padding: 15px;">
+                    <span style="color: var(--text-secondary); font-size: 11px; display: block; margin-bottom: 5px;">ПОКУПОК</span>
+                    <span id="stat-orders" style="font-size: 22px; font-weight: 800;">0</span>
+                </div>
+                <div class="cat-card" style="padding: 15px;">
+                    <span style="color: var(--text-secondary); font-size: 11px; display: block; margin-bottom: 5px;">ТРАТЫ</span>
+                    <span id="stat-spent" style="font-size: 22px; font-weight: 800; color: var(--accent);">0 ₽</span>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" style="margin-bottom: 12px;" onclick="Router.openHistory()">📑 МОИ ПОКУПКИ</button>
+            <button class="btn btn-secondary" style="margin-bottom: 30px;" onclick="TG.openTelegramLink('https://t.me/Z1KROV')">🆘 ПОДДЕРЖКА</button>
+
+            <div id="admin-access-block" class="hidden">
+                <h3 class="section-title" style="color: var(--error);">SYSTEM OVERRIDE</h3>
+                <button class="btn btn-primary" style="background: var(--error); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);" onclick="Router.go('admin')">ПАНЕЛЬ УПРАВЛЕНИЯ v15.0</button>
+            </div>
         </div>
     </div>
 
-    <div id="view-admin" class="view hidden">
-        <div class="header"><h1>Управление</h1></div>
+    <div id="view-admin" class="view hidden anim-fade">
+        <div class="header">
+            <h1 style="color: var(--error);">Admin Panel</h1>
+            <p>Управление товарами и API Lolz</p>
+        </div>
         <div class="container">
-            <button class="btn-ghost" onclick="Router.go('profile')">← Назад в профиль</button>
-            
-            <div class="cat-card" style="width: 100%; margin-top: 15px;">
-                <h3>Добавить товар</h3>
-                <div class="input-group" style="margin-top: 15px;">
-                    <label>Название товара</label>
-                    <input type="text" id="new-p-name" placeholder="Telegram Auto-Reg">
+            <div style="margin-bottom: 20px;">
+                <button class="btn-ghost" onclick="Router.go('profile')">← Назад в профиль</button>
+            </div>
+
+            <div class="cat-card" style="width: 100%; text-align: left; margin-bottom: 20px; border-color: var(--error);">
+                <h3 class="section-title">Settings</h3>
+                <div class="input-group">
+                    <label>LOLZ API TOKEN</label>
+                    <input type="password" id="cfg-lolz-token" placeholder="Введите ваш токен...">
                 </div>
                 <div class="input-group">
-                    <label>Категория</label>
-                    <select id="new-p-cat"></select>
+                    <label>ID АДМИН-ЧАТА (Уведомления)</label>
+                    <input type="text" id="cfg-admin-chat" placeholder="Напр: 12345678">
+                </div>
+                <button class="btn btn-primary" style="padding: 12px; font-size: 14px;" onclick="Admin.saveConfig()">ОБНОВИТЬ КОНФИГ</button>
+            </div>
+
+            <div class="cat-card" style="width: 100%; text-align: left; margin-bottom: 20px;">
+                <h3 class="section-title">New Product</h3>
+                <div class="input-group">
+                    <label>Название в магазине</label>
+                    <input type="text" id="adm-p-name" placeholder="Напр: TG Авторег (RU)">
                 </div>
                 <div class="input-group">
-                    <label>Цена (₽)</label>
-                    <input type="number" id="new-p-price" placeholder="150">
+                    <label>Наценка (%)</label>
+                    <input type="number" id="adm-p-margin" placeholder="20">
                 </div>
                 
-                <hr style="border: none; border-top: 1px solid #222; margin: 15px 0;">
-                <p style="font-size: 11px; color: var(--accent); margin-bottom: 10px;">ПАРАМЕТРЫ LOLZ (АВТО-ВЫДАЧА)</p>
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 15px 0;">
+                <p style="font-size: 11px; color: var(--accent); margin-bottom: 10px; font-weight: 700;">ПАРАМЕТРЫ ПАРСИНГА LOLZ</p>
                 
                 <div class="input-group">
-                    <label>Происхождение (Origin)</label>
-                    <input type="text" id="lz-origin" placeholder="autoreg, brute, etc">
+                    <label>Категория Lolz (ID)</label>
+                    <select id="adm-lz-cat">
+                        <option value="2">Telegram</option>
+                        <option value="1">Steam</option>
+                        <option value="4">Epic Games</option>
+                        <option value="11">Discord</option>
+                        <option value="14">VPN</option>
+                    </select>
                 </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="input-group">
-                        <label>Мин. цена Lolz</label>
-                        <input type="number" id="lz-min" placeholder="10">
+                        <label>Мин. цена</label>
+                        <input type="number" id="adm-lz-min" placeholder="10">
                     </div>
                     <div class="input-group">
-                        <label>Макс. цена Lolz</label>
-                        <input type="number" id="lz-max" placeholder="100">
+                        <label>Макс. цена</label>
+                        <input type="number" id="adm-lz-max" placeholder="500">
                     </div>
                 </div>
-                
-                <button class="btn" onclick="Admin.addProduct()">СОХРАНИТЬ ТОВАР</button>
+
+                <div class="input-group">
+                    <label>Происхождение (Origin)</label>
+                    <select id="adm-lz-origin">
+                        <option value="autoreg">Авторег</option>
+                        <option value="brute">Брут</option>
+                        <option value="owner">Личный</option>
+                        <option value="resale">Перепродажа</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Ключевое слово в названии</label>
+                    <input type="text" id="adm-lz-query" placeholder="Напр: 100+ контактов">
+                </div>
+
+                <button class="btn btn-success" onclick="Admin.addProduct()">ДОБАВИТЬ В МАРКЕТ</button>
             </div>
 
-            <div class="admin-log" id="admin-log">
-                > System initialized...
+            <h3 class="section-title">Console Output</h3>
+            <div class="admin-log-console" id="admin-log">
+                > System kernel v15.0 initialized...
+                <br>> Ready for operations.
             </div>
-        </div>
-    </div>
-
-    <div id="modal-pay" class="modal">
-        <div class="modal-content">
-            <h2 id="m-title">Оплата</h2>
-            <p id="m-price" style="color: var(--accent); font-size: 24px; font-weight: 800; margin: 10px 0;">0 ₽</p>
             
-            <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; margin: 20px 0;">
-                <p style="font-size: 13px; color: var(--text-secondary);">Реквизиты для оплаты (Карта):</p>
-                <p style="font-size: 18px; font-weight: 700; margin-top: 5px;">4400 1122 3344 5566</p>
+            <button class="btn btn-error" style="background: #222;" onclick="Admin.clearData()">СБРОСИТЬ ВСЕ ДАННЫЕ</button>
+        </div>
+    </div>
+
+    <div id="modal-pay" class="modal-overlay">
+        <div class="modal-sheet">
+            <h2 id="m-pay-title" style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Оплата</h2>
+            <p id="m-pay-subtitle" style="color: var(--text-secondary); font-size: 14px; margin-bottom: 25px;">Переведите средства и прикрепите чек</p>
+            
+            <div class="cat-card" style="width: 100%; background: #1a1a1e; border-color: var(--accent); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-secondary); font-size: 13px;">Сумма к оплате:</span>
+                    <span id="m-pay-price" style="font-size: 24px; font-weight: 800; color: var(--accent);">0 ₽</span>
+                </div>
+                <hr style="border: none; border-top: 1px solid #333; margin: 15px 0;">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 5px;">Реквизиты (Карта/СБП):</p>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <code id="m-pay-wallet" style="font-size: 18px; font-weight: 700; color: white;">4400 1122 3344 5566</code>
+                    <button class="btn-ghost" style="width: auto; padding: 5px;" onclick="TG.copyToClipboard('4400112233445566'); TG.showAlert('Скопировано!')">📋</button>
+                </div>
             </div>
 
-            <p style="font-size: 12px; color: var(--text-secondary);">Прикрепите скриншот чека для проверки:</p>
-            <div class="upload-zone" id="up-zone">
-                <span>Нажмите, чтобы выбрать фото</span>
-                <input type="file" id="pay-file" accept="image/*" onchange="Logic.previewFile(this)">
-                <img id="screenshot-preview" src="#" alt="Preview">
+            <div class="screenshot-box" id="sc-box">
+                <span id="sc-label">Нажмите для выбора скриншота чека</span>
+                <input type="file" id="pay-file-input" accept="image/*">
+                <img id="preview-img" src="">
             </div>
 
-            <div id="pay-actions">
-                <button class="btn" onclick="Logic.submitPayment()">ОТПРАВИТЬ НА ПРОВЕРКУ</button>
-                <button class="btn btn-ghost" onclick="UI.closeModal()">Отмена</button>
+            <div id="pay-flow-actions">
+                <button class="btn btn-primary" id="btn-submit-pay" onclick="Payment.submit()">ОТПРАВИТЬ НА ПРОВЕРКУ</button>
+                <button class="btn btn-ghost" style="margin-top: 10px;" onclick="Router.closeModal()">Отмена</button>
+            </div>
+
+            <div id="pay-flow-loading" class="hidden" style="text-align: center;">
+                <div class="loader-ring"></div>
+                <p style="color: var(--accent); font-weight: 600;">Проверка платежа администратором...</p>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">Пожалуйста, не закрывайте приложение.</p>
             </div>
         </div>
     </div>
 
-    <nav class="nav">
-        <div class="nav-item active" onclick="Router.go('market')">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            МАРКЕТ
-        </div>
-        <div class="nav-item" onclick="Router.go('profile')">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            ПРОФИЛЬ
-        </div>
+    <nav class="nav-bar">
+        <a href="javascript:void(0)" class="nav-item active" onclick="Router.go('market')">
+            <svg viewBox="0 0 24 24"><path d="M12 3L4 9v12h16V9l-8-6zm6 16h-3v-4h-6v4H6v-9l6-4.5 6 4.5v9z"/></svg>
+            <span>МАРКЕТ</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="Router.go('profile')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span>ПРОФИЛЬ</span>
+        </a>
     </nav>
 
     <script>
+        const TG = window.Telegram.WebApp;
+        
         /**
-         * ZIKROV MARKET CORE v12.0
-         * МОНОЛИТНЫЙ ДВИЖЕК
+         * ГЛОБАЛЬНОЕ ХРАНИЛИЩЕ (STORE)
          */
-
-        const CONFIG = {
-            ADMIN_ID: 1577146268, // ЗАМЕНИТЕ НА ВАШ ТЕЛЕГРАМ ID
-            BOT_TOKEN: '8376191518:AAGKsCRld5dFXqF0Ltr4x5KbHoUZamiUesk', // Для отправки уведомлений
-            CHAT_ID: '-1003358354858'
-        };
-
-        const State = {
-            categories: JSON.parse(localStorage.getItem('z_cats') || '[{"id":"tg","name":"TG Аккаунты","icon":"📱"}]'),
-            products: JSON.parse(localStorage.getItem('z_prods') || '[]'),
-            history: JSON.parse(localStorage.getItem('z_history') || '[]'),
-            user: window.Telegram.WebApp.initDataUnsafe.user || {id: 0, first_name: 'Dev'},
-            activeProduct: null
-        };
-
-        const UI = {
-            init() {
-                window.Telegram.WebApp.expand();
-                this.renderCats();
-                this.updateProfile();
-                this.syncAdminUI();
-                this.populateCatSelect();
+        const App = {
+            Config: JSON.parse(localStorage.getItem('zk_config')) || {
+                admin_id: 1577146268, // ТВОЙ ID
+                lolz_token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJzdWIiOjU3NzQxOTcsImlzcyI6Imx6dCIsImlhdCI6MTc2NjE1MjI0OSwianRpIjoiODk4NTQ5Iiwic2NvcGUiOiJiYXNpYyByZWFkIHBvc3QgY29udmVyc2F0ZSBwYXltZW50IGludm9pY2UgY2hhdGJveCBtYXJrZXQiLCJleHAiOjE5MjM4MzIyNDl9.V6ZEAK9Fum1k6K-cKbMURcJ3jcy3cC6CTVG93hVCTsevCoj4RLkn8Qy0AYR2Q3jDq8t1fWcHuZUsgbSkrlYjBmakLKP-vdFHgMYKqguM9Cgq0qoqS29NFlQiUeA-6AvPI60UgbW4C8hIg1JRXxQzldKz4qYrTBY48CLA_gytt9w',
+                admin_chat_id: '',
+                wallet: '1577146268'
+            },
+            
+            DB: {
+                categories: [
+                    { id: 'cat_tg', name: 'Telegram', icon: '📱', lz_id: 2 }
+                ],
+                products: JSON.parse(localStorage.getItem('zk_products')) || [],
+                orders: JSON.parse(localStorage.getItem('zk_orders')) || []
             },
 
-            renderCats() {
-                const html = State.categories.map(c => `
-                    <div class="cat-card" onclick="Logic.openCat('${c.id}')">
-                        <span class="icon">${c.icon}</span>
-                        <span class="name">${c.name}</span>
-                    </div>
-                `).join('');
-                document.getElementById('cat-render').innerHTML = html;
-            },
+            State: {
+                user: TG.initDataUnsafe.user || { id: 0, first_name: 'Debug', last_name: 'User' },
+                activeCategory: null,
+                selectedProduct: null
+            }
+        };
 
-            renderProds(catId) {
-                const prods = State.products.filter(p => p.catId === catId);
-                const html = prods.length ? prods.map(p => `
-                    <div class="product-item">
-                        <div class="prod-meta">
-                            <h3>${p.name}</h3>
-                            <p style="font-size:11px; color:#666;">${p.lz_origin} | Lolz Sync</p>
-                        </div>
-                        <div style="text-align:right">
-                            <div class="prod-price">${p.price} ₽</div>
-                            <button class="btn" style="padding:6px 12px; font-size:12px; margin-top:5px;" onclick="Logic.openPay('${p.id}')">Купить</button>
-                        </div>
-                    </div>
-                `).join('') : '<p style="text-align:center; padding:20px; color:#555;">В этой категории нет товаров</p>';
+        /**
+         * LOLZ API BRIDGE (ВЗАИМОДЕЙСТВИЕ С МАРКЕТОМ)
+         */
+        const LolzAPI = {
+            baseUrl: 'https://api.lzt.market',
+
+            // Поиск самого дешевого товара по фильтрам
+            async findCheapest(params) {
+                if(!App.Config.lolz_token) return { error: 'API Token missing' };
+
+                Admin.log(`Searching Lolz for CatID: ${params.catId}...`);
                 
-                document.getElementById('prod-list').innerHTML = html;
+                // Эмуляция запроса (В реальности здесь fetch к /list)
+                // Параметры: category_id, pmin, pmax, origin, title
+                const query = `category_id=${params.catId}&pmin=${params.min}&pmax=${params.max}&origin=${params.origin}&title=${params.query}`;
+                
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            item_id: Math.floor(Math.random() * 90000000),
+                            price: Number(params.min) + 5, // Берем чуть выше минималки
+                            title: "Telegram Account | Autoreg | 2FA"
+                        });
+                    }, 1500);
+                });
             },
 
-            updateProfile() {
-                document.getElementById('u-name').innerText = State.user.first_name;
-                document.getElementById('u-id').innerText = State.user.id;
-                document.getElementById('u-avatar').innerText = State.user.first_name[0];
-            },
+            // Бронирование и покупка
+            async purchase(itemId) {
+                Admin.log(`Initiating purchase for Item #${itemId}...`);
+                // 1. POST /reserve
+                // 2. POST /confirm-buy
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve({
+                            success: true,
+                            data: "LOG:PASS:2FA_CODE_" + Math.random().toString(36).substr(2, 6).toUpperCase()
+                        });
+                    }, 2000);
+                });
+            }
+        };
 
-            syncAdminUI() {
-                if(State.user.id === CONFIG.ADMIN_ID) {
-                    document.getElementById('admin-entry').classList.remove('hidden');
+        /**
+         * ИНТЕРФЕЙС И РОУТИНГ
+         */
+        const Router = {
+            go(view) {
+                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+                document.getElementById(`view-${view}`).classList.remove('hidden');
+                
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const navMap = { 'market': 0, 'profile': 1 };
+                if(navMap[view] !== undefined) {
+                    document.querySelectorAll('.nav-item')[navMap[view]].classList.add('active');
                 }
+                
+                TG.HapticFeedback.selectionChanged();
+                window.scrollTo(0,0);
             },
 
-            populateCatSelect() {
-                const sel = document.getElementById('new-p-cat');
-                sel.innerHTML = State.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            backToCats() {
+                document.getElementById('category-grid').classList.remove('hidden');
+                document.getElementById('product-list-view').classList.add('hidden');
+                window.scrollTo(0,0);
+            },
+
+            openHistory() {
+                if(App.DB.orders.length === 0) {
+                    TG.showAlert("У вас еще нет покупок.");
+                    return;
+                }
+                let list = App.DB.orders.map(o => `📦 ${o.name}\n💰 ${o.price}₽ | ${o.date}\n🔑 Данные: ${o.creds}`).join('\n\n---\n\n');
+                TG.showAlert("ВАШИ ЗАКАЗЫ:\n\n" + list);
             },
 
             closeModal() {
@@ -328,150 +539,255 @@
             }
         };
 
-        const Router = {
-            go(view) {
-                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-                document.getElementById('view-' + view).classList.remove('hidden');
-                
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                if(view === 'market') document.querySelectorAll('.nav-item')[0].classList.add('active');
-                if(view === 'profile') document.querySelectorAll('.nav-item')[1].classList.add('active');
-                
-                window.Telegram.WebApp.HapticFeedback.selectionChanged();
-            },
-            showCats() {
-                document.getElementById('cat-render').classList.remove('hidden');
-                document.getElementById('prod-render').classList.add('hidden');
-            }
-        };
+        /**
+         * ЛОГИКА ОПЛАТЫ И ПОДТВЕРЖДЕНИЯ
+         */
+        const Payment = {
+            init(prodId) {
+                const prod = App.DB.products.find(p => p.id === prodId);
+                App.State.selectedProduct = prod;
 
-        const Logic = {
-            openCat(catId) {
-                UI.renderProds(catId);
-                document.getElementById('cat-render').classList.add('hidden');
-                document.getElementById('prod-render').classList.remove('hidden');
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            },
-
-            openPay(prodId) {
-                const p = State.products.find(x => x.id == prodId);
-                State.activeProduct = p;
-                document.getElementById('m-title').innerText = p.name;
-                document.getElementById('m-price').innerText = p.price + ' ₽';
+                document.getElementById('m-pay-title').innerText = prod.name;
+                document.getElementById('m-pay-price').innerText = prod.price + " ₽";
+                document.getElementById('m-pay-wallet').innerText = App.Config.wallet;
+                
+                // Reset form
+                document.getElementById('preview-img').style.display = 'none';
+                document.getElementById('sc-label').style.display = 'block';
+                document.getElementById('pay-flow-actions').classList.remove('hidden');
+                document.getElementById('pay-flow-loading').classList.add('hidden');
+                
                 document.getElementById('modal-pay').classList.add('active');
-                
-                // Reset upload
-                document.getElementById('screenshot-preview').style.display = 'none';
-                document.getElementById('up-zone').classList.remove('previewed');
+                TG.HapticFeedback.impactOccurred('medium');
             },
 
-            previewFile(input) {
-                const file = input.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const preview = document.getElementById('screenshot-preview');
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                        document.getElementById('up-zone').classList.add('previewed');
-                    }
-                    reader.readAsDataURL(file);
-                }
-            },
-
-            async submitPayment() {
-                const fileInput = document.getElementById('pay-file');
-                if(!fileInput.files[0]) {
-                    window.Telegram.WebApp.showAlert("Прикрепите скриншот чека!");
+            submit() {
+                const file = document.getElementById('pay-file-input').files[0];
+                if(!file) {
+                    TG.showAlert("Пожалуйста, прикрепите скриншот чека!");
                     return;
                 }
 
-                window.Telegram.WebApp.showConfirm("Данные отправлены администратору. Ожидайте подтверждения.", () => {
-                    this.sendToAdminBot(fileInput.files[0]);
-                    UI.closeModal();
-                });
-            },
+                document.getElementById('pay-flow-actions').classList.add('hidden');
+                document.getElementById('pay-flow-loading').classList.remove('hidden');
 
-            async sendToAdminBot(file) {
-                // Имитация отправки в Telegram Bot API
-                // В реальном приложении здесь делается fetch на https://api.telegram.org/bot.../sendPhoto
-                Admin.log(`Sending payment request for ${State.activeProduct.name}...`);
+                // Здесь мы имитируем уведомление админу.
+                // В реальном боте мы бы отправили файл через Bot API админу.
+                Admin.log(`New payment notification for ${App.State.selectedProduct.name} from UID ${App.State.user.id}`);
                 
-                // Эмуляция ответа админа через 3 секунды
+                // Эмуляция того, что админ нажал "Принять" через 4 секунды
                 setTimeout(() => {
-                    this.finalizeOrder();
-                }, 3000);
+                    this.confirmAndBuy();
+                }, 4000);
             },
 
-            finalizeOrder() {
-                const p = State.activeProduct;
+            async confirmAndBuy() {
+                const p = App.State.selectedProduct;
+                Admin.log(`Payment CONFIRMED. Accessing Lolz Market...`);
+                
+                // 1. Ищем товар на лолзе
+                const lzItem = await LolzAPI.findCheapest({
+                    catId: p.lz_cat,
+                    min: p.lz_min,
+                    max: p.lz_max,
+                    origin: p.lz_origin,
+                    query: p.lz_query
+                });
+
+                if(lzItem.error) {
+                    TG.showAlert("Ошибка API Lolz. Свяжитесь с админом.");
+                    Router.closeModal();
+                    return;
+                }
+
+                // 2. Покупаем
+                const purchaseResult = await LolzAPI.purchase(lzItem.item_id);
+
+                if(purchaseResult.success) {
+                    this.finalize(purchaseResult.data);
+                }
+            },
+
+            finalize(creds) {
                 const order = {
                     id: Date.now(),
-                    name: p.name,
-                    price: p.price,
+                    name: App.State.selectedProduct.name,
+                    price: App.State.selectedProduct.price,
                     date: new Date().toLocaleString(),
-                    creds: "LOG:" + Math.random().toString(36).substring(7).toUpperCase()
+                    creds: creds
                 };
-                
-                State.history.push(order);
-                localStorage.setItem('z_history', JSON.stringify(State.history));
-                
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                window.Telegram.WebApp.showConfirm("Оплата принята! Ваши данные: " + order.creds + "\nСкопировать?", (ok) => {
-                    if(ok) navigator.clipboard.writeText(order.creds);
-                });
-            },
 
-            showHistory() {
-                if(!State.history.length) {
-                    window.Telegram.WebApp.showAlert("История пуста");
-                    return;
-                }
-                const text = State.history.map(h => `${h.date} | ${h.name} | ${h.creds}`).join('\n\n');
-                window.Telegram.WebApp.showAlert("Ваши покупки:\n\n" + text);
+                App.DB.orders.unshift(order);
+                localStorage.setItem('zk_orders', JSON.stringify(App.DB.orders));
+                
+                TG.HapticFeedback.notificationOccurred('success');
+                Router.closeModal();
+                UI.updateStats();
+
+                TG.showConfirm(`Оплата принята! Товар куплен на Lolz.\n\nДанные:\n${creds}\n\nСкопировать?`, (ok) => {
+                    if(ok) {
+                        const el = document.createElement('textarea');
+                        el.value = creds;
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                        TG.showAlert("Данные скопированы!");
+                    }
+                    Router.go('profile');
+                });
             }
         };
 
+        /**
+         * АДМИН-ДВИЖОК
+         */
         const Admin = {
             log(msg) {
-                const box = document.getElementById('admin-log');
-                box.innerHTML += `<br>> [${new Date().toLocaleTimeString()}] ${msg}`;
-                box.scrollTop = box.scrollHeight;
+                const console = document.getElementById('admin-log');
+                const time = new Date().toLocaleTimeString();
+                console.innerHTML += `<br>> [${time}] ${msg}`;
+                console.scrollTop = console.scrollHeight;
+            },
+
+            saveConfig() {
+                App.Config.lolz_token = document.getElementById('cfg-lolz-token').value;
+                App.Config.admin_chat_id = document.getElementById('cfg-admin-chat').value;
+                localStorage.setItem('zk_config', JSON.stringify(App.Config));
+                TG.showAlert("Конфигурация сохранена!");
+                this.log("Config updated.");
             },
 
             addProduct() {
-                const name = document.getElementById('new-p-name').value;
-                const catId = document.getElementById('new-p-cat').value;
-                const price = document.getElementById('new-p-price').value;
-                const origin = document.getElementById('lz-origin').value;
-                const min = document.getElementById('lz-min').value;
-                const max = document.getElementById('lz-max').value;
+                const name = document.getElementById('adm-p-name').value;
+                const margin = Number(document.getElementById('adm-p-margin').value) || 0;
+                const cat = document.getElementById('adm-lz-cat').value;
+                const min = Number(document.getElementById('adm-lz-min').value);
+                const max = Number(document.getElementById('adm-lz-max').value);
+                const origin = document.getElementById('adm-lz-origin').value;
+                const query = document.getElementById('adm-lz-query').value;
 
-                if(!name || !price) return window.Telegram.WebApp.showAlert("Заполните поля!");
+                if(!name || !min || !max) {
+                    TG.showAlert("Заполните все поля!");
+                    return;
+                }
+
+                // Рассчитываем итоговую цену для витрины
+                const finalPrice = Math.ceil(max + (max * (margin / 100)));
 
                 const newProd = {
                     id: Date.now(),
-                    catId, name, price: Number(price),
-                    lz_origin: origin,
-                    lz_min: min,
-                    lz_max: max
+                    name, price: finalPrice, margin,
+                    lz_cat: cat, lz_min: min, lz_max: max, lz_origin: origin, lz_query: query
                 };
 
-                State.products.push(newProd);
-                localStorage.setItem('z_prods', JSON.stringify(State.products));
+                App.DB.products.push(newProd);
+                localStorage.setItem('zk_products', JSON.stringify(App.DB.products));
                 
-                this.log(`Product "${name}" added to cat ${catId}`);
-                window.Telegram.WebApp.showAlert("Товар успешно добавлен!");
-                
-                // Reset
-                document.getElementById('new-p-name').value = '';
-                UI.renderCats();
+                this.log(`Added product: ${name} (Est. Price: ${finalPrice}₽)`);
+                TG.showAlert("Товар добавлен в магазин!");
+                UI.renderMarket();
+            },
+
+            clearData() {
+                TG.showConfirm("ВЫ УВЕРЕНЫ? Все товары и настройки будут стерты!", (ok) => {
+                    if(ok) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                });
             }
         };
 
-        // RUN
-        UI.init();
+        /**
+         * ОПЕРАЦИОННЫЙ ЦЕНТР UI
+         */
+        const UI = {
+            init() {
+                TG.ready();
+                TG.expand();
+                
+                this.renderMarket();
+                this.updateStats();
+                
+                // Привязка событий
+                document.getElementById('pay-file-input').onchange = (e) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = document.getElementById('preview-img');
+                        img.src = ev.target.result;
+                        img.style.display = 'block';
+                        document.getElementById('sc-label').style.display = 'none';
+                        document.getElementById('sc-box').classList.add('has-file');
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                };
+
+                // Проверка админа
+                if(App.State.user.id === App.Config.admin_id) {
+                    document.getElementById('admin-access-block').classList.remove('hidden');
+                }
+
+                document.getElementById('u-name').innerText = App.State.user.first_name + " " + (App.State.user.last_name || "");
+                document.getElementById('u-id').innerText = App.State.user.id;
+                document.getElementById('u-ava').innerText = App.State.user.first_name[0];
+
+                // Загрузка конфига в инпуты
+                document.getElementById('cfg-lolz-token').value = App.Config.lolz_token;
+                document.getElementById('cfg-admin-chat').value = App.Config.admin_chat_id;
+            },
+
+            renderMarket() {
+                const catGrid = document.getElementById('category-grid');
+                catGrid.innerHTML = App.DB.categories.map(c => `
+                    <div class="cat-card anim-slide" onclick="UI.openCategory('${c.id}')">
+                        <span class="icon">${c.icon}</span>
+                        <span class="name">${c.name}</span>
+                    </div>
+                `).join('');
+            },
+
+            openCategory(catId) {
+                const cat = App.DB.categories.find(c => c.id === catId);
+                const products = App.DB.products.filter(p => p.lz_cat == cat.lz_id);
+                
+                document.getElementById('cat-view-title').innerText = cat.name;
+                document.getElementById('category-grid').classList.add('hidden');
+                document.getElementById('product-list-view').classList.remove('hidden');
+                
+                const container = document.getElementById('products-render-container');
+                if(products.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; padding:40px; color:var(--text-muted);">В этой категории пока нет товаров...</p>`;
+                } else {
+                    container.innerHTML = products.map(p => `
+                        <div class="product-card anim-slide" onclick="Payment.init(${p.id})">
+                            <div class="prod-info">
+                                <h3>${p.name}</h3>
+                                <div class="prod-tags">
+                                    <span class="tag">${p.lz_origin}</span>
+                                    <span class="tag">Lolz Sync</span>
+                                </div>
+                            </div>
+                            <div class="prod-price-box">
+                                <div class="price">${p.price} ₽</div>
+                                <div class="stock">В наличии</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                TG.HapticFeedback.impactOccurred('light');
+            },
+
+            updateStats() {
+                document.getElementById('stat-orders').innerText = App.DB.orders.length;
+                const total = App.DB.orders.reduce((acc, cur) => acc + cur.price, 0);
+                document.getElementById('stat-spent').innerText = total + " ₽";
+            }
+        };
+
+        // ЗАПУСК
+        window.onload = () => UI.init();
+
     </script>
 </body>
 </html>
-
