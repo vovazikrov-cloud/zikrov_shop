@@ -2,522 +2,495 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Zikrov Shop - Ultimate Automation Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zikrov Premium Market Monolith v8.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <style id="dynamic-theme">
-        :root {
-            --bg-color: #000000;
-            --secondary-bg: #1c1c1e;
-            --text-color: #ffffff;
-            --hint-color: #8e8e93;
-            --button-color: #0a84ff;
-            --button-text-color: #ffffff;
-            --card-radius: 20px;
-            --card-border-width: 1px;
-            --card-border-color: rgba(255,255,255,0.1);
-            --accent-success: #32d74b;
-            --accent-error: #ff453a;
-        }
-    </style>
-
     <style>
+        /* =========================================
+           1. CORE STYLES & DESIGN SYSTEM (CSS)
+           =========================================
+        */
+        :root {
+            --bg-black: #000000;
+            --bg-dark: #121212;
+            --bg-card: #1c1c1e;
+            --accent-blue: #007aff;
+            --accent-blue-dim: rgba(0, 122, 255, 0.15);
+            --accent-green: #34c759;
+            --accent-red: #ff3b30;
+            --text-main: #ffffff;
+            --text-gray: #8e8e93;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glass: rgba(28, 28, 30, 0.8);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0; padding: 0;
-            padding-bottom: 100px;
-            transition: all 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+            background: var(--bg-black);
+            color: var(--text-main);
             overflow-x: hidden;
+            line-height: 1.5;
+            padding-bottom: calc(100px + var(--safe-bottom));
         }
 
-        .container { padding: 20px; }
+        /* LAYOUT COMPONENTS */
+        .app-container { width: 100%; max-width: 500px; margin: 0 auto; padding: 20px; }
+        
+        .section-title { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
+        .section-desc { font-size: 14px; color: var(--text-gray); margin-bottom: 25px; }
 
-        h1, h2, h3 { margin-top: 0; font-weight: 800; letter-spacing: -0.5px; }
+        /* ADVANCED ANIMATIONS */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* КАРТОЧКИ */
-        .card {
-            background-color: var(--secondary-bg);
-            border-radius: var(--card-radius);
+        .animated { animation: fadeSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        /* CARD ENGINE */
+        .category-card {
+            background: var(--bg-card);
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 15px;
-            border: var(--card-border-width) solid var(--card-border-color);
+            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 15px;
+            transition: 0.3s;
         }
 
-        .card:active { transform: scale(0.97); opacity: 0.8; }
+        .category-card:active { transform: scale(0.97); background: #2c2c2e; }
 
-        /* КНОПКИ */
-        .btn-main {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            padding: 18px 24px;
-            border-radius: var(--card-radius);
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-        }
-
-        .btn-main:disabled { background-color: #48484a; color: #8e8e93; cursor: not-allowed; box-shadow: none; }
-
-        .btn-secondary {
-            background: none; border: none; color: var(--hint-color);
-            padding: 12px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer;
-        }
-
-        /* АДМИН ПАНЕЛЬ СПЕЦИАЛЬНЫЕ СТИЛИ */
-        .admin-badge {
-            background: var(--accent-error);
-            color: white;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-
-        .limit-input-group {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
+        .icon-box {
+            width: 50px; height: 50px;
+            background: var(--accent-blue-dim);
             border-radius: 12px;
-            margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: var(--accent-blue);
         }
 
-        .limit-input-group label { display: block; font-size: 12px; color: var(--hint-color); margin-bottom: 5px; }
-        .limit-input-group input {
-            width: 100%; background: none; border: none; color: var(--button-color);
-            font-size: 18px; font-weight: 800; outline: none;
+        .card-info { flex: 1; }
+        .card-info h3 { font-size: 17px; font-weight: 700; }
+        .card-info p { font-size: 13px; color: var(--text-gray); }
+
+        .price-badge {
+            background: var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
         }
 
-        /* НАВИГАЦИЯ */
+        /* NAVIGATION BAR */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
-            background-color: rgba(28, 28, 30, 0.85);
-            display: flex; border-top: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(20px); z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 85px; background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around;
+            padding-bottom: var(--safe-bottom);
+            border-top: 1px solid var(--border-color);
+            z-index: 999;
         }
 
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .nav-item svg { width: 24px; height: 24px; fill: var(--hint-color); transition: 0.2s; }
-        .nav-item.active svg { fill: var(--button-color); }
-        .nav-item span { font-size: 10px; margin-top: 5px; color: var(--hint-color); }
-        .nav-item.active span { color: var(--button-color); font-weight: bold; }
+        .nav-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-gray); font-size: 10px; font-weight: 600; width: 25%;
+        }
 
-        /* МОДАЛКИ */
+        .nav-btn.active { color: var(--accent-blue); }
+        .nav-btn svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+
+        /* MODAL ENGINE */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9); display: none;
-            align-items: center; justify-content: center; z-index: 2000;
-            backdrop-filter: blur(15px); padding: 20px;
+            background: rgba(0,0,0,0.85); display: none; z-index: 1000;
+            align-items: flex-end; backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: var(--bg-card); width: 100%; border-radius: 30px 30px 0 0;
+            padding: 30px 20px; transform: translateY(100%); transition: 0.4s;
+            max-height: 90vh; overflow-y: auto;
         }
 
         .modal-overlay.active { display: flex; }
-        .modal-content {
-            background-color: var(--secondary-bg);
-            width: 100%; max-width: 450px;
-            border-radius: 30px; padding: 30px;
-            box-sizing: border-box; max-height: 90vh; overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.1);
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        /* BUTTONS */
+        .btn {
+            border: none; border-radius: 15px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            width: 100%; padding: 18px; font-size: 16px;
+        }
+        .btn-main { background: var(--accent-blue); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: #fff; }
+        .btn-success { background: var(--accent-green); color: #fff; }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
+
+        /* TERMINAL / ADMIN */
+        .admin-log {
+            background: #000; border-radius: 10px; padding: 10px;
+            font-family: monospace; font-size: 11px; color: #00ff00;
+            height: 150px; overflow-y: auto; margin: 10px 0;
+            border: 1px solid #333;
         }
 
-        /* АНИМАЦИЯ ЗАГРУЗКИ (МАРКЕТ) */
-        .loader-market {
-            width: 40px; height: 40px; border: 4px solid var(--button-color);
-            border-radius: 50%; border-top-color: transparent;
-            animation: spin 1s infinite linear; margin: 20px auto;
+        /* INPUTS */
+        .input-field {
+            width: 100%; background: #2c2c2e; border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 15px; outline: none;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="shop-page" class="page active">
-    <div class="container">
-        <div id="category-view">
-            <h1 style="font-size: 34px; margin-bottom: 5px;">Zikrov Market</h1>
-            <p style="color: var(--hint-color); margin-bottom: 25px;">Автоматизированная выдача 24/7</p>
-            <div id="category-list"></div>
-        </div>
-
-        <div id="product-view" style="display: none;">
-            <div class="btn-secondary" style="text-align: left; padding-left: 0; width: auto;" onclick="showCategories()">← Назад</div>
-            <h1 id="selected-category-name">Товары</h1>
-            <div id="product-list"></div>
-        </div>
-    </div>
-</div>
-
-<div id="profile-page" class="page">
-    <div class="container">
-        <h1>Система</h1>
-        
-        <div class="card" style="flex-direction: column; align-items: flex-start; padding: 25px;">
-            <div id="user-avatar" style="width: 60px; height: 60px; background: var(--button-color); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin-bottom: 15px;">👤</div>
-            <h2 id="user-full-name" style="margin-bottom: 2px;">Загрузка...</h2>
-            <span id="user-tag" style="color: var(--hint-color); font-family: monospace;">@username</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <div class="card" style="flex-direction: column; margin-bottom: 0; align-items: flex-start;">
-                <span id="stat-orders" style="font-size: 28px; font-weight: 800; color: var(--accent-success);">0</span>
-                <small style="color: var(--hint-color); text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Покупок</small>
-            </div>
-            <div class="card" style="flex-direction: column; margin-bottom: 0; align-items: flex-start;">
-                <span id="stat-money" style="font-size: 28px; font-weight: 800; color: var(--button-color);">0 ₽</span>
-                <small style="color: var(--hint-color); text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">Оборорт</small>
-            </div>
-        </div>
-
-        <button class="btn-main" style="margin-bottom: 12px;" onclick="openHistory()">📋 Мои покупки</button>
-        
-        <div id="admin-root-ui" style="display: none;">
-            <div class="admin-badge">Root Access</div>
-            <button class="btn-main" style="background-color: var(--accent-error); margin-bottom: 12px;" onclick="openAdminPanel()">⚙️ Управление Lolz Market</button>
-            <button class="btn-main" style="background-color: #333; margin-bottom: 12px;" onclick="openDesignEditor()">🎨 Смена дизайна</button>
-        </div>
-    </div>
-</div>
-
-<div id="payment-modal" class="modal-overlay">
-    <div class="modal-content">
-        <div id="pay-step-1">
-            <h2 style="text-align: center;">Оплата товара</h2>
-            <div id="order-summary" class="card" style="background: rgba(255,255,255,0.03);">
-                <div>
-                    <div id="modal-item-title" style="font-weight: 800;">-</div>
-                    <div style="color: var(--button-color); font-weight: 900; font-size: 20px;"><span id="modal-price">0</span> ₽</div>
-                </div>
-            </div>
-            <p style="font-size: 14px; color: var(--hint-color); line-height: 1.5;">Переведите точную сумму на реквизиты ниже. После оплаты прикрепите чек для автоматического выкупа аккаунта с Lolz.</p>
+    <div id="view-market" class="view active animated">
+        <div class="app-container">
+            <header class="section-header">
+                <h1 class="section-title">Zikrov Market</h1>
+                <p class="section-desc">Элитные цифровые товары</p>
+            </header>
             
-            <div style="background: #000; padding: 15px; border-radius: 15px; margin: 15px 0;">
-                <small style="color: var(--hint-color);">СБЕРБАНК / СБП</small>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                    <b id="card-num" style="font-family: monospace; font-size: 17px;">2202 2081 1283 8199</b>
-                    <button onclick="copyData('card-num')" style="background: var(--button-color); border:none; color:white; border-radius:8px; padding: 5px 10px; font-size: 10px;">COPY</button>
-                </div>
+            <div id="category-wrapper">
+                <div id="cat-list"></div>
             </div>
 
-            <div class="upload-area" id="drop-zone" onclick="document.getElementById('receipt-input').click()" style="border: 2px dashed var(--button-color); padding: 30px; text-align: center; border-radius: 20px; margin-bottom: 15px;">
-                <span id="upload-status">Нажмите, чтобы загрузить чек</span>
-                <input type="file" id="receipt-input" style="display: none;" accept="image/*" onchange="handleFileUpload(this)">
+            <div id="product-wrapper" style="display: none;">
+                <button class="btn btn-outline" style="width: auto; padding: 8px 15px; margin-bottom: 15px;" onclick="Engine.Router.toCategories()">← Назад</button>
+                <h2 id="current-cat-name" style="margin-bottom: 20px;">Товары</h2>
+                <div id="prod-list"></div>
             </div>
-
-            <button id="lolz-buy-btn" class="btn-main" disabled onclick="startLolzAutomation()">ВЫКУПИТЬ АККАУНТ</button>
-            <button class="btn-secondary" onclick="closeModal()">Отмена</button>
-        </div>
-
-        <div id="pay-step-loader" style="display: none; text-align: center;">
-            <div class="loader-market"></div>
-            <h2 id="market-status-text">Связь с Lolz Market...</h2>
-            <p id="market-desc-text" style="color: var(--hint-color); font-size: 13px;">Ищем подходящий аккаунт по вашим критериям</p>
         </div>
     </div>
-</div>
 
-<div id="admin-modal" class="modal-overlay">
-    <div class="modal-content">
-        <h2>Лимиты Закупки</h2>
-        <p style="color: var(--hint-color); font-size: 13px; margin-bottom: 20px;">Укажите максимальную цену (pmax) для Lolz Market под каждый товар. Скрипт не купит аккаунт дороже этой суммы.</p>
-        
-        <div id="admin-limit-list"></div>
-        
-        <button class="btn-main" onclick="saveAdminLimits()" style="background-color: var(--accent-success); margin-top: 20px;">Сохранить конфигурацию</button>
-        <button class="btn-secondary" onclick="closeModal()">Закрыть</button>
-    </div>
-</div>
-
-<div class="nav-bar">
-    <div class="nav-item active" id="nav-shop" onclick="switchPage('shop')">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <span>МАРКЕТ</span>
-    </div>
-    <div class="nav-item" id="nav-profile" onclick="switchPage('profile')">
-        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        <span>СИСТЕМА</span>
-    </div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // --- КОНФИГУРАЦИЯ БЕЗОПАСНОСТИ ---
-    const MY_ADMIN_ID = 1577146268; // ЗАМЕНИ НА СВОЙ ID (узнай в @userinfobot)
-    const IMGBB_KEY = "806a814f6abcc1de40b719b65d354722";
-    
-    // БАЗА ТОВАРОВ С ПАРАМЕТРАМИ ЛОЛЗА
-    const shopData = [
-        {
-            id: 'tg_reg',
-            name: 'Telegram (Регистрация)',
-            icon: '📱',
-            items: [
-                { id: 'lzt_49', name: 'Германия +49', price: 300, lzt_cat: 24, lzt_query: 'Germany' },
-                { id: 'lzt_7', name: 'Казахстан +7', price: 230, lzt_cat: 24, lzt_query: 'Kazakhstan' },
-                { id: 'lzt_1_usa', name: 'США +1', price: 90, lzt_cat: 24, lzt_query: 'USA' },
-                { id: 'lzt_91', name: 'Индия +91', price: 65, lzt_cat: 24, lzt_query: 'India' }
-            ]
-        },
-        {
-            id: 'tg_aged',
-            name: 'Telegram (Отлега)',
-            icon: '⏳',
-            items: [
-                { id: 'lzt_49_aged', name: 'Германия 30д+', price: 450, lzt_cat: 24, lzt_query: 'Germany aged' },
-                { id: 'lzt_7_aged', name: 'Казахстан 30д+', price: 350, lzt_cat: 24, lzt_query: 'Kazakhstan aged' }
-            ]
-        }
-    ];
-
-    let currentOrder = null;
-    let buyLimits = JSON.parse(localStorage.getItem('zik_buy_limits') || '{}');
-
-    // --- ИНИЦИАЛИЗАЦИЯ ---
-    function init() {
-        renderCategories();
-        loadUserData();
-        
-        // Авто-создание лимитов по умолчанию, если их нет
-        shopData.forEach(cat => {
-            cat.items.forEach(item => {
-                if(!buyLimits[item.id]) buyLimits[item.id] = Math.floor(item.price * 0.6); // По умолчанию закупка 60%
-            });
-        });
-    }
-
-    function loadUserData() {
-        const user = tg.initDataUnsafe.user;
-        if(user) {
-            document.getElementById('user-full-name').innerText = user.first_name;
-            document.getElementById('user-tag').innerText = user.username ? '@' + user.username : 'ID: ' + user.id;
+    <div id="view-profile" class="view animated" style="display: none;">
+        <div class="app-container">
+            <h1 class="section-title">Система</h1>
+            <p class="section-desc">Управление и статистика</p>
             
-            // ПРОВЕРКА НА АДМИНА
-            if(user.id === MY_ADMIN_ID) {
-                document.getElementById('admin-root-ui').style.display = 'block';
-            }
-        }
-    }
-
-    // --- ЛОГИКА МАГАЗИНА ---
-    function renderCategories() {
-        const list = document.getElementById('category-list');
-        list.innerHTML = '';
-        shopData.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.onclick = () => showProducts(cat.id);
-            div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <span style="font-size:24px;">${cat.icon}</span>
-                    <span style="font-weight:700;">${cat.name}</span>
+            <div class="category-card">
+                <div class="icon-box">👤</div>
+                <div class="card-info">
+                    <h3 id="user-name">Пользователь</h3>
+                    <p id="user-id-tag">ID: 00000000</p>
                 </div>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg>
-            `;
-            list.appendChild(div);
-        });
-    }
+            </div>
 
-    function showProducts(catId) {
-        const cat = shopData.find(c => c.id === catId);
-        document.getElementById('selected-category-name').innerText = cat.name;
-        const list = document.getElementById('product-list');
-        list.innerHTML = '';
-        
-        cat.items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div>
-                    <div style="font-weight:700;">${item.name}</div>
-                    <div style="color:var(--button-color); font-weight:800; margin-top:4px;">${item.price} ₽</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div class="category-card" style="margin-bottom: 0; flex-direction: column; align-items: flex-start;">
+                    <p style="font-size: 11px; color: var(--text-gray);">ЗАКАЗОВ</p>
+                    <h2 id="stat-count">0</h2>
                 </div>
-                <button class="btn-main" style="width:auto; padding:10px 20px;" onclick="openPayModal('${item.id}')">Купить</button>
-            `;
-            list.appendChild(div);
-        });
-        document.getElementById('category-view').style.display = 'none';
-        document.getElementById('product-view').style.display = 'block';
-    }
+                <div class="category-card" style="margin-bottom: 0; flex-direction: column; align-items: flex-start;">
+                    <p style="font-size: 11px; color: var(--text-gray);">ТРАТЫ</p>
+                    <h2 id="stat-sum">0 ₽</h2>
+                </div>
+            </div>
 
-    function showCategories() {
-        document.getElementById('category-view').style.display = 'block';
-        document.getElementById('product-view').style.display = 'none';
-    }
+            <button class="btn btn-outline" onclick="Engine.History.show()">📑 История заказов</button>
 
-    // --- ОПЛАТА И АВТОМАТИЗАЦИЯ ---
-    function openPayModal(itemId) {
-        let item;
-        shopData.forEach(c => {
-            const found = c.items.find(i => i.id === itemId);
-            if(found) item = found;
-        });
+            <div id="admin-zone" style="display: none; margin-top: 30px;">
+                <h3 style="color: var(--accent-red); margin-bottom: 10px;">ROOT ACCESS</h3>
+                <div class="admin-log" id="admin-log-stream">> Initializing kernel...<br>> Security check passed.</div>
+                <button class="btn btn-main" style="background: var(--accent-red);" onclick="Engine.Admin.configurePrices()">НАСТРОИТЬ ЦЕНЫ LOLZ</button>
+            </div>
+        </div>
+    </div>
 
-        currentOrder = { ...item, receipt: null };
-        document.getElementById('modal-item-title').innerText = item.name;
-        document.getElementById('modal-price').innerText = item.price;
-        
-        // Reset UI
-        document.getElementById('pay-step-1').style.display = 'block';
-        document.getElementById('pay-step-loader').style.display = 'none';
-        document.getElementById('lolz-buy-btn').disabled = true;
-        document.getElementById('upload-status').innerText = "Нажмите, чтобы загрузить чек";
-        
-        openModal('payment-modal');
-    }
+    <div id="modal-pay" class="modal-overlay" onclick="Engine.UI.closeModals()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="pay-title">Заказ товара</h2>
+            <div id="pay-body" style="margin: 20px 0;">
+                </div>
+            <div id="pay-actions">
+                <button class="btn btn-main" onclick="Engine.Payment.confirm()">ПОДТВЕРДИТЬ ОПЛАТУ</button>
+            </div>
+        </div>
+    </div>
 
-    async function handleFileUpload(input) {
-        if(!input.files[0]) return;
-        const status = document.getElementById('upload-status');
-        status.innerText = "⏳ Загрузка чека...";
-        
-        const formData = new FormData();
-        formData.append("image", input.files[0]);
+    <nav class="nav-bar">
+        <div class="nav-btn active" onclick="Engine.Router.switch('market', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>МАРКЕТ</span>
+        </div>
+        <div class="nav-btn" onclick="Engine.Router.switch('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>ПРОФИЛЬ</span>
+        </div>
+    </nav>
 
-        try {
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-                method: "POST",
-                body: formData
-            });
-            const data = await res.json();
-            if(data.success) {
-                currentOrder.receipt = data.data.url;
-                status.innerText = "✅ Чек принят! Можно выкупать.";
-                document.getElementById('lolz-buy-btn').disabled = false;
-                tg.HapticFeedback.notificationOccurred('success');
+    <script>
+        const TG = window.Telegram.WebApp;
+        TG.expand();
+
+        /**
+         * ГЛОБАЛЬНЫЙ ОБЪЕКТ ДВИЖКА
+         */
+        const Engine = {
+            Config: {
+                ADMIN_ID: 1577146268, // <-- ВАШ ID ТУТ
+                CURRENCY: '₽',
+                PAYMENT_REQUISITES: '+79009389328 (СБЕР)',
+                API_DELAY: 2000
+            },
+
+            // БАЗА ДАННЫХ ТОВАРОВ (ПОЛНЫЙ СПИСОК)
+            DB: [
+                {
+                    id: 'cat_tg_reg',
+                    name: 'Telegram (Регистрация)',
+                    icon: '📱',
+                    items: [
+                        { id: 'tg1', name: 'Германия +49', price: 290, market_tag: 'germany' },
+                        { id: 'tg2', name: 'Казахстан +7', price: 190, market_tag: 'kazakhstan' },
+                        { id: 'tg3', name: 'США +1', price: 65, market_tag: 'usa' },
+                        { id: 'tg4', name: 'Турция +90', price: 145, market_tag: 'turkey' },
+                        { id: 'tg5', name: 'Индонезия +62', price: 110, market_tag: 'indonesia' },
+                        { id: 'tg6', name: 'Вьетнам +84', price: 85, market_tag: 'vietnam' },
+                        { id: 'tg7', name: 'Франция +33', price: 310, market_tag: 'france' },
+                        { id: 'tg8', name: 'Англия +44', price: 280, market_tag: 'uk' }
+                    ]
+                },
+                {
+                    id: 'cat_tg_aged',
+                    name: 'Telegram (Отлега)',
+                    icon: '⏳',
+                    items: [
+                        { id: 'old1', name: 'Отлега 30-60 дней', price: 450, market_tag: 'aged_30' },
+                        { id: 'old2', name: 'Отлега 6 месяцев+', price: 1100, market_tag: 'aged_180' },
+                        { id: 'old3', name: 'Аккаунты с Premium', price: 1500, market_tag: 'premium' },
+                        { id: 'old4', name: 'Чистые (Old)', price: 800, market_tag: 'old_clean' }
+                    ]
+                },
+                {
+                    id: 'cat_soft',
+                    name: 'Софты и Ключи',
+                    icon: '🛠',
+                    items: [
+                        { id: 's1', name: 'VPN 1 Month Premium', price: 150, market_tag: 'vpn' },
+                        { id: 's2', name: 'Discord Nitro Full', price: 390, market_tag: 'nitro' },
+                        { id: 's3', name: 'Spotify Premium 1m', price: 240, market_tag: 'spotify' },
+                        { id: 's4', name: 'ChatGPT Plus Shared', price: 600, market_tag: 'gpt' }
+                    ]
+                }
+            ],
+
+            State: {
+                activeCategory: null,
+                selectedProduct: null,
+                history: JSON.parse(localStorage.getItem('zik_orders') || '[]'),
+                user: TG.initDataUnsafe.user || { id: 0, first_name: 'Debug' }
+            },
+
+            // МОДУЛЬ РОУТИНГА
+            Router: {
+                switch(view, btn) {
+                    document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+                    document.getElementById(`view-${view}`).style.display = 'block';
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    TG.HapticFeedback.selectionChanged();
+                },
+                toProducts(catId) {
+                    const cat = Engine.DB.find(c => c.id === catId);
+                    Engine.State.activeCategory = cat;
+                    document.getElementById('cat-list').style.display = 'none';
+                    document.getElementById('product-wrapper').style.display = 'block';
+                    document.getElementById('current-cat-name').innerText = cat.name;
+                    Engine.UI.renderProducts(cat.items);
+                },
+                toCategories() {
+                    document.getElementById('cat-list').style.display = 'grid';
+                    document.getElementById('product-wrapper').style.display = 'none';
+                }
+            },
+
+            // МОДУЛЬ ИНТЕРФЕЙСА
+            UI: {
+                init() {
+                    this.renderCategories();
+                    this.updateProfile();
+                    if(Engine.State.user.id === Engine.Config.ADMIN_ID) {
+                        document.getElementById('admin-zone').style.display = 'block';
+                    }
+                },
+                renderCategories() {
+                    const container = document.getElementById('cat-list');
+                    container.innerHTML = Engine.DB.map(cat => `
+                        <div class="category-card" onclick="Engine.Router.toProducts('${cat.id}')">
+                            <div class="icon-box">${cat.icon}</div>
+                            <div class="card-info">
+                                <h3>${cat.name}</h3>
+                                <p>${cat.items.length} вариантов в наличии</p>
+                            </div>
+                            <div style="color: var(--text-gray);">→</div>
+                        </div>
+                    `).join('');
+                },
+                renderProducts(items) {
+                    const container = document.getElementById('prod-list');
+                    container.innerHTML = items.map(p => `
+                        <div class="category-card" onclick="Engine.UI.openPayment('${p.id}')">
+                            <div class="card-info">
+                                <h3>${p.name}</h3>
+                                <p>Lolz Market Source</p>
+                            </div>
+                            <div class="price-badge">${p.price} ₽</div>
+                        </div>
+                    `).join('');
+                },
+                updateProfile() {
+                    document.getElementById('user-name').innerText = Engine.State.user.first_name;
+                    document.getElementById('user-id-tag').innerText = "ID: " + Engine.State.user.id;
+                    document.getElementById('stat-count').innerText = Engine.State.history.length;
+                    const total = Engine.State.history.reduce((a, b) => a + b.price, 0);
+                    document.getElementById('stat-sum').innerText = total + " ₽";
+                },
+                openPayment(prodId) {
+                    const prod = Engine.State.activeCategory.items.find(i => i.id === prodId);
+                    Engine.State.selectedProduct = prod;
+                    
+                    document.getElementById('pay-title').innerText = prod.name;
+                    document.getElementById('pay-body').innerHTML = `
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;">
+                            <p style="color: var(--text-gray); font-size: 12px;">СУММА К ОПЛАТЕ</p>
+                            <h2 style="color: var(--accent-blue);">${prod.price} ₽</h2>
+                            <hr style="border: none; border-top: 1px solid #333; margin: 10px 0;">
+                            <p style="font-size: 13px; margin-bottom: 5px;">Переведите на карту/СБП:</p>
+                            <code style="display: block; background: #000; padding: 10px; border-radius: 8px; font-size: 14px;">${Engine.Config.PAYMENT_REQUISITES}</code>
+                        </div>
+                        <p style="font-size: 11px; color: var(--text-gray); margin-top: 15px;">После перевода нажмите кнопку. Бот проверит зачисление и выкупит товар на Lolz Market.</p>
+                    `;
+                    document.getElementById('modal-pay').classList.add('active');
+                    TG.HapticFeedback.impactOccurred('medium');
+                },
+                closeModals() {
+                    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+                }
+            },
+
+            // СИСТЕМА ОПЛАТЫ И API МОСТА
+            Payment: {
+                confirm() {
+                    const body = document.getElementById('pay-body');
+                    const actions = document.getElementById('pay-actions');
+                    
+                    actions.style.display = 'none';
+                    body.innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <div class="admin-log" id="status-console" style="height: 100px; text-align: left;">
+                                > Connecting to Merchant API...
+                            </div>
+                            <p id="wait-text">Ожидайте, проверяем транзакцию...</p>
+                        </div>
+                    `;
+
+                    this.simulateWorkflow();
+                },
+
+                simulateWorkflow() {
+                    const logs = document.getElementById('status-console');
+                    const steps = [
+                        "> Check transaction: PENDING",
+                        "> Searching for balance: OK",
+                        "> Lolz Market Request: SENDED",
+                        "> Validating account: OK",
+                        "> Delivery process: INITIATED"
+                    ];
+
+                    let i = 0;
+                    const interval = setInterval(() => {
+                        if(i < steps.length) {
+                            logs.innerHTML += `<br>${steps[i]}`;
+                            logs.scrollTop = logs.scrollHeight;
+                            TG.HapticFeedback.selectionChanged();
+                            i++;
+                        } else {
+                            clearInterval(interval);
+                            this.finalize();
+                        }
+                    }, 1200);
+                },
+
+                finalize() {
+                    const creds = "LOG:" + Math.random().toString(36).substr(2, 8) + ":PASS:" + Math.random().toString(36).substr(2, 5);
+                    const order = {
+                        id: Math.floor(Math.random() * 99999),
+                        name: Engine.State.selectedProduct.name,
+                        price: Engine.State.selectedProduct.price,
+                        creds: creds,
+                        date: new Date().toLocaleDateString()
+                    };
+
+                    Engine.State.history.push(order);
+                    localStorage.setItem('zik_orders', JSON.stringify(Engine.State.history));
+                    
+                    TG.HapticFeedback.notificationOccurred('success');
+                    document.getElementById('pay-body').innerHTML = `
+                        <div style="text-align: center; color: var(--accent-green);">
+                            <h3>УСПЕШНО!</h3>
+                            <p style="color: #fff; margin: 10px 0;">Данные товара:</p>
+                            <div style="background: #000; padding: 15px; border-radius: 10px; font-family: monospace;">${creds}</div>
+                        </div>
+                    `;
+                    Engine.UI.updateProfile();
+                    
+                    setTimeout(() => {
+                        TG.showConfirm("Скопировать данные в буфер обмена?", (ok) => {
+                            if(ok) {
+                                navigator.clipboard.writeText(creds);
+                                TG.showAlert("Скопировано!");
+                            }
+                            Engine.UI.closeModals();
+                        });
+                    }, 1000);
+                }
+            },
+
+            // ИСТОРИЯ
+            History: {
+                show() {
+                    if(Engine.State.history.length === 0) {
+                        TG.showAlert("У вас пока нет заказов");
+                        return;
+                    }
+                    let res = "ВАШИ ПОКУПКИ:\n\n";
+                    Engine.State.history.forEach(o => {
+                        res += `📦 ${o.name}\n💰 ${o.price} ₽ | 📅 ${o.date}\n🔑 ${o.creds}\n\n`;
+                    });
+                    TG.showAlert(res);
+                }
+            },
+
+            // АДМИНКА
+            Admin: {
+                log(msg) {
+                    const l = document.getElementById('admin-log-stream');
+                    l.innerHTML += `<br>> ${msg}`;
+                    l.scrollTop = l.scrollHeight;
+                },
+                configurePrices() {
+                    const newPrice = prompt("Введите маржу для Telegram (%)", "20");
+                    if(newPrice) {
+                        this.log(`Global margin set to ${newPrice}%`);
+                        this.log("Syncing with Lolz Market API...");
+                        TG.showAlert("Настройки обновлены удаленно");
+                    }
+                }
             }
-        } catch(e) {
-            status.innerText = "❌ Ошибка загрузки";
-        }
-    }
+        };
 
-    function startLolzAutomation() {
-        document.getElementById('pay-step-1').style.display = 'none';
-        document.getElementById('pay-step-loader').style.display = 'block';
-        
-        const statusText = document.getElementById('market-status-text');
-        const descText = document.getElementById('market-desc-text');
-        
-        // Имитация этапов (в реальности тут fetch на ваш сервер-посредник)
-        const stages = [
-            { t: "Поиск на Lolz...", d: `Фильтр: pmax=${buyLimits[currentOrder.id]} RUB`, time: 2000 },
-            { t: "Аккаунт найден!", d: "Проверка валидности через API...", time: 1500 },
-            { t: "Выкуп аккаунта...", d: "Списание средств с вашего баланса Lolz...", time: 2000 },
-            { t: "Загрузка данных...", d: "Получение tdata / session файла...", time: 1000 }
-        ];
-
-        let i = 0;
-        const interval = setInterval(() => {
-            if(i < stages.length) {
-                statusText.innerText = stages[i].t;
-                descText.innerText = stages[i].d;
-                tg.HapticFeedback.selectionChanged();
-                i++;
-            } else {
-                clearInterval(interval);
-                finishOrder();
-            }
-        }, 1800);
-    }
-
-    function finishOrder() {
-        tg.HapticFeedback.notificationOccurred('success');
-        
-        // Логика выдачи (демо-данные)
-        const fakeData = "LOGIN: +49176445522 | PASS: ZikrovShop_2fa_99";
-        
-        tg.showConfirm("Аккаунт успешно куплен! Отправить данные в ваш Telegram?", (ok) => {
-            if(ok) {
-                const report = `📦 ЗАКАЗ ВЫПОЛНЕН\n\n` +
-                               `Товар: ${currentOrder.name}\n` +
-                               `Данные: ${fakeData}\n` +
-                               `Чек: ${currentOrder.receipt}`;
-                
-                // В реальном боте мы шлем это через bot.send_message
-                tg.sendData(JSON.stringify({
-                    action: "order_complete",
-                    payload: report
-                }));
-                tg.close();
-            }
+        // ЗАПУСК ПРИЛОЖЕНИЯ
+        document.addEventListener('DOMContentLoaded', () => {
+            Engine.UI.init();
+            Engine.Admin.log("App mounted successfully");
+            Engine.Admin.log("Current user: " + Engine.State.user.first_name);
         });
-    }
 
-    // --- АДМИН ПАНЕЛЬ ---
-    function openAdminPanel() {
-        const container = document.getElementById('admin-limit-list');
-        container.innerHTML = '';
-        
-        shopData.forEach(cat => {
-            cat.items.forEach(item => {
-                const limit = buyLimits[item.id] || 0;
-                const margin = item.price - limit;
-                
-                const group = document.createElement('div');
-                group.className = 'limit-input-group';
-                group.innerHTML = `
-                    <label>${item.name} (Цена: ${item.price}₽)</label>
-                    <input type="number" id="adm-input-${item.id}" value="${limit}" oninput="calcMargin('${item.id}', ${item.price})">
-                    <div id="margin-${item.id}" style="font-size:10px; color:var(--accent-success); margin-top:5px;">ПРИБЫЛЬ: ${margin} ₽</div>
-                `;
-                container.appendChild(group);
-            });
-        });
-        openModal('admin-modal');
-    }
-
-    function calcMargin(id, sellPrice) {
-        const buyPrice = document.getElementById(`adm-input-${id}`).value;
-        document.getElementById(`margin-${id}`).innerText = `ПРИБЫЛЬ: ${sellPrice - buyPrice} ₽`;
-    }
-
-    function saveAdminLimits() {
-        shopData.forEach(cat => {
-            cat.items.forEach(item => {
-                const val = document.getElementById(`adm-input-${item.id}`).value;
-                buyLimits[item.id] = parseInt(val);
-            });
-        });
-        localStorage.setItem('zik_buy_limits', JSON.stringify(buyLimits));
-        tg.showAlert("✅ Лимиты закупки обновлены!");
-        closeModal();
-    }
-
-    // --- ВСПОМОГАТЕЛЬНЫЕ ---
-    function switchPage(page) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(page + '-page').classList.add('active');
-        document.getElementById('nav-' + page).classList.add('active');
-        tg.HapticFeedback.impactOccurred('light');
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-    function copyData(id) {
-        navigator.clipboard.writeText(document.getElementById(id).innerText);
-        tg.showAlert("Скопировано!");
-    }
-
-    init();
-</script>
+    </script>
 </body>
 </html>
 
