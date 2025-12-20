@@ -2,159 +2,286 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Shop Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 15px; }
-        .category-btn { display: block; width: 100%; padding: 10px; margin-bottom: 5px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 8px; cursor: pointer; }
-        .product-card { border: 1px solid #ccc; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #fff);
+            --text-color: var(--tg-theme-text-color, #222);
+            --hint-color: var(--tg-theme-hint-color, #999);
+            --button-color: var(--tg-theme-button-color, #3390ec);
+            --button-text: var(--tg-theme-button-text-color, #fff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            margin: 0; padding: 0;
+            user-select: none;
+        }
+
+        /* Header & Navigation */
+        .header {
+            background: var(--bg-color);
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .container { padding: 15px; padding-bottom: 80px; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .category-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+
+        .btn {
+            display: block; width: 100%; padding: 12px;
+            border-radius: 10px; border: none;
+            background: var(--button-color); color: var(--button-text);
+            font-weight: 600; cursor: pointer; text-align: center;
+            text-decoration: none; margin-top: 10px;
+        }
+
+        .btn-outline {
+            background: transparent; color: var(--button-color);
+            border: 1px solid var(--button-color);
+        }
+
+        /* Bottom Menu */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%;
+            background: var(--bg-color);
+            display: flex; justify-content: space-around;
+            padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            font-size: 12px; color: var(--hint-color);
+            text-align: center; cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--button-color); }
+
         .hidden { display: none; }
-        input, textarea { width: 100%; margin-top: 10px; padding: 8px; box-sizing: border-box; }
-        .admin-panel { border-top: 2px solid #666; margin-top: 20px; padding-top: 10px; }
-        .history-item { font-size: 0.8em; border-bottom: 1px solid #eee; padding: 5px 0; }
+
+        input, select, textarea {
+            width: 100%; padding: 10px; margin: 5px 0;
+            border-radius: 8px; border: 1px solid #ddd;
+            background: var(--bg-color); color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .badge {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            background: #e1f5fe; color: #01579b; margin-left: 5px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="main-page">
-        <h2>🛍 Магазин</h2>
-        <div id="categories-list">
+    <div class="header" id="page-title">Магазин</div>
+
+    <div class="container" id="app">
+        <div id="view-main">
+            <h3 style="margin-top:0">Категории</h3>
+            <div class="category-grid" id="cat-list"></div>
+        </div>
+
+        <div id="view-products" class="hidden">
+            <div id="prod-list"></div>
+        </div>
+
+        <div id="view-profile" class="hidden">
+            <div class="card" style="text-align: center;">
+                <img id="user-photo" src="" style="width: 80px; border-radius: 50%; display: none; margin: 0 auto 10px;">
+                <h2 id="user-name" style="margin:0">Пользователь</h2>
+                <p id="user-id" style="color: var(--hint-color); font-size: 14px;"></p>
             </div>
-        <button onclick="showHistory()" class="category-btn" style="background: gray;">📜 История заказов</button>
+            <h3>История покупок</h3>
+            <div id="order-history"></div>
+        </div>
+
+        <div id="view-payment" class="hidden">
+            <div class="card">
+                <h3>Оплата заказа</h3>
+                <p id="pay-info"></p>
+                <div style="background: #fffbe6; padding: 10px; border-radius: 8px; border: 1px solid #ffe58f; font-size: 14px;">
+                    Реквизиты: <b>4444 0000 1111 2222</b><br>Получатель: Иван И.
+                </div>
+                <p style="font-size: 13px; color: var(--hint-color);">Прикрепите скриншот чека ниже:</p>
+                <input type="file" id="receipt-file" accept="image/*">
+                <button class="btn" onclick="processPayment()">Подтвердить оплату</button>
+            </div>
+        </div>
+
+        <div id="view-admin" class="hidden">
+            <div class="card">
+                <h4>➕ Новая категория</h4>
+                <input type="text" id="adm-cat-name" placeholder="Название">
+                <button class="btn" onclick="addCategory()">Создать категорию</button>
+            </div>
+            <div class="card">
+                <h4>➕ Новый товар</h4>
+                <input type="text" id="adm-prod-name" placeholder="Название">
+                <input type="number" id="adm-prod-price" placeholder="Цена (руб)">
+                <select id="adm-prod-cat"></select>
+                <button class="btn" onclick="addProduct()">Добавить товар</button>
+            </div>
+        </div>
     </div>
 
-    <div id="products-page" class="hidden">
-        <button onclick="showMain()">⬅ Назад</button>
-        <h2 id="cat-title">Товары</h2>
-        <div id="products-list"></div>
-    </div>
-
-    <div id="payment-page" class="hidden">
-        <button onclick="showMain()">⬅ Отмена</button>
-        <h2>Оплата по реквизитам</h2>
-        <p>Сумма: <b id="pay-price"></b> руб.</p>
-        <p>Реквизиты: <b>4444 0000 1111 2222</b></p>
-        <p>Загрузите скриншот чека и нажмите "Оплатить":</p>
-        <input type="file" id="screenshot" accept="image/*">
-        <button class="category-btn" onclick="sendOrder()" style="margin-top:20px;">✅ Отправить на проверку</button>
-    </div>
-
-    <div id="history-page" class="hidden">
-        <button onclick="showMain()">⬅ Назад</button>
-        <h2>Ваша история</h2>
-        <div id="history-list"></div>
-    </div>
-
-    <hr>
-    <div id="admin-section" class="admin-panel hidden">
-        <h3>⚙ Админ-панель</h3>
-        <input type="text" id="new-cat" placeholder="Название категории">
-        <button onclick="addCategory()">Добавить категорию</button>
-        <br><br>
-        <input type="text" id="prod-name" placeholder="Имя товара">
-        <input type="number" id="prod-price" placeholder="Цена">
-        <select id="prod-cat-select"></select>
-        <button onclick="addProduct()">Добавить товар</button>
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('main')">🏠<br>Магазин</div>
+        <div class="nav-item" onclick="switchTab('profile')">👤<br>Профиль</div>
+        <div class="nav-item hidden" id="admin-tab" onclick="switchTab('admin')">⚙️<br>Админ</div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        tg.headerColor = tg.themeParams.bg_color;
 
-        // Имитация базы данных в LocalStorage (чтобы данные не пропадали при перезагрузке)
-        let data = JSON.parse(localStorage.getItem('shopData')) || {
-            categories: [{id: 1, name: "Электроника"}],
-            products: [{id: 1, catId: 1, name: "Наушники", price: 1500}],
+        const ADMIN_USERNAME = "ВАШ_ЛОГИН_БЕЗ_СОБАЧКИ"; // Вставьте сюда ваш юзернейм для связи
+
+        // Данные (имитация БД)
+        let state = JSON.parse(localStorage.getItem('store_db')) || {
+            categories: [{id: 1, name: "Софт"}],
+            products: [{id: 101, catId: 1, name: "VPN Premium", price: 500}],
             orders: []
         };
 
-        const adminId = 12345678; // ЗАМЕНИТЕ НА ВАШ ID
+        function save() {
+            localStorage.setItem('store_db', JSON.stringify(state));
+            render();
+        }
 
-        function save() { localStorage.setItem('shopData', JSON.stringify(data)); render(); }
+        function switchTab(tab) {
+            document.querySelectorAll('#app > div').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            document.getElementById('page-title').innerText = tab === 'main' ? 'Магазин' : tab.toUpperCase();
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Простая логика подсветки
+            if(tab === 'main') document.querySelectorAll('.nav-item')[0].classList.add('active');
+            if(tab === 'profile') document.querySelectorAll('.nav-item')[1].classList.add('active');
+        }
 
         function render() {
-            // Рендер категорий
-            const catDiv = document.getElementById('categories-list');
-            const select = document.getElementById('prod-cat-select');
-            catDiv.innerHTML = ''; select.innerHTML = '';
-            data.categories.forEach(c => {
-                catDiv.innerHTML += `<button class="category-btn" onclick="showProducts(${c.id}, '${c.name}')">${c.name}</button>`;
-                select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            // Категории
+            const catList = document.getElementById('cat-list');
+            const admSelect = document.getElementById('adm-prod-cat');
+            catList.innerHTML = ''; admSelect.innerHTML = '';
+            
+            state.categories.forEach(c => {
+                catList.innerHTML += `<div class="card" onclick="showProducts(${c.id}, '${c.name}')"><b>${c.name}</b></div>`;
+                admSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
 
-            // Показ админки если юзер - админ
-            if (tg.initDataUnsafe?.user?.id === adminId) {
-                document.getElementById('admin-section').classList.remove('hidden');
+            // Профиль
+            if(tg.initDataUnsafe.user) {
+                const user = tg.initDataUnsafe.user;
+                document.getElementById('user-name').innerText = user.first_name;
+                document.getElementById('user-id').innerText = "@" + (user.username || "id" + user.id);
+                // Если вы хотите видеть админку (проверка по ID или username)
+                if(user.username === ADMIN_USERNAME) {
+                    document.getElementById('admin-tab').classList.remove('hidden');
+                }
             }
+
+            // История
+            const historyList = document.getElementById('order-history');
+            historyList.innerHTML = state.orders.length ? '' : '<p style="color:gray; text-align:center">Нет покупок</p>';
+            state.orders.forEach(o => {
+                historyList.innerHTML += `<div class="card" style="font-size:14px">🛍 ${o.item}<br><small>${o.date}</small> <span class="badge">${o.status}</span></div>`;
+            });
         }
 
         function showProducts(catId, name) {
-            document.getElementById('main-page').classList.add('hidden');
-            document.getElementById('products-page').classList.remove('hidden');
-            document.getElementById('cat-title').innerText = name;
-            const list = document.getElementById('products-list');
-            list.innerHTML = '';
-            data.products.filter(p => p.catId === catId).forEach(p => {
+            switchTab('products');
+            document.getElementById('page-title').innerText = name;
+            const list = document.getElementById('prod-list');
+            list.innerHTML = `<button class="btn btn-outline" onclick="switchTab('main')" style="margin-bottom:15px">⬅ Назад</button>`;
+            
+            state.products.filter(p => p.catId === catId).forEach(p => {
                 list.innerHTML += `
-                    <div class="product-card">
-                        <b>${p.name}</b> — ${p.price} руб.
-                        <button onclick="startPay('${p.name}', ${p.price})">Купить</button>
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <b>${p.name}</b>
+                            <span style="font-weight:bold; color:var(--button-color)">${p.price} ₽</span>
+                        </div>
+                        <button class="btn" onclick="startPay('${p.name}', ${p.price})">Купить</button>
                     </div>`;
             });
         }
 
         function startPay(name, price) {
-            document.getElementById('products-page').classList.add('hidden');
-            document.getElementById('payment-page').classList.remove('hidden');
-            document.getElementById('pay-price').innerText = price;
-            window.currentOrder = { name, price };
+            switchTab('payment');
+            document.getElementById('pay-info').innerHTML = `Товар: <b>${name}</b><br>К оплате: <b>${price} ₽</b>`;
+            window.tempOrder = { name, price };
         }
 
-        function sendOrder() {
-            const file = document.getElementById('screenshot').files[0];
-            if (!file) return alert("Загрузите скриншот!");
+        function processPayment() {
+            const fileInput = document.getElementById('receipt-file');
+            if(!fileInput.files[0]) {
+                tg.showAlert("Пожалуйста, прикрепите фото чека!");
+                return;
+            }
 
-            const orderInfo = `Заказ: ${window.currentOrder.name} (${window.currentOrder.price} руб.)`;
-            data.orders.push({ text: orderInfo, status: "Проверка" });
+            // Сохраняем в историю
+            state.orders.unshift({
+                item: window.tempOrder.name,
+                price: window.tempOrder.price,
+                date: new Date().toLocaleDateString(),
+                status: "Проверяется"
+            });
             save();
 
-            // Отправка данных боту
-            tg.sendData(JSON.stringify({
-                action: "new_order",
-                item: window.currentOrder.name,
-                price: window.currentOrder.price,
-                user: tg.initDataUnsafe?.user?.username || "unknown"
-            }));
+            // Формируем ссылку для переноса в ЛС к админу
+            const messageText = encodeURIComponent(
+                `👋 Здравствуйте! Я оплатил заказ.\n\n` +
+                `📦 Товар: ${window.tempOrder.name}\n` +
+                `💰 Цена: ${window.tempOrder.price} руб.\n` +
+                `🖼 Скриншот чека прилагаю.`
+            );
             
-            tg.close();
+            const adminLink = `https://t.me/${ADMIN_USERNAME}?text=${messageText}`;
+
+            tg.showConfirm("Данные приняты! Теперь нужно отправить скриншот администратору в ЛС. Перейти?", (ok) => {
+                if(ok) {
+                    tg.openTelegramLink(adminLink);
+                    tg.close();
+                }
+            });
         }
 
-        function showHistory() {
-            document.getElementById('main-page').classList.add('hidden');
-            document.getElementById('history-page').classList.remove('hidden');
-            const list = document.getElementById('history-list');
-            list.innerHTML = data.orders.length ? data.orders.map(o => `<div class="history-item">${o.text} - <b>${o.status}</b></div>`).join('') : "Пусто";
-        }
-
-        function showMain() {
-            document.querySelectorAll('div[id$="-page"]').forEach(d => d.classList.add('hidden'));
-            document.getElementById('main-page').classList.remove('hidden');
-        }
-
-        // Админ-функции
+        // Админ функции
         function addCategory() {
-            const name = document.getElementById('new-cat').value;
-            data.categories.push({id: Date.now(), name});
-            save();
+            const val = document.getElementById('adm-cat-name').value;
+            if(val) { state.categories.push({id: Date.now(), name: val}); save(); }
         }
 
         function addProduct() {
-            const name = document.getElementById('prod-name').value;
-            const price = document.getElementById('prod-price').value;
-            const catId = parseInt(document.getElementById('prod-cat-select').value);
-            data.products.push({id: Date.now(), catId, name, price});
-            save();
+            const name = document.getElementById('adm-prod-name').value;
+            const price = document.getElementById('adm-prod-price').value;
+            const catId = parseInt(document.getElementById('adm-prod-cat').value);
+            if(name && price) {
+                state.products.push({id: Date.now(), catId, name, price});
+                save();
+            }
         }
 
         render();
