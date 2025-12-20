@@ -2,670 +2,475 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Zikrov Elite Market v3.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Shop Mini App</title>
     
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    
+
     <style>
-        /* ================================================================
-           1. CSS DESIGN SYSTEM (DEEP DARK ENTERPRISE)
-           ================================================================
-        */
-        :root {
-            --bg-base: #000000;
-            --bg-surface: #0a0a0b;
-            --bg-card: #111113;
-            --bg-elevated: #1c1c1e;
-            
-            --accent: #007aff;
-            --accent-gradient: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
-            --accent-soft: rgba(0, 122, 255, 0.15);
-            
-            --success: #32d74b;
-            --warning: #ffd60a;
-            --error: #ff453a;
-            
-            --text-main: #ffffff;
-            --text-secondary: #8e8e93;
-            --text-muted: #48484a;
-            
-            --border: rgba(255, 255, 255, 0.06);
-            --border-bright: rgba(255, 255, 255, 0.12);
-            
-            --radius-xs: 8px;
-            --radius-sm: 12px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
-            --radius-xl: 32px;
-            
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
-            --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
-            
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
-        }
-
-        /* Reset & Global */
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            font-family: 'Inter', -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            overflow-x: hidden;
-            width: 100%;
-            min-height: 100vh;
-            padding-bottom: calc(100px + var(--safe-bottom));
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 0; }
-
-        /* Typography */
-        h1 { font-size: 34px; font-weight: 850; letter-spacing: -1.5px; line-height: 1.1; }
-        h2 { font-size: 22px; font-weight: 750; letter-spacing: -0.5px; }
-        h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
-        p { font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
-
-        /* Layout Helpers */
-        .container { padding: 0 20px; width: 100%; max-width: 600px; margin: 0 auto; }
-        .flex-row { display: flex; align-items: center; justify-content: space-between; }
-        .hidden { display: none !important; }
-        .anim-fade { animation: fadeIn 0.4s ease-out; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* ================================================================
-           2. UI COMPONENTS
-           ================================================================
-        */
-
-        /* Buttons */
-        .btn {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; border: none; border-radius: var(--radius-md);
-            padding: 18px; font-size: 16px; font-weight: 700;
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative; overflow: hidden;
-        }
-
-        .btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3); }
-        .btn-secondary { background: var(--bg-elevated); color: white; border: 1px solid var(--border-bright); }
-        .btn-ghost { background: transparent; color: var(--text-secondary); padding: 10px; }
-        .btn-danger { background: var(--error); color: white; }
-
-        .btn:active { transform: scale(0.97); opacity: 0.9; }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            margin-bottom: 16px;
-            transition: 0.3s;
-        }
-
-        .card-active:active { background: var(--bg-elevated); border-color: var(--accent); }
-
-        /* Inputs */
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-left: 4px; }
-        .input-field {
-            width: 100%; background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: var(--radius-sm); padding: 16px; color: white;
-            font-size: 15px; outline: none; transition: 0.2s;
-        }
-        .input-field:focus { border-color: var(--accent); background: #151517; }
-
-        /* Navigation Bar */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: calc(85px + var(--safe-bottom));
-            background: rgba(10, 10, 12, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around;
-            padding: 10px 10px var(--safe-bottom);
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-muted); text-decoration: none; width: 20%;
-            transition: 0.2s;
-        }
-
-        .nav-item.active { color: var(--accent); }
-        .nav-item svg { width: 24px; height: 24px; margin-bottom: 6px; fill: currentColor; }
-        .nav-item span { font-size: 10px; font-weight: 700; }
-
-        /* Badges */
-        .badge {
-            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .badge-success { background: rgba(50, 215, 75, 0.1); color: var(--success); }
-        .badge-blue { background: var(--accent-soft); color: var(--accent); }
-
-        /* Bottom Sheet (Payment Modal) */
-        .sheet-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); z-index: 2000;
-            display: none; align-items: flex-end;
-        }
-        .sheet-overlay.active { display: flex; }
-        .sheet {
-            background: var(--bg-card); width: 100%; border-radius: 32px 32px 0 0;
-            padding: 32px 24px calc(40px + var(--safe-bottom));
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .sheet-overlay.active .sheet { transform: translateY(0); }
-
+        body { -webkit-tap-highlight-color: transparent; }
+        /* Скрываем скроллбар для красоты */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-    <div id="view-market" class="view anim-fade">
-        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
-            <p id="welcome-text">Premium Accounts</p>
-            <h1>Elite Market</h1>
-        </header>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { motion, AnimatePresence } = window.Motion;
+        const { ShoppingBag, User, Settings, CreditCard, Coins, Upload, CheckCircle, Plus, Trash2, Palette, Box } = window.lucide;
 
-        <div class="container">
-            <div id="cat-render-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px;">
-                </div>
+        // --- Имитация Базы Данных (LocalStorage) ---
+        const DB = {
+            get: (key, def) => {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : def;
+            },
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val))
+        };
 
-            <div id="product-view" class="hidden">
-                <div class="flex-row" style="margin-bottom: 20px;">
-                    <h2 id="current-cat-name">Category</h2>
-                    <button class="btn-ghost" onclick="Router.back()">← Назад</button>
-                </div>
-                <div id="product-render-list">
-                    </div>
-            </div>
-        </div>
-    </div>
+        const INITIAL_PRODUCTS = [
+            { id: 1, title: 'Telegram Premium 3 мес.', price: 1200, category: 'Premium' },
+            { id: 2, title: 'Аккаунт USA (+1)', price: 250, category: 'Accounts' },
+            { id: 3, title: 'Аккаунт RU (+7)', price: 300, category: 'Accounts' },
+            { id: 4, title: 'Канал 2018 года', price: 5000, category: 'Channels' },
+        ];
 
-    <div id="view-profile" class="view hidden anim-fade">
-        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
-            <h1>Мой Кабинет</h1>
-        </header>
-
-        <div class="container">
-            <div class="card" style="display: flex; gap: 20px; align-items: center;">
-                <div id="u-avatar" style="width: 70px; height: 70px; border-radius: 24px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: white;">?</div>
-                <div>
-                    <h2 id="u-name">User</h2>
-                    <p id="u-id-display">ID: 000000</p>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                <div class="card" style="margin-bottom: 0; padding: 20px;">
-                    <h3 style="font-size: 11px; text-transform: uppercase; margin-bottom: 5px;">Сделок</h3>
-                    <div id="stat-deals" style="font-size: 24px; font-weight: 850;">0</div>
-                </div>
-                <div class="card" style="margin-bottom: 0; padding: 20px;">
-                    <h3 style="font-size: 11px; text-transform: uppercase; margin-bottom: 5px;">Потрачено</h3>
-                    <div id="stat-spent" style="font-size: 24px; font-weight: 850; color: var(--accent);">0 ₽</div>
-                </div>
-            </div>
-
-            <button class="btn btn-secondary" onclick="Logic.showHistory()" style="margin-bottom: 12px;">🕒 История покупок</button>
-            <button class="btn btn-secondary" onclick="TG.openTelegramLink('https://t.me/Z1KROV')">🆘 Поддержка</button>
-
-            <div id="admin-access" class="hidden" style="margin-top: 40px;">
-                <div style="background: rgba(255, 69, 58, 0.1); border: 1px dashed var(--error); padding: 20px; border-radius: 20px;">
-                    <h3 style="color: var(--error); margin-bottom: 10px;">ROOT ACCESS DETECTED</h3>
-                    <button class="btn btn-danger" onclick="Router.go('admin')">ВОЙТИ В АДМИН-ПАНЕЛЬ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-admin" class="view hidden anim-fade">
-        <header class="header container" style="padding-top: 40px; margin-bottom: 30px;">
-            <button class="btn-ghost" onclick="Router.go('profile')" style="margin-left: -10px;">← Назад</button>
-            <h1 style="color: var(--error);">Console v3.0</h1>
-        </header>
-
-        <div class="container" style="padding-bottom: 50px;">
+        // --- Главный Компонент ---
+        function App() {
+            // Состояния
+            const [view, setView] = useState('shop');
+            const [products, setProducts] = useState(() => DB.get('products', INITIAL_PRODUCTS));
+            const [cartItem, setCartItem] = useState(null);
+            const [theme, setTheme] = useState(() => DB.get('theme', { bg: '#171717', text: '#ffffff', btn: '#3b82f6', card: '#262626' }));
+            const [userStats, setUserStats] = useState(() => DB.get('stats', { spent: 0, orders: [] }));
+            const [activeCategory, setActiveCategory] = useState('All');
             
-            <div class="card">
-                <h2>Конфигурация</h2>
-                <div class="input-group" style="margin-top: 20px;">
-                    <label>LOLZ MARKET TOKEN</label>
-                    <input type="password" id="adm-lolz-token" class="input-field" placeholder="api_key_here">
-                </div>
-                <div class="input-group">
-                    <label>Текст оплаты (Крипта)</label>
-                    <textarea id="adm-pay-crypto" class="input-field" style="height: 80px;">Переведите USDT на адрес ниже...</textarea>
-                </div>
-                <div class="input-group">
-                    <label>Текст оплаты (Карта)</label>
-                    <textarea id="adm-pay-card" class="input-field" style="height: 80px;">Переведите на карту Тинькофф...</textarea>
-                </div>
-                <button class="btn btn-primary" onclick="Admin.saveGlobalConfig()">Сохранить настройки</button>
-            </div>
-
-            <div class="card">
-                <h2>Добавить Категорию</h2>
-                <div class="input-group" style="margin-top: 15px;">
-                    <input type="text" id="adm-cat-name" class="input-field" placeholder="Название (напр. Telegram RU)">
-                </div>
-                <button class="btn btn-secondary" onclick="Admin.addCategory()">Создать категорию</button>
-            </div>
-
-            <div class="card">
-                <h2>Новый Товар (LOLZ SYNC)</h2>
-                <div class="input-group" style="margin-top: 15px;">
-                    <label>Название в магазине</label>
-                    <input type="text" id="adm-p-name" class="input-field" placeholder="TG Авторег 2FA">
-                </div>
-                <div class="input-group">
-                    <label>Категория</label>
-                    <select id="adm-p-cat-select" class="input-field"></select>
-                </div>
-                <div class="input-group">
-                    <label>Ваша цена (Фикс в рублях)</label>
-                    <input type="number" id="adm-p-price" class="input-field" placeholder="150">
-                </div>
-
-                <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
-                <p style="font-size: 11px; color: var(--accent); font-weight: 800; margin-bottom: 10px;">ПАРАМЕТРЫ ПАРСИНГА LOLZ</p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="input-group">
-                        <label>Мин. цена Lolz</label>
-                        <input type="number" id="adm-lz-min" class="input-field" placeholder="10">
-                    </div>
-                    <div class="input-group">
-                        <label>Макс. цена Lolz</label>
-                        <input type="number" id="adm-lz-max" class="input-field" placeholder="100">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Происхождение</label>
-                    <select id="adm-lz-origin" class="input-field">
-                        <option value="autoreg">Авторег</option>
-                        <option value="brute">Брут</option>
-                        <option value="owner">Личный</option>
-                        <option value="resale">Перепродажа</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Ключевое слово в заголовке</label>
-                    <input type="text" id="adm-lz-query" class="input-field" placeholder="Telegram">
-                </div>
-
-                <button class="btn btn-primary" onclick="Admin.addProduct()">Опубликовать товар</button>
-            </div>
-
-            <button class="btn btn-secondary" onclick="Admin.resetAllData()" style="color: var(--error);">⚠️ СБРОСИТЬ ВСЕ ДАННЫЕ</button>
-        </div>
-    </div>
-
-    <div id="pay-sheet-overlay" class="sheet-overlay" onclick="UI.closePaymentSheet()">
-        <div class="sheet" onclick="event.stopPropagation()">
-            <div style="width: 40px; height: 5px; background: var(--text-muted); border-radius: 10px; margin: 0 auto 25px;"></div>
-            <h2 id="pay-sheet-title">Выбор оплаты</h2>
-            <p id="pay-sheet-price" style="font-size: 28px; font-weight: 900; color: var(--accent); margin: 10px 0 25px;">0 ₽</p>
-            
-            <div id="pay-step-1">
-                <button class="btn btn-secondary" style="margin-bottom: 12px; justify-content: flex-start; padding-left: 20px;" onclick="Logic.selectPaymentMethod('card')">
-                    <span style="font-size: 24px;">💳</span> 
-                    <div style="text-align: left;">
-                        <div style="font-weight: 700;">Банковская карта</div>
-                        <div style="font-size: 11px; color: var(--text-muted);">РФ / СНГ / Мир</div>
-                    </div>
-                </button>
-                <button class="btn btn-secondary" style="justify-content: flex-start; padding-left: 20px;" onclick="Logic.selectPaymentMethod('crypto')">
-                    <span style="font-size: 24px;">💎</span>
-                    <div style="text-align: left;">
-                        <div style="font-weight: 700;">Криптовалюта</div>
-                        <div style="font-size: 11px; color: var(--text-muted);">USDT / BTC / TON</div>
-                    </div>
-                </button>
-            </div>
-
-            <div id="pay-step-2" class="hidden">
-                <div id="pay-instruction-text" style="background: var(--bg-surface); padding: 15px; border-radius: 15px; font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
-                    Инструкция...
-                </div>
-                <button class="btn btn-primary" onclick="Logic.submitPaymentVerification()">Я ОПЛАТИЛ</button>
-                <button class="btn btn-ghost" onclick="Logic.resetPaymentSteps()">← Назад</button>
-            </div>
-        </div>
-    </div>
-
-    <nav class="nav-bar">
-        <a href="javascript:void(0)" class="nav-item active" onclick="Router.go('market')">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span>МАРКЕТ</span>
-        </a>
-        <a href="javascript:void(0)" class="nav-item" onclick="Router.go('profile')">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <span>ПРОФИЛЬ</span>
-        </a>
-    </nav>
-
-    <script>
-        const TG = window.Telegram.WebApp;
-
-        /**
-         * DB & STATE MANAGEMENT
-         */
-        const App = {
-            Config: JSON.parse(localStorage.getItem('z_cfg')) || {
-                admin_id: 1577146268, // ЗАМЕНИТЕ НА СВОЙ ID
-                lolz_token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJzdWIiOjU3NzQxOTcsImlzcyI6Imx6dCIsImlhdCI6MTc2NjE1Mjg1MiwianRpIjoiODk4NTUzIiwic2NvcGUiOiJiYXNpYyByZWFkIHBvc3QgY29udmVyc2F0ZSBwYXltZW50IGludm9pY2UgY2hhdGJveCBtYXJrZXQiLCJleHAiOjE5MjM4MzI4NTJ9.tnYGD1LYkhLXKS3-OKqN28hirnz9782jiHU2eo6kotkE4-eAappDadFRnX4vLsSBc0zihc2M1oZt9EYx_Fex17Wxue9Vu7sLz61P8ujeSjUb-CWpPYVXPBIfcMJyJ_RBYXvdjJQTlxCxtiIS1l1EJIbukgJhe78RTxhuLy4lFRE',
-                pay_crypto: 'Переведите USDT TRC-20 на адрес: TXxxxxx...',
-                pay_card: 'Переведите на карту: 4400 1122 3344 5566'
-            },
-            Data: {
-                categories: JSON.parse(localStorage.getItem('z_cats')) || [],
-                products: JSON.parse(localStorage.getItem('z_prods')) || [],
-                orders: JSON.parse(localStorage.getItem('z_orders')) || []
-            },
-            State: {
-                user: TG.initDataUnsafe.user || { id: 0, first_name: 'Tester' },
-                activeCat: null,
-                activeProd: null,
-                activeMethod: null
-            }
-        };
-
-        /**
-         * ROUTER SYSTEM
-         */
-        const Router = {
-            go(view) {
-                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-                document.getElementById('view-' + view).classList.remove('hidden');
-                
-                // Nav UI
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                if(view === 'market') document.querySelectorAll('.nav-item')[0].classList.add('active');
-                if(view === 'profile') document.querySelectorAll('.nav-item')[1].classList.add('active');
-                
-                TG.HapticFeedback.selectionChanged();
-                window.scrollTo(0,0);
-            },
-            back() {
-                document.getElementById('cat-render-grid').classList.remove('hidden');
-                document.getElementById('product-view').classList.add('hidden');
-            }
-        };
-
-        /**
-         * LOLZ API SERVICE
-         */
-        const LolzAPI = {
-            async searchItem(params) {
-                // Имитация запроса к маркету (реально через ваш прокси/сервер)
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve({
-                            item_id: Math.floor(Math.random() * 999999),
-                            title: params.query,
-                            price: params.min,
-                            creds: "LOG:PASS:2FA_TOKEN_" + Math.random().toString(36).substr(2, 5).toUpperCase()
-                        });
-                    }, 1500);
-                });
-            }
-        };
-
-        /**
-         * LOGIC CONTROLLER
-         */
-        const Logic = {
-            init() {
-                TG.ready();
-                TG.expand();
-                
-                this.renderCategories();
-                this.updateProfile();
-                
-                // Проверка админа
-                if(App.State.user.id == App.Config.admin_id) {
-                    document.getElementById('admin-access').classList.remove('hidden');
+            // Telegram WebApp init
+            useEffect(() => {
+                if(window.Telegram.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
                 }
+            }, []);
 
-                // Загрузка настроек в админку
-                document.getElementById('adm-lolz-token').value = App.Config.lolz_token;
-                document.getElementById('adm-pay-crypto').value = App.Config.pay_crypto;
-                document.getElementById('adm-pay-card').value = App.Config.pay_card;
-            },
+            // Сохранение данных при изменении
+            useEffect(() => DB.set('products', products), [products]);
+            useEffect(() => DB.set('theme', theme), [theme]);
+            useEffect(() => DB.set('stats', userStats), [userStats]);
 
-            renderCategories() {
-                const grid = document.getElementById('cat-render-grid');
-                if(App.Data.categories.length === 0) {
-                    grid.innerHTML = '<p style="grid-column: 1/3; text-align: center; padding: 40px;">Товаров пока нет...</p>';
-                    return;
-                }
-                grid.innerHTML = App.Data.categories.map(c => `
-                    <div class="card card-active" style="padding: 30px 15px; text-align: center; margin-bottom: 0;" onclick="Logic.openCategory('${c.id}')">
-                        <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
-                        <div style="font-weight: 800; font-size: 15px;">${c.name}</div>
-                    </div>
-                `).join('');
-                Admin.updateCatSelect();
-            },
-
-            openCategory(id) {
-                const cat = App.Data.categories.find(x => x.id == id);
-                App.State.activeCat = cat;
-                
-                document.getElementById('current-cat-name').innerText = cat.name;
-                document.getElementById('cat-render-grid').classList.add('hidden');
-                document.getElementById('product-view').classList.remove('hidden');
-                
-                this.renderProducts(id);
-                TG.HapticFeedback.impactOccurred('medium');
-            },
-
-            renderProducts(catId) {
-                const list = document.getElementById('product-render-list');
-                const prods = App.Data.products.filter(p => p.catId == catId);
-                
-                if(prods.length === 0) {
-                    list.innerHTML = '<p style="text-align: center; padding: 30px;">Нет товаров в этой категории</p>';
-                    return;
-                }
-
-                list.innerHTML = prods.map(p => `
-                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 18px;">
-                        <div>
-                            <div style="font-weight: 800; font-size: 16px; margin-bottom: 4px;">${p.name}</div>
-                            <div class="badge badge-blue">Lolz Sync</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 18px; font-weight: 900; color: var(--accent);">${p.price} ₽</div>
-                            <button class="btn btn-primary" style="padding: 8px 15px; font-size: 12px; margin-top: 8px;" onclick="Logic.openPayment('${p.id}')">Купить</button>
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            openPayment(id) {
-                const prod = App.Data.products.find(x => x.id == id);
-                App.State.activeProd = prod;
-                
-                document.getElementById('pay-sheet-price').innerText = prod.price + ' ₽';
-                UI.openPaymentSheet();
-            },
-
-            selectPaymentMethod(method) {
-                App.State.activeMethod = method;
-                document.getElementById('pay-step-1').classList.add('hidden');
-                document.getElementById('pay-step-2').classList.remove('hidden');
-                
-                const text = method === 'card' ? App.Config.pay_card : App.Config.pay_crypto;
-                document.getElementById('pay-instruction-text').innerText = text;
-                TG.HapticFeedback.impactOccurred('light');
-            },
-
-            resetPaymentSteps() {
-                document.getElementById('pay-step-1').classList.remove('hidden');
-                document.getElementById('pay-step-2').classList.add('hidden');
-            },
-
-            async submitPaymentVerification() {
-                TG.showConfirm("Вы подтверждаете оплату? После подтверждения начнется поиск аккаунта на Lolz.", async (ok) => {
-                    if(!ok) return;
-                    
-                    UI.closePaymentSheet();
-                    TG.MainButton.setText("ПОИСК И ПОКУПКА НА LOLZ...");
-                    TG.MainButton.show();
-                    TG.MainButton.showProgress();
-
-                    // Реальный вызов API Lolz (через заглушку)
-                    const p = App.State.activeProd;
-                    const result = await LolzAPI.searchItem({
-                        min: p.lz_min, max: p.lz_max, origin: p.lz_origin, query: p.lz_query
-                    });
-
-                    // Сохраняем заказ
-                    const order = {
-                        id: Date.now(),
-                        name: p.name,
-                        price: p.price,
-                        creds: result.creds,
-                        date: new Date().toLocaleString()
-                    };
-                    
-                    App.Data.orders.push(order);
-                    localStorage.setItem('z_orders', JSON.stringify(App.Data.orders));
-                    
-                    TG.MainButton.hideProgress();
-                    TG.MainButton.hide();
-                    
-                    this.updateProfile();
-                    TG.HapticFeedback.notificationOccurred('success');
-                    
-                    TG.showConfirm(`ТОВАР КУПЛЕН!\n\nДанные: ${order.creds}\n\nСкопировать в буфер?`, (copy) => {
-                        if(copy) {
-                            navigator.clipboard.writeText(order.creds);
-                            TG.showAlert("Скопировано!");
-                        }
-                    });
-                });
-            },
-
-            updateProfile() {
-                document.getElementById('u-name').innerText = App.State.user.first_name;
-                document.getElementById('u-id-display').innerText = "ID: " + App.State.user.id;
-                document.getElementById('u-avatar').innerText = App.State.user.first_name[0];
-                
-                const totalSpent = App.Data.orders.reduce((acc, curr) => acc + curr.price, 0);
-                document.getElementById('stat-deals').innerText = App.Data.orders.length;
-                document.getElementById('stat-spent').innerText = totalSpent + ' ₽';
-            },
-
-            showHistory() {
-                if(App.Data.orders.length === 0) {
-                    TG.showAlert("У вас пока нет покупок.");
-                    return;
-                }
-                const list = App.Data.orders.map(o => `${o.date} | ${o.name}\nДанные: ${o.creds}`).join('\n\n---\n\n');
-                TG.showAlert("ВАШИ ПОКУПКИ:\n\n" + list);
-            }
-        };
-
-        /**
-         * ADMIN CONTROLLER
-         */
-        const Admin = {
-            saveGlobalConfig() {
-                App.Config.lolz_token = document.getElementById('adm-lolz-token').value;
-                App.Config.pay_crypto = document.getElementById('adm-pay-crypto').value;
-                App.Config.pay_card = document.getElementById('adm-pay-card').value;
-                
-                localStorage.setItem('z_cfg', JSON.stringify(App.Config));
-                TG.showAlert("Конфигурация сохранена!");
-            },
-
-            addCategory() {
-                const name = document.getElementById('adm-cat-name').value;
-                if(!name) return;
-
-                const newCat = { id: Date.now(), name: name };
-                App.Data.categories.push(newCat);
-                localStorage.setItem('z_cats', JSON.stringify(App.Data.categories));
-                
-                document.getElementById('adm-cat-name').value = '';
-                Logic.renderCategories();
-                TG.showAlert("Категория создана!");
-            },
-
-            updateCatSelect() {
-                const sel = document.getElementById('adm-p-cat-select');
-                sel.innerHTML = App.Data.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            },
-
-            addProduct() {
-                const name = document.getElementById('adm-p-name').value;
-                const catId = document.getElementById('adm-p-cat-select').value;
-                const price = document.getElementById('adm-p-price').value;
-                
-                const min = document.getElementById('adm-lz-min').value;
-                const max = document.getElementById('adm-lz-max').value;
-                const origin = document.getElementById('adm-lz-origin').value;
-                const query = document.getElementById('adm-lz-query').value;
-
-                if(!name || !price) {
-                    TG.showAlert("Заполните название и цену!");
-                    return;
-                }
-
-                const newProd = {
+            // Обработчик покупки (Имитация проверки)
+            const handleOrder = (item, method, amountTon) => {
+                const newOrder = {
                     id: Date.now(),
-                    catId, name, price: Number(price),
-                    lz_min: min, lz_max: max, lz_origin: origin, lz_query: query
+                    title: item.title,
+                    price: item.price,
+                    date: new Date().toLocaleDateString(),
+                    status: 'На проверке'
                 };
-
-                App.Data.products.push(newProd);
-                localStorage.setItem('z_prods', JSON.stringify(App.Data.products));
                 
-                TG.showAlert("Товар добавлен!");
-                Router.go('market');
-                Logic.renderCategories();
-            },
+                const newStats = {
+                    spent: userStats.spent + item.price,
+                    orders: [newOrder, ...userStats.orders]
+                };
+                
+                setUserStats(newStats);
+                
+                // Отправка данных боту (В реальности)
+                if(window.Telegram.WebApp.sendData) {
+                    // window.Telegram.WebApp.sendData(JSON.stringify(newOrder));
+                }
+            };
 
-            resetAllData() {
-                TG.showConfirm("ВЫ УВЕРЕНЫ? Это удалит все товары, категории и настройки!", (ok) => {
-                    if(ok) {
-                        localStorage.clear();
-                        location.reload();
-                    }
-                });
-            }
+            // Общие стили
+            const appStyle = { backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', fontFamily: 'sans-serif' };
+
+            return (
+                <div style={appStyle} className="pb-24 transition-colors duration-300">
+                    <AnimatePresence mode="wait">
+                        {view === 'shop' && (
+                            <Shop 
+                                key="shop" 
+                                products={products} 
+                                category={activeCategory} 
+                                setCategory={setActiveCategory} 
+                                onBuy={(p) => { setCartItem(p); setView('checkout'); }} 
+                                theme={theme} 
+                            />
+                        )}
+                        {view === 'checkout' && (
+                            <Checkout 
+                                key="checkout" 
+                                item={cartItem} 
+                                theme={theme} 
+                                onBack={() => setView('shop')}
+                                onSuccess={(method, ton) => handleOrder(cartItem, method, ton)}
+                            />
+                        )}
+                        {view === 'profile' && <Profile key="profile" stats={userStats} theme={theme} />}
+                        {view === 'admin' && (
+                            <Admin 
+                                key="admin" 
+                                products={products} 
+                                setProducts={setProducts} 
+                                theme={theme} 
+                                setTheme={setTheme} 
+                            />
+                        )}
+                    </AnimatePresence>
+
+                    {/* Навигация */}
+                    <Navigation view={view} setView={setView} theme={theme} />
+                </div>
+            );
+        }
+
+        // --- Компонент Магазина ---
+        const Shop = ({ products, category, setCategory, onBuy, theme }) => {
+            const categories = ['All', ...new Set(products.map(p => p.category))];
+            const filtered = category === 'All' ? products : products.filter(p => p.category === category);
+
+            return (
+                <motion.div initial={{opacity:0, x:-20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:20}} className="p-4">
+                    <header className="flex justify-between items-center mb-6 mt-2">
+                        <h1 className="text-2xl font-extrabold tracking-tight">Каталог</h1>
+                        <span className="text-xs px-2 py-1 rounded bg-white/10 opacity-70">v1.0</span>
+                    </header>
+
+                    {/* Категории */}
+                    <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+                        {categories.map(cat => (
+                            <button 
+                                key={cat}
+                                onClick={() => setCategory(cat)}
+                                style={{ 
+                                    backgroundColor: category === cat ? theme.btn : theme.card,
+                                    color: category === cat ? '#fff' : theme.text 
+                                }}
+                                className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all active:scale-95"
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Сетка товаров */}
+                    <div className="grid gap-3">
+                        {filtered.map(p => (
+                            <div key={p.id} style={{backgroundColor: theme.card}} className="p-4 rounded-2xl flex justify-between items-center shadow-lg border border-white/5">
+                                <div>
+                                    <h3 className="font-bold text-lg leading-tight">{p.title}</h3>
+                                    <p className="opacity-50 text-xs uppercase mt-1 tracking-wider">{p.category}</p>
+                                    <div className="mt-2 font-mono text-lg font-bold">{p.price} ₽</div>
+                                </div>
+                                <button 
+                                    onClick={() => onBuy(p)}
+                                    style={{backgroundColor: theme.btn}} 
+                                    className="h-10 px-5 rounded-xl font-bold text-white shadow-lg active:scale-90 transition-transform flex items-center"
+                                >
+                                    Купить
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            );
         };
 
-        /**
-         * UI HELPERS
-         */
-        const UI = {
-            openPaymentSheet() {
-                document.getElementById('pay-sheet-overlay').classList.add('active');
-                Logic.resetPaymentSteps();
-            },
-            closePaymentSheet() {
-                document.getElementById('pay-sheet-overlay').classList.remove('active');
-            }
+        // --- Компонент Оплаты ---
+        const Checkout = ({ item, theme, onBack, onSuccess }) => {
+            const [step, setStep] = useState(1); // 1: Выбор, 2: Оплата, 3: Успех
+            const [method, setMethod] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const tonRate = 550; // Фиксированный курс для примера
+            const tonPrice = (item.price / tonRate).toFixed(2);
+
+            const handleUpload = () => {
+                setLoading(true);
+                // Имитация загрузки
+                setTimeout(() => {
+                    setLoading(false);
+                    onSuccess(method, tonPrice);
+                    setStep(3);
+                }, 2000);
+            };
+
+            if (step === 3) return (
+                <div className="flex flex-col items-center justify-center h-[80vh] p-4 text-center">
+                    <motion.div initial={{scale:0}} animate={{scale:1}} className="mb-4 text-green-500">
+                        <i data-lucide="check-circle" width="64" height="64"></i>
+                    </motion.div>
+                    <h2 className="text-2xl font-bold mb-2">Заказ отправлен!</h2>
+                    <p className="opacity-60 mb-6">Администратор проверит чек и пришлет данные в чат.</p>
+                    <button onClick={onBack} style={{backgroundColor: theme.btn}} className="px-6 py-3 rounded-xl text-white font-bold w-full">В магазин</button>
+                </div>
+            );
+
+            return (
+                <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0}} className="p-4">
+                    <button onClick={onBack} className="mb-4 opacity-50 flex items-center gap-1 text-sm font-bold">← Назад</button>
+                    
+                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl mb-6 border border-white/5">
+                        <p className="opacity-60 text-sm">Покупка:</p>
+                        <h2 className="text-xl font-bold mb-4">{item.title}</h2>
+                        <div className="h-px bg-white/10 w-full mb-4"></div>
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-2xl font-mono font-bold">{item.price} ₽</p>
+                                <p className="text-sm opacity-50">~ {tonPrice} TON</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 className="font-bold mb-3">Выберите метод:</h3>
+                    <div className="flex gap-3 mb-6">
+                        <button 
+                            onClick={() => setMethod('card')} 
+                            className={`flex-1 p-4 rounded-xl border-2 transition-all ${method === 'card' ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-white/5'}`}
+                        >
+                            <i data-lucide="credit-card" className="mx-auto mb-2 opacity-80"></i>
+                            <div className="text-sm font-bold">Карта</div>
+                        </button>
+                        <button 
+                            onClick={() => setMethod('crypto')} 
+                            className={`flex-1 p-4 rounded-xl border-2 transition-all ${method === 'crypto' ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-white/5'}`}
+                        >
+                            <i data-lucide="coins" className="mx-auto mb-2 opacity-80"></i>
+                            <div className="text-sm font-bold">TON</div>
+                        </button>
+                    </div>
+
+                    <AnimatePresence>
+                        {method && (
+                            <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} className="overflow-hidden">
+                                <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl text-center">
+                                    <p className="text-sm opacity-60 mb-2">Реквизиты для оплаты:</p>
+                                    <div className="font-mono bg-black/20 p-3 rounded-lg select-all mb-4 text-sm break-all">
+                                        {method === 'card' ? '2200 1234 5678 9000' : 'UQCx...MockTonAddress...x'}
+                                    </div>
+                                    
+                                    <label className="block w-full cursor-pointer active:scale-95 transition-transform">
+                                        <div className={`border-2 border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center gap-2 ${loading ? 'opacity-50' : ''}`}>
+                                            {loading ? (
+                                                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                                            ) : (
+                                                <>
+                                                    <i data-lucide="upload" className="opacity-50"></i>
+                                                    <span className="text-sm font-bold">Прикрепить чек</span>
+                                                    <span className="text-xs opacity-50">(Нажми сюда)</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <input type="file" className="hidden" onChange={handleUpload} disabled={loading} />
+                                    </label>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+            );
         };
 
-        // RUN APP
-        Logic.init();
+        // --- Компонент Админки ---
+        const Admin = ({ products, setProducts, theme, setTheme }) => {
+            const [newProduct, setNewProduct] = useState({ title: '', price: '', category: 'Accounts' });
+
+            const addProduct = () => {
+                if(!newProduct.title || !newProduct.price) return;
+                setProducts([...products, { ...newProduct, id: Date.now() }]);
+                setNewProduct({ title: '', price: '', category: 'Accounts' });
+            };
+
+            const removeProduct = (id) => {
+                setProducts(products.filter(p => p.id !== id));
+            };
+
+            return (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} className="p-4 pb-24">
+                    <h1 className="text-2xl font-bold mb-6">Админ панель</h1>
+
+                    {/* Добавление товара */}
+                    <section className="mb-8">
+                        <div className="flex items-center gap-2 mb-3">
+                            <i data-lucide="box" size="18"></i>
+                            <h3 className="font-bold">Добавить товар</h3>
+                        </div>
+                        <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl space-y-3">
+                            <input 
+                                type="text" 
+                                placeholder="Название" 
+                                value={newProduct.title}
+                                onChange={e => setNewProduct({...newProduct, title: e.target.value})}
+                                className="w-full bg-black/20 p-3 rounded-lg outline-none border border-transparent focus:border-blue-500 transition-colors"
+                            />
+                            <div className="flex gap-3">
+                                <input 
+                                    type="number" 
+                                    placeholder="Цена (RUB)" 
+                                    value={newProduct.price}
+                                    onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
+                                    className="w-1/2 bg-black/20 p-3 rounded-lg outline-none"
+                                />
+                                <select 
+                                    value={newProduct.category}
+                                    onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                                    className="w-1/2 bg-black/20 p-3 rounded-lg outline-none"
+                                >
+                                    <option value="Accounts">Accounts</option>
+                                    <option value="Premium">Premium</option>
+                                    <option value="Channels">Channels</option>
+                                </select>
+                            </div>
+                            <button onClick={addProduct} style={{backgroundColor: theme.btn}} className="w-full py-3 rounded-lg font-bold text-white flex justify-center gap-2 items-center">
+                                <i data-lucide="plus" size="18"></i> Добавить
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Список товаров (удаление) */}
+                    <section className="mb-8">
+                        <h3 className="font-bold mb-3 opacity-70 text-sm uppercase">Активные товары</h3>
+                        <div className="space-y-2">
+                            {products.map(p => (
+                                <div key={p.id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg">
+                                    <span className="text-sm font-medium">{p.title}</span>
+                                    <button onClick={() => removeProduct(p.id)} className="text-red-400 p-2">
+                                        <i data-lucide="trash-2" size="18"></i>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Редактор темы */}
+                    <section>
+                        <div className="flex items-center gap-2 mb-3">
+                            <i data-lucide="palette" size="18"></i>
+                            <h3 className="font-bold">Редактор темы</h3>
+                        </div>
+                        <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl space-y-3">
+                            <ThemeInput label="Фон" val={theme.bg} onChange={v => setTheme({...theme, bg: v})} />
+                            <ThemeInput label="Карточки" val={theme.card} onChange={v => setTheme({...theme, card: v})} />
+                            <ThemeInput label="Кнопки" val={theme.btn} onChange={v => setTheme({...theme, btn: v})} />
+                            <ThemeInput label="Текст" val={theme.text} onChange={v => setTheme({...theme, text: v})} />
+                        </div>
+                    </section>
+                </motion.div>
+            );
+        };
+
+        const ThemeInput = ({ label, val, onChange }) => (
+            <div className="flex justify-between items-center">
+                <span className="text-sm opacity-80">{label}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono opacity-50">{val}</span>
+                    <input type="color" value={val} onChange={e => onChange(e.target.value)} className="w-8 h-8 rounded overflow-hidden cursor-pointer border-none p-0" />
+                </div>
+            </div>
+        );
+
+        // --- Профиль ---
+        const Profile = ({ stats, theme }) => (
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="p-4">
+                <div className="flex items-center gap-4 mb-8 mt-4">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500 flex items-center justify-center text-3xl font-bold text-white">
+                        U
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold">User</h2>
+                        <p className="opacity-50">Customer</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-8">
+                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl text-center border border-white/5">
+                        <div className="text-3xl font-bold mb-1">{stats.orders.length}</div>
+                        <div className="text-xs uppercase tracking-widest opacity-50">Заказов</div>
+                    </div>
+                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl text-center border border-white/5">
+                        <div className="text-3xl font-bold mb-1">{stats.spent}</div>
+                        <div className="text-xs uppercase tracking-widest opacity-50">Рублей</div>
+                    </div>
+                </div>
+
+                <h3 className="font-bold mb-4 text-lg">История заказов</h3>
+                <div className="space-y-3">
+                    {stats.orders.length === 0 ? (
+                        <div className="text-center opacity-30 py-10">История пуста</div>
+                    ) : (
+                        stats.orders.map(o => (
+                            <div key={o.id} style={{backgroundColor: theme.card}} className="p-4 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <div className="font-bold">{o.title}</div>
+                                    <div className="text-xs opacity-50">{o.date}</div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="font-mono">{o.price} ₽</div>
+                                    <div className="text-xs text-yellow-500">{o.status}</div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </motion.div>
+        );
+
+        // --- Навигация (Меню) ---
+        const Navigation = ({ view, setView, theme }) => {
+            const items = [
+                { id: 'shop', icon: 'shopping-bag', label: 'Магазин' },
+                { id: 'profile', icon: 'user', label: 'Профиль' },
+                { id: 'admin', icon: 'settings', label: 'Админ' },
+            ];
+
+            return (
+                <div className="fixed bottom-4 left-4 right-4 h-16 bg-black/80 backdrop-blur-md rounded-2xl flex justify-around items-center border border-white/10 shadow-2xl z-50">
+                    {items.map(item => {
+                        const isActive = view === item.id;
+                        return (
+                            <button 
+                                key={item.id} 
+                                onClick={() => setView(item.id)}
+                                className="relative p-2 w-12 h-12 flex items-center justify-center transition-all"
+                            >
+                                <i 
+                                    data-lucide={item.icon} 
+                                    style={{ color: isActive ? theme.btn : '#6b7280' }}
+                                    className={`transition-all duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}
+                                ></i>
+                                {isActive && (
+                                    <motion.div 
+                                        layoutId="dot" 
+                                        className="absolute bottom-1 w-1 h-1 rounded-full" 
+                                        style={{backgroundColor: theme.btn}}
+                                    />
+                                )}
+                            </button>
+                        )
+                    })}
+                </div>
+            );
+        };
+
+        // Рендер приложения и иконок
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        
+        // Инициализация иконок Lucide после рендера React
+        setTimeout(() => {
+            window.lucide.createIcons();
+        }, 100);
+
+        // Хак для обновления иконок при смене страниц (так как мы используем lucide через CDN)
+        const observer = new MutationObserver(() => window.lucide.createIcons());
+        observer.observe(document.body, { childList: true, subtree: true });
 
     </script>
 </body>
