@@ -2,289 +2,162 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Mini App Shop</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Shop Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { font-family: sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 15px; }
+        .category-btn { display: block; width: 100%; padding: 10px; margin-bottom: 5px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 8px; cursor: pointer; }
+        .product-card { border: 1px solid #ccc; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .hidden { display: none; }
+        input, textarea { width: 100%; margin-top: 10px; padding: 8px; box-sizing: border-box; }
+        .admin-panel { border-top: 2px solid #666; margin-top: 20px; padding-top: 10px; }
+        .history-item { font-size: 0.8em; border-bottom: 1px solid #eee; padding: 5px 0; }
     </style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
-        const { motion, AnimatePresence } = window.Motion;
-        const { 
-            ShoppingBag, User, Settings, CreditCard, Coins, 
-            Plus, Trash2, Palette, ChevronRight, CheckCircle2, 
-            Image as ImageIcon, LayoutGrid, Zap 
-        } = window.lucide;
+    <div id="main-page">
+        <h2>🛍 Магазин</h2>
+        <div id="categories-list">
+            </div>
+        <button onclick="showHistory()" class="category-btn" style="background: gray;">📜 История заказов</button>
+    </div>
 
-        // --- НАСТРОЙКИ ТЕЛЕГРАМ БОТА ---
-        const BOT_CONFIG = {
-            token: '8376191518:AAGKsCRld5dFXqF0Ltr4x5KbHoUZamiUesk', // Вставьте сюда токен от @BotFather
-            adminChatId: '1577146268',    // Вставьте ваш ID (узнать в @userinfobot)
+    <div id="products-page" class="hidden">
+        <button onclick="showMain()">⬅ Назад</button>
+        <h2 id="cat-title">Товары</h2>
+        <div id="products-list"></div>
+    </div>
+
+    <div id="payment-page" class="hidden">
+        <button onclick="showMain()">⬅ Отмена</button>
+        <h2>Оплата по реквизитам</h2>
+        <p>Сумма: <b id="pay-price"></b> руб.</p>
+        <p>Реквизиты: <b>4444 0000 1111 2222</b></p>
+        <p>Загрузите скриншот чека и нажмите "Оплатить":</p>
+        <input type="file" id="screenshot" accept="image/*">
+        <button class="category-btn" onclick="sendOrder()" style="margin-top:20px;">✅ Отправить на проверку</button>
+    </div>
+
+    <div id="history-page" class="hidden">
+        <button onclick="showMain()">⬅ Назад</button>
+        <h2>Ваша история</h2>
+        <div id="history-list"></div>
+    </div>
+
+    <hr>
+    <div id="admin-section" class="admin-panel hidden">
+        <h3>⚙ Админ-панель</h3>
+        <input type="text" id="new-cat" placeholder="Название категории">
+        <button onclick="addCategory()">Добавить категорию</button>
+        <br><br>
+        <input type="text" id="prod-name" placeholder="Имя товара">
+        <input type="number" id="prod-price" placeholder="Цена">
+        <select id="prod-cat-select"></select>
+        <button onclick="addProduct()">Добавить товар</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Имитация базы данных в LocalStorage (чтобы данные не пропадали при перезагрузке)
+        let data = JSON.parse(localStorage.getItem('shopData')) || {
+            categories: [{id: 1, name: "Электроника"}],
+            products: [{id: 1, catId: 1, name: "Наушники", price: 1500}],
+            orders: []
         };
 
-        // --- УТИЛИТЫ ХРАНЕНИЯ ---
-        const Storage = {
-            get: (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback,
-            set: (key, val) => localStorage.setItem(key, JSON.stringify(val))
-        };
+        const adminId = 12345678; // ЗАМЕНИТЕ НА ВАШ ID
 
-        const App = () => {
-            const [view, setView] = useState('catalog'); // catalog, profile, admin, checkout
-            const [products, setProducts] = useState(() => Storage.get('shop_products', [
-                { id: 1, title: 'Telegram Premium (Год)', price: 2500, category: 'Подписки' },
-                { id: 2, title: 'Аккаунт USA +1', price: 450, category: 'Аккаунты' }
-            ]));
-            const [theme, setTheme] = useState(() => Storage.get('shop_theme', {
-                bg: '#0f172a', text: '#f8fafc', accent: '#3b82f6', card: '#1e293b'
+        function save() { localStorage.setItem('shopData', JSON.stringify(data)); render(); }
+
+        function render() {
+            // Рендер категорий
+            const catDiv = document.getElementById('categories-list');
+            const select = document.getElementById('prod-cat-select');
+            catDiv.innerHTML = ''; select.innerHTML = '';
+            data.categories.forEach(c => {
+                catDiv.innerHTML += `<button class="category-btn" onclick="showProducts(${c.id}, '${c.name}')">${c.name}</button>`;
+                select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+
+            // Показ админки если юзер - админ
+            if (tg.initDataUnsafe?.user?.id === adminId) {
+                document.getElementById('admin-section').classList.remove('hidden');
+            }
+        }
+
+        function showProducts(catId, name) {
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('products-page').classList.remove('hidden');
+            document.getElementById('cat-title').innerText = name;
+            const list = document.getElementById('products-list');
+            list.innerHTML = '';
+            data.products.filter(p => p.catId === catId).forEach(p => {
+                list.innerHTML += `
+                    <div class="product-card">
+                        <b>${p.name}</b> — ${p.price} руб.
+                        <button onclick="startPay('${p.name}', ${p.price})">Купить</button>
+                    </div>`;
+            });
+        }
+
+        function startPay(name, price) {
+            document.getElementById('products-page').classList.add('hidden');
+            document.getElementById('payment-page').classList.remove('hidden');
+            document.getElementById('pay-price').innerText = price;
+            window.currentOrder = { name, price };
+        }
+
+        function sendOrder() {
+            const file = document.getElementById('screenshot').files[0];
+            if (!file) return alert("Загрузите скриншот!");
+
+            const orderInfo = `Заказ: ${window.currentOrder.name} (${window.currentOrder.price} руб.)`;
+            data.orders.push({ text: orderInfo, status: "Проверка" });
+            save();
+
+            // Отправка данных боту
+            tg.sendData(JSON.stringify({
+                action: "new_order",
+                item: window.currentOrder.name,
+                price: window.currentOrder.price,
+                user: tg.initDataUnsafe?.user?.username || "unknown"
             }));
-            const [user, setUser] = useState(() => Storage.get('shop_user', { totalSpent: 0, orders: [] }));
-            const [selectedItem, setSelectedItem] = useState(null);
+            
+            tg.close();
+        }
 
-            useEffect(() => { Storage.set('shop_products', products); }, [products]);
-            useEffect(() => { Storage.set('shop_theme', theme); }, [theme]);
-            useEffect(() => { Storage.set('shop_user', user); }, [user]);
+        function showHistory() {
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('history-page').classList.remove('hidden');
+            const list = document.getElementById('history-list');
+            list.innerHTML = data.orders.length ? data.orders.map(o => `<div class="history-item">${o.text} - <b>${o.status}</b></div>`).join('') : "Пусто";
+        }
 
-            // Функция отправки уведомления в Telegram
-            const sendTelegramNotification = async (orderData, photoFile) => {
-                const text = `💰 НОВЫЙ ЗАКАЗ!\n\n🛍 Товар: ${orderData.title}\n💵 Сумма: ${orderData.price} руб\n👤 Клиент: @${window.Telegram.WebApp.initDataUnsafe?.user?.username || 'unknown'}\n💳 Метод: ${orderData.method}`;
-                
-                const formData = new FormData();
-                formData.append('chat_id', BOT_CONFIG.adminChatId);
-                formData.append('caption', text);
-                formData.append('photo', photoFile);
+        function showMain() {
+            document.querySelectorAll('div[id$="-page"]').forEach(d => d.classList.add('hidden'));
+            document.getElementById('main-page').classList.remove('hidden');
+        }
 
-                try {
-                    await fetch(`https://api.telegram.org/bot${BOT_CONFIG.token}/sendPhoto`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                } catch (e) { console.error("Ошибка отправки:", e); }
-            };
+        // Админ-функции
+        function addCategory() {
+            const name = document.getElementById('new-cat').value;
+            data.categories.push({id: Date.now(), name});
+            save();
+        }
 
-            const appStyle = { backgroundColor: theme.bg, color: theme.text, minHeight: '100vh' };
+        function addProduct() {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+            const catId = parseInt(document.getElementById('prod-cat-select').value);
+            data.products.push({id: Date.now(), catId, name, price});
+            save();
+        }
 
-            return (
-                <div style={appStyle} className="transition-all duration-500 overflow-x-hidden">
-                    <AnimatePresence mode="wait">
-                        {view === 'catalog' && <Catalog key="cat" products={products} theme={theme} onBuy={(p) => {setSelectedItem(p); setView('checkout');}} />}
-                        {view === 'checkout' && <Checkout key="check" item={selectedItem} theme={theme} onBack={() => setView('catalog')} onFinish={sendTelegramNotification} setUser={setUser} user={user} />}
-                        {view === 'profile' && <Profile key="prof" user={user} theme={theme} />}
-                        {view === 'admin' && <Admin key="adm" products={products} setProducts={setProducts} theme={theme} setTheme={setTheme} />}
-                    </AnimatePresence>
-
-                    {/* Навигация */}
-                    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] glass rounded-2xl p-2 flex justify-around items-center z-50">
-                        <NavBtn active={view === 'catalog'} onClick={() => setView('catalog')} icon={<ShoppingBag />} theme={theme} />
-                        <NavBtn active={view === 'profile'} onClick={() => setView('profile')} icon={<User />} theme={theme} />
-                        <NavBtn active={view === 'admin'} onClick={() => setView('admin')} icon={<Settings />} theme={theme} />
-                    </nav>
-                </div>
-            );
-        };
-
-        const NavBtn = ({ active, onClick, icon, theme }) => (
-            <button onClick={onClick} className={`p-3 rounded-xl transition-all ${active ? 'scale-110 shadow-lg' : 'opacity-40'}`} 
-                style={{ backgroundColor: active ? theme.accent : 'transparent' }}>
-                {React.cloneElement(icon, { size: 24, color: '#fff' })}
-            </button>
-        );
-
-        const Catalog = ({ products, theme, onBuy }) => (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-6">
-                <header className="mb-8">
-                    <h1 className="text-3xl font-extrabold italic mb-1">STORE</h1>
-                    <div className="h-1 w-12 rounded-full" style={{backgroundColor: theme.accent}}></div>
-                </header>
-                <div className="grid gap-4 pb-24">
-                    {products.map(p => (
-                        <div key={p.id} style={{backgroundColor: theme.card}} className="p-5 rounded-3xl border border-white/5 shadow-xl flex justify-between items-center group">
-                            <div>
-                                <span className="text-[10px] uppercase tracking-[2px] opacity-40 font-bold">{p.category}</span>
-                                <h3 className="text-lg font-bold mt-1">{p.title}</h3>
-                                <p className="text-xl font-mono mt-2" style={{color: theme.accent}}>{p.price} ₽</p>
-                            </div>
-                            <button onClick={() => onBuy(p)} className="p-4 rounded-2xl active:scale-90 transition-transform shadow-lg" style={{backgroundColor: theme.accent}}>
-                                <Zap size={20} fill="#fff" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-        );
-
-        const Checkout = ({ item, theme, onBack, onFinish, setUser, user }) => {
-            const [method, setMethod] = useState(null);
-            const [screen, setScreen] = useState('select'); // select, payment, success
-            const tonPrice = (item.price / 650).toFixed(2); // Примерный курс
-
-            const handleFile = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    onFinish({ ...item, method }, file);
-                    // Обновляем статистику локально
-                    setUser({
-                        totalSpent: user.totalSpent + item.price,
-                        orders: [{title: item.title, price: item.price, date: new Date().toLocaleDateString()}, ...user.orders]
-                    });
-                    setScreen('success');
-                }
-            };
-
-            if (screen === 'success') return (
-                <div className="p-6 flex flex-col items-center justify-center h-screen text-center">
-                    <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center mb-4 shadow-lg shadow-green-500/50">
-                        <CheckCircle2 size={40} color="#fff" />
-                    </div>
-                    <h2 className="text-2xl font-bold">Оплачено!</h2>
-                    <p className="opacity-60 mt-2">Чек отправлен админу. Ожидайте выдачи товара.</p>
-                    <button onClick={onBack} className="mt-8 px-8 py-3 rounded-xl font-bold" style={{backgroundColor: theme.accent}}>В каталог</button>
-                </div>
-            );
-
-            return (
-                <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="p-6">
-                    <button onClick={onBack} className="mb-6 opacity-50">← Назад</button>
-                    <div className="glass p-6 rounded-3xl mb-6">
-                        <p className="opacity-50 text-sm italic">К оплате:</p>
-                        <h2 className="text-2xl font-bold">{item.title}</h2>
-                        <p className="text-3xl font-mono font-bold mt-2" style={{color: theme.accent}}>{item.price} RUB</p>
-                        <p className="text-sm opacity-40">~ {tonPrice} TON</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <PaymentBtn active={method === 'card'} onClick={() => setMethod('card')} icon={<CreditCard />} text="Карта" theme={theme} />
-                        <PaymentBtn active={method === 'crypto'} onClick={() => setMethod('crypto')} icon={<Coins />} text="TON" theme={theme} />
-                    </div>
-
-                    <AnimatePresence>
-                        {method && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="overflow-hidden">
-                                <div className="p-6 rounded-3xl bg-black/20 border border-white/5 text-center">
-                                    <p className="text-sm opacity-70 mb-4">
-                                        Переведите <b>{method === 'card' ? item.price : tonPrice}</b> {method === 'card' ? 'RUB' : 'TON'} по реквизитам:
-                                    </p>
-                                    <div className="p-3 bg-white/5 rounded-xl font-mono mb-6 select-all">
-                                        {method === 'card' ? '4400 1234 5678 9000' : 'UQCx_EXAMPLE_TON_WALLET'}
-                                    </div>
-                                    <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/20 rounded-3xl cursor-pointer hover:bg-white/5 transition-colors">
-                                        <ImageIcon className="opacity-20 mb-2" size={32} />
-                                        <span className="text-sm font-bold opacity-60">Загрузить скриншот чека</span>
-                                        <input type="file" className="hidden" accept="image/*" onChange={handleFile} />
-                                    </label>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
-            );
-        };
-
-        const PaymentBtn = ({ active, onClick, icon, text, theme }) => (
-            <button onClick={onClick} className={`p-4 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all ${active ? 'border-white bg-white/10' : 'border-transparent bg-white/5 opacity-50'}`}>
-                {React.cloneElement(icon, { size: 24 })}
-                <span className="text-xs font-bold uppercase tracking-wider">{text}</span>
-            </button>
-        );
-
-        const Profile = ({ user, theme }) => (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 pb-24">
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-black">
-                        {window.Telegram.WebApp.initDataUnsafe?.user?.first_name?.[0] || 'U'}
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold">{window.Telegram.WebApp.initDataUnsafe?.user?.first_name || 'Пользователь'}</h2>
-                        <p className="text-xs opacity-40 font-mono italic">ID: {window.Telegram.WebApp.initDataUnsafe?.user?.id || '000000'}</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                    <div className="glass p-5 rounded-3xl text-center">
-                        <p className="text-2xl font-black">{user.orders.length}</p>
-                        <p className="text-[10px] uppercase opacity-40 font-bold">Заказов</p>
-                    </div>
-                    <div className="glass p-5 rounded-3xl text-center">
-                        <p className="text-2xl font-black">{user.totalSpent} ₽</p>
-                        <p className="text-[10px] uppercase opacity-40 font-bold">Потрачено</p>
-                    </div>
-                </div>
-
-                <h3 className="font-bold mb-4 flex items-center gap-2"><LayoutGrid size={18} /> История</h3>
-                <div className="space-y-3">
-                    {user.orders.length === 0 ? <p className="opacity-20 text-center py-10 italic">Заказов пока нет</p> : 
-                        user.orders.map((o, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex justify-between">
-                                <div><p className="font-bold">{o.title}</p><p className="text-[10px] opacity-40">{o.date}</p></div>
-                                <p className="font-mono font-bold" style={{color: theme.accent}}>{o.price} ₽</p>
-                            </div>
-                        ))
-                    }
-                </div>
-            </motion.div>
-        );
-
-        const Admin = ({ products, setProducts, theme, setTheme }) => {
-            const [newItem, setNewItem] = useState({ title: '', price: '', category: 'Accounts' });
-
-            return (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 pb-24">
-                    <h2 className="text-2xl font-black mb-6">ADMIN PANEL</h2>
-                    
-                    <div className="glass p-5 rounded-3xl mb-8">
-                        <h3 className="text-sm font-bold mb-4 opacity-60 uppercase tracking-widest">Добавить товар</h3>
-                        <input className="w-full bg-white/5 p-3 rounded-xl mb-2 outline-none" placeholder="Название" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
-                        <input className="w-full bg-white/5 p-3 rounded-xl mb-4 outline-none font-mono" placeholder="Цена" type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} />
-                        <button onClick={() => { setProducts([...products, { ...newItem, id: Date.now(), price: Number(newItem.price) }]); setNewItem({title:'', price:'', category:'Accounts'}); }} 
-                            className="w-full py-3 rounded-xl font-bold shadow-lg" style={{backgroundColor: theme.accent}}>Добавить</button>
-                    </div>
-
-                    <div className="glass p-5 rounded-3xl mb-8">
-                        <h3 className="text-sm font-bold mb-4 opacity-60 uppercase tracking-widest">Цвета темы</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] opacity-40 uppercase font-bold">Фон</span>
-                                <input type="color" className="w-full h-10 rounded-lg border-none p-0" value={theme.bg} onChange={e => setTheme({...theme, bg: e.target.value})} />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] opacity-40 uppercase font-bold">Акцент</span>
-                                <input type="color" className="w-full h-10 rounded-lg border-none p-0" value={theme.accent} onChange={e => setTheme({...theme, accent: e.target.value})} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <h3 className="font-bold mb-4 opacity-60">Удаление товаров:</h3>
-                    <div className="space-y-2">
-                        {products.map(p => (
-                            <div key={p.id} className="p-3 glass rounded-xl flex justify-between items-center">
-                                <span className="text-sm font-bold">{p.title}</span>
-                                <button onClick={() => setProducts(products.filter(i => i.id !== p.id))} className="text-red-500 p-2"><Trash2 size={16} /></button>
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-        
-        // Рендер иконок
-        setTimeout(() => lucide.createIcons(), 500);
+        render();
     </script>
 </body>
 </html>
