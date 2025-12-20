@@ -155,7 +155,7 @@
         tg.expand();
         tg.headerColor = tg.themeParams.bg_color;
 
-        const ADMIN_USERNAME = "ВАШ_ЛОГИН_БЕЗ_СОБАЧКИ"; // Вставьте сюда ваш юзернейм для связи
+        const ADMIN_USERNAME = "z1krov"; // Вставьте сюда ваш юзернейм для связи
 
         // Данные (имитация БД)
         let state = JSON.parse(localStorage.getItem('store_db')) || {
@@ -195,7 +195,7 @@
             if(tg.initDataUnsafe.user) {
                 const user = tg.initDataUnsafe.user;
                 document.getElementById('user-name').innerText = user.first_name;
-                document.getElementById('user-id').innerText = "@" + (user.username || "id" + user.id);
+                document.getElementById('1577146268').innerText = "@" + (user.username || "id" + user.id);
                 // Если вы хотите видеть админку (проверка по ID или username)
                 if(user.username === ADMIN_USERNAME) {
                     document.getElementById('admin-tab').classList.remove('hidden');
@@ -288,3 +288,4 @@
     </script>
 </body>
 </html>
+
