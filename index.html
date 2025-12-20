@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Shop Mini App</title>
-    
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <title>Ultimate Mini App Shop</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
@@ -14,9 +13,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
-        /* Скрываем скроллбар для красоты */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body>
@@ -25,250 +25,166 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
         const { motion, AnimatePresence } = window.Motion;
-        const { ShoppingBag, User, Settings, CreditCard, Coins, Upload, CheckCircle, Plus, Trash2, Palette, Box } = window.lucide;
+        const { 
+            ShoppingBag, User, Settings, CreditCard, Coins, 
+            Plus, Trash2, Palette, ChevronRight, CheckCircle2, 
+            Image as ImageIcon, LayoutGrid, Zap 
+        } = window.lucide;
 
-        // --- Имитация Базы Данных (LocalStorage) ---
-        const DB = {
-            get: (key, def) => {
-                const data = localStorage.getItem(key);
-                return data ? JSON.parse(data) : def;
-            },
+        // --- НАСТРОЙКИ ТЕЛЕГРАМ БОТА ---
+        const BOT_CONFIG = {
+            token: '8376191518:AAGKsCRld5dFXqF0Ltr4x5KbHoUZamiUesk', // Вставьте сюда токен от @BotFather
+            adminChatId: '1577146268',    // Вставьте ваш ID (узнать в @userinfobot)
+        };
+
+        // --- УТИЛИТЫ ХРАНЕНИЯ ---
+        const Storage = {
+            get: (key, fallback) => JSON.parse(localStorage.getItem(key)) || fallback,
             set: (key, val) => localStorage.setItem(key, JSON.stringify(val))
         };
 
-        const INITIAL_PRODUCTS = [
-            { id: 1, title: 'Telegram Premium 3 мес.', price: 1200, category: 'Premium' },
-            { id: 2, title: 'Аккаунт USA (+1)', price: 250, category: 'Accounts' },
-            { id: 3, title: 'Аккаунт RU (+7)', price: 300, category: 'Accounts' },
-            { id: 4, title: 'Канал 2018 года', price: 5000, category: 'Channels' },
-        ];
+        const App = () => {
+            const [view, setView] = useState('catalog'); // catalog, profile, admin, checkout
+            const [products, setProducts] = useState(() => Storage.get('shop_products', [
+                { id: 1, title: 'Telegram Premium (Год)', price: 2500, category: 'Подписки' },
+                { id: 2, title: 'Аккаунт USA +1', price: 450, category: 'Аккаунты' }
+            ]));
+            const [theme, setTheme] = useState(() => Storage.get('shop_theme', {
+                bg: '#0f172a', text: '#f8fafc', accent: '#3b82f6', card: '#1e293b'
+            }));
+            const [user, setUser] = useState(() => Storage.get('shop_user', { totalSpent: 0, orders: [] }));
+            const [selectedItem, setSelectedItem] = useState(null);
 
-        // --- Главный Компонент ---
-        function App() {
-            // Состояния
-            const [view, setView] = useState('shop');
-            const [products, setProducts] = useState(() => DB.get('products', INITIAL_PRODUCTS));
-            const [cartItem, setCartItem] = useState(null);
-            const [theme, setTheme] = useState(() => DB.get('theme', { bg: '#171717', text: '#ffffff', btn: '#3b82f6', card: '#262626' }));
-            const [userStats, setUserStats] = useState(() => DB.get('stats', { spent: 0, orders: [] }));
-            const [activeCategory, setActiveCategory] = useState('All');
-            
-            // Telegram WebApp init
-            useEffect(() => {
-                if(window.Telegram.WebApp) {
-                    window.Telegram.WebApp.ready();
-                    window.Telegram.WebApp.expand();
-                }
-            }, []);
+            useEffect(() => { Storage.set('shop_products', products); }, [products]);
+            useEffect(() => { Storage.set('shop_theme', theme); }, [theme]);
+            useEffect(() => { Storage.set('shop_user', user); }, [user]);
 
-            // Сохранение данных при изменении
-            useEffect(() => DB.set('products', products), [products]);
-            useEffect(() => DB.set('theme', theme), [theme]);
-            useEffect(() => DB.set('stats', userStats), [userStats]);
+            // Функция отправки уведомления в Telegram
+            const sendTelegramNotification = async (orderData, photoFile) => {
+                const text = `💰 НОВЫЙ ЗАКАЗ!\n\n🛍 Товар: ${orderData.title}\n💵 Сумма: ${orderData.price} руб\n👤 Клиент: @${window.Telegram.WebApp.initDataUnsafe?.user?.username || 'unknown'}\n💳 Метод: ${orderData.method}`;
+                
+                const formData = new FormData();
+                formData.append('chat_id', BOT_CONFIG.adminChatId);
+                formData.append('caption', text);
+                formData.append('photo', photoFile);
 
-            // Обработчик покупки (Имитация проверки)
-            const handleOrder = (item, method, amountTon) => {
-                const newOrder = {
-                    id: Date.now(),
-                    title: item.title,
-                    price: item.price,
-                    date: new Date().toLocaleDateString(),
-                    status: 'На проверке'
-                };
-                
-                const newStats = {
-                    spent: userStats.spent + item.price,
-                    orders: [newOrder, ...userStats.orders]
-                };
-                
-                setUserStats(newStats);
-                
-                // Отправка данных боту (В реальности)
-                if(window.Telegram.WebApp.sendData) {
-                    // window.Telegram.WebApp.sendData(JSON.stringify(newOrder));
-                }
+                try {
+                    await fetch(`https://api.telegram.org/bot${BOT_CONFIG.token}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } catch (e) { console.error("Ошибка отправки:", e); }
             };
 
-            // Общие стили
-            const appStyle = { backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', fontFamily: 'sans-serif' };
+            const appStyle = { backgroundColor: theme.bg, color: theme.text, minHeight: '100vh' };
 
             return (
-                <div style={appStyle} className="pb-24 transition-colors duration-300">
+                <div style={appStyle} className="transition-all duration-500 overflow-x-hidden">
                     <AnimatePresence mode="wait">
-                        {view === 'shop' && (
-                            <Shop 
-                                key="shop" 
-                                products={products} 
-                                category={activeCategory} 
-                                setCategory={setActiveCategory} 
-                                onBuy={(p) => { setCartItem(p); setView('checkout'); }} 
-                                theme={theme} 
-                            />
-                        )}
-                        {view === 'checkout' && (
-                            <Checkout 
-                                key="checkout" 
-                                item={cartItem} 
-                                theme={theme} 
-                                onBack={() => setView('shop')}
-                                onSuccess={(method, ton) => handleOrder(cartItem, method, ton)}
-                            />
-                        )}
-                        {view === 'profile' && <Profile key="profile" stats={userStats} theme={theme} />}
-                        {view === 'admin' && (
-                            <Admin 
-                                key="admin" 
-                                products={products} 
-                                setProducts={setProducts} 
-                                theme={theme} 
-                                setTheme={setTheme} 
-                            />
-                        )}
+                        {view === 'catalog' && <Catalog key="cat" products={products} theme={theme} onBuy={(p) => {setSelectedItem(p); setView('checkout');}} />}
+                        {view === 'checkout' && <Checkout key="check" item={selectedItem} theme={theme} onBack={() => setView('catalog')} onFinish={sendTelegramNotification} setUser={setUser} user={user} />}
+                        {view === 'profile' && <Profile key="prof" user={user} theme={theme} />}
+                        {view === 'admin' && <Admin key="adm" products={products} setProducts={setProducts} theme={theme} setTheme={setTheme} />}
                     </AnimatePresence>
 
                     {/* Навигация */}
-                    <Navigation view={view} setView={setView} theme={theme} />
+                    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] glass rounded-2xl p-2 flex justify-around items-center z-50">
+                        <NavBtn active={view === 'catalog'} onClick={() => setView('catalog')} icon={<ShoppingBag />} theme={theme} />
+                        <NavBtn active={view === 'profile'} onClick={() => setView('profile')} icon={<User />} theme={theme} />
+                        <NavBtn active={view === 'admin'} onClick={() => setView('admin')} icon={<Settings />} theme={theme} />
+                    </nav>
                 </div>
-            );
-        }
-
-        // --- Компонент Магазина ---
-        const Shop = ({ products, category, setCategory, onBuy, theme }) => {
-            const categories = ['All', ...new Set(products.map(p => p.category))];
-            const filtered = category === 'All' ? products : products.filter(p => p.category === category);
-
-            return (
-                <motion.div initial={{opacity:0, x:-20}} animate={{opacity:1, x:0}} exit={{opacity:0, x:20}} className="p-4">
-                    <header className="flex justify-between items-center mb-6 mt-2">
-                        <h1 className="text-2xl font-extrabold tracking-tight">Каталог</h1>
-                        <span className="text-xs px-2 py-1 rounded bg-white/10 opacity-70">v1.0</span>
-                    </header>
-
-                    {/* Категории */}
-                    <div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
-                        {categories.map(cat => (
-                            <button 
-                                key={cat}
-                                onClick={() => setCategory(cat)}
-                                style={{ 
-                                    backgroundColor: category === cat ? theme.btn : theme.card,
-                                    color: category === cat ? '#fff' : theme.text 
-                                }}
-                                className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all active:scale-95"
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Сетка товаров */}
-                    <div className="grid gap-3">
-                        {filtered.map(p => (
-                            <div key={p.id} style={{backgroundColor: theme.card}} className="p-4 rounded-2xl flex justify-between items-center shadow-lg border border-white/5">
-                                <div>
-                                    <h3 className="font-bold text-lg leading-tight">{p.title}</h3>
-                                    <p className="opacity-50 text-xs uppercase mt-1 tracking-wider">{p.category}</p>
-                                    <div className="mt-2 font-mono text-lg font-bold">{p.price} ₽</div>
-                                </div>
-                                <button 
-                                    onClick={() => onBuy(p)}
-                                    style={{backgroundColor: theme.btn}} 
-                                    className="h-10 px-5 rounded-xl font-bold text-white shadow-lg active:scale-90 transition-transform flex items-center"
-                                >
-                                    Купить
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </motion.div>
             );
         };
 
-        // --- Компонент Оплаты ---
-        const Checkout = ({ item, theme, onBack, onSuccess }) => {
-            const [step, setStep] = useState(1); // 1: Выбор, 2: Оплата, 3: Успех
-            const [method, setMethod] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const tonRate = 550; // Фиксированный курс для примера
-            const tonPrice = (item.price / tonRate).toFixed(2);
+        const NavBtn = ({ active, onClick, icon, theme }) => (
+            <button onClick={onClick} className={`p-3 rounded-xl transition-all ${active ? 'scale-110 shadow-lg' : 'opacity-40'}`} 
+                style={{ backgroundColor: active ? theme.accent : 'transparent' }}>
+                {React.cloneElement(icon, { size: 24, color: '#fff' })}
+            </button>
+        );
 
-            const handleUpload = () => {
-                setLoading(true);
-                // Имитация загрузки
-                setTimeout(() => {
-                    setLoading(false);
-                    onSuccess(method, tonPrice);
-                    setStep(3);
-                }, 2000);
+        const Catalog = ({ products, theme, onBuy }) => (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-6">
+                <header className="mb-8">
+                    <h1 className="text-3xl font-extrabold italic mb-1">STORE</h1>
+                    <div className="h-1 w-12 rounded-full" style={{backgroundColor: theme.accent}}></div>
+                </header>
+                <div className="grid gap-4 pb-24">
+                    {products.map(p => (
+                        <div key={p.id} style={{backgroundColor: theme.card}} className="p-5 rounded-3xl border border-white/5 shadow-xl flex justify-between items-center group">
+                            <div>
+                                <span className="text-[10px] uppercase tracking-[2px] opacity-40 font-bold">{p.category}</span>
+                                <h3 className="text-lg font-bold mt-1">{p.title}</h3>
+                                <p className="text-xl font-mono mt-2" style={{color: theme.accent}}>{p.price} ₽</p>
+                            </div>
+                            <button onClick={() => onBuy(p)} className="p-4 rounded-2xl active:scale-90 transition-transform shadow-lg" style={{backgroundColor: theme.accent}}>
+                                <Zap size={20} fill="#fff" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </motion.div>
+        );
+
+        const Checkout = ({ item, theme, onBack, onFinish, setUser, user }) => {
+            const [method, setMethod] = useState(null);
+            const [screen, setScreen] = useState('select'); // select, payment, success
+            const tonPrice = (item.price / 650).toFixed(2); // Примерный курс
+
+            const handleFile = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    onFinish({ ...item, method }, file);
+                    // Обновляем статистику локально
+                    setUser({
+                        totalSpent: user.totalSpent + item.price,
+                        orders: [{title: item.title, price: item.price, date: new Date().toLocaleDateString()}, ...user.orders]
+                    });
+                    setScreen('success');
+                }
             };
 
-            if (step === 3) return (
-                <div className="flex flex-col items-center justify-center h-[80vh] p-4 text-center">
-                    <motion.div initial={{scale:0}} animate={{scale:1}} className="mb-4 text-green-500">
-                        <i data-lucide="check-circle" width="64" height="64"></i>
-                    </motion.div>
-                    <h2 className="text-2xl font-bold mb-2">Заказ отправлен!</h2>
-                    <p className="opacity-60 mb-6">Администратор проверит чек и пришлет данные в чат.</p>
-                    <button onClick={onBack} style={{backgroundColor: theme.btn}} className="px-6 py-3 rounded-xl text-white font-bold w-full">В магазин</button>
+            if (screen === 'success') return (
+                <div className="p-6 flex flex-col items-center justify-center h-screen text-center">
+                    <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center mb-4 shadow-lg shadow-green-500/50">
+                        <CheckCircle2 size={40} color="#fff" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Оплачено!</h2>
+                    <p className="opacity-60 mt-2">Чек отправлен админу. Ожидайте выдачи товара.</p>
+                    <button onClick={onBack} className="mt-8 px-8 py-3 rounded-xl font-bold" style={{backgroundColor: theme.accent}}>В каталог</button>
                 </div>
             );
 
             return (
-                <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0}} className="p-4">
-                    <button onClick={onBack} className="mb-4 opacity-50 flex items-center gap-1 text-sm font-bold">← Назад</button>
-                    
-                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl mb-6 border border-white/5">
-                        <p className="opacity-60 text-sm">Покупка:</p>
-                        <h2 className="text-xl font-bold mb-4">{item.title}</h2>
-                        <div className="h-px bg-white/10 w-full mb-4"></div>
-                        <div className="flex justify-between items-end">
-                            <div>
-                                <p className="text-2xl font-mono font-bold">{item.price} ₽</p>
-                                <p className="text-sm opacity-50">~ {tonPrice} TON</p>
-                            </div>
-                        </div>
+                <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="p-6">
+                    <button onClick={onBack} className="mb-6 opacity-50">← Назад</button>
+                    <div className="glass p-6 rounded-3xl mb-6">
+                        <p className="opacity-50 text-sm italic">К оплате:</p>
+                        <h2 className="text-2xl font-bold">{item.title}</h2>
+                        <p className="text-3xl font-mono font-bold mt-2" style={{color: theme.accent}}>{item.price} RUB</p>
+                        <p className="text-sm opacity-40">~ {tonPrice} TON</p>
                     </div>
 
-                    <h3 className="font-bold mb-3">Выберите метод:</h3>
-                    <div className="flex gap-3 mb-6">
-                        <button 
-                            onClick={() => setMethod('card')} 
-                            className={`flex-1 p-4 rounded-xl border-2 transition-all ${method === 'card' ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-white/5'}`}
-                        >
-                            <i data-lucide="credit-card" className="mx-auto mb-2 opacity-80"></i>
-                            <div className="text-sm font-bold">Карта</div>
-                        </button>
-                        <button 
-                            onClick={() => setMethod('crypto')} 
-                            className={`flex-1 p-4 rounded-xl border-2 transition-all ${method === 'crypto' ? 'border-blue-500 bg-blue-500/10' : 'border-transparent bg-white/5'}`}
-                        >
-                            <i data-lucide="coins" className="mx-auto mb-2 opacity-80"></i>
-                            <div className="text-sm font-bold">TON</div>
-                        </button>
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <PaymentBtn active={method === 'card'} onClick={() => setMethod('card')} icon={<CreditCard />} text="Карта" theme={theme} />
+                        <PaymentBtn active={method === 'crypto'} onClick={() => setMethod('crypto')} icon={<Coins />} text="TON" theme={theme} />
                     </div>
 
                     <AnimatePresence>
                         {method && (
-                            <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} className="overflow-hidden">
-                                <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl text-center">
-                                    <p className="text-sm opacity-60 mb-2">Реквизиты для оплаты:</p>
-                                    <div className="font-mono bg-black/20 p-3 rounded-lg select-all mb-4 text-sm break-all">
-                                        {method === 'card' ? '2200 1234 5678 9000' : 'UQCx...MockTonAddress...x'}
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="overflow-hidden">
+                                <div className="p-6 rounded-3xl bg-black/20 border border-white/5 text-center">
+                                    <p className="text-sm opacity-70 mb-4">
+                                        Переведите <b>{method === 'card' ? item.price : tonPrice}</b> {method === 'card' ? 'RUB' : 'TON'} по реквизитам:
+                                    </p>
+                                    <div className="p-3 bg-white/5 rounded-xl font-mono mb-6 select-all">
+                                        {method === 'card' ? '4400 1234 5678 9000' : 'UQCx_EXAMPLE_TON_WALLET'}
                                     </div>
-                                    
-                                    <label className="block w-full cursor-pointer active:scale-95 transition-transform">
-                                        <div className={`border-2 border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center gap-2 ${loading ? 'opacity-50' : ''}`}>
-                                            {loading ? (
-                                                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                                            ) : (
-                                                <>
-                                                    <i data-lucide="upload" className="opacity-50"></i>
-                                                    <span className="text-sm font-bold">Прикрепить чек</span>
-                                                    <span className="text-xs opacity-50">(Нажми сюда)</span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <input type="file" className="hidden" onChange={handleUpload} disabled={loading} />
+                                    <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/20 rounded-3xl cursor-pointer hover:bg-white/5 transition-colors">
+                                        <ImageIcon className="opacity-20 mb-2" size={32} />
+                                        <span className="text-sm font-bold opacity-60">Загрузить скриншот чека</span>
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleFile} />
                                     </label>
                                 </div>
                             </motion.div>
@@ -278,200 +194,97 @@
             );
         };
 
-        // --- Компонент Админки ---
-        const Admin = ({ products, setProducts, theme, setTheme }) => {
-            const [newProduct, setNewProduct] = useState({ title: '', price: '', category: 'Accounts' });
-
-            const addProduct = () => {
-                if(!newProduct.title || !newProduct.price) return;
-                setProducts([...products, { ...newProduct, id: Date.now() }]);
-                setNewProduct({ title: '', price: '', category: 'Accounts' });
-            };
-
-            const removeProduct = (id) => {
-                setProducts(products.filter(p => p.id !== id));
-            };
-
-            return (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} className="p-4 pb-24">
-                    <h1 className="text-2xl font-bold mb-6">Админ панель</h1>
-
-                    {/* Добавление товара */}
-                    <section className="mb-8">
-                        <div className="flex items-center gap-2 mb-3">
-                            <i data-lucide="box" size="18"></i>
-                            <h3 className="font-bold">Добавить товар</h3>
-                        </div>
-                        <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl space-y-3">
-                            <input 
-                                type="text" 
-                                placeholder="Название" 
-                                value={newProduct.title}
-                                onChange={e => setNewProduct({...newProduct, title: e.target.value})}
-                                className="w-full bg-black/20 p-3 rounded-lg outline-none border border-transparent focus:border-blue-500 transition-colors"
-                            />
-                            <div className="flex gap-3">
-                                <input 
-                                    type="number" 
-                                    placeholder="Цена (RUB)" 
-                                    value={newProduct.price}
-                                    onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
-                                    className="w-1/2 bg-black/20 p-3 rounded-lg outline-none"
-                                />
-                                <select 
-                                    value={newProduct.category}
-                                    onChange={e => setNewProduct({...newProduct, category: e.target.value})}
-                                    className="w-1/2 bg-black/20 p-3 rounded-lg outline-none"
-                                >
-                                    <option value="Accounts">Accounts</option>
-                                    <option value="Premium">Premium</option>
-                                    <option value="Channels">Channels</option>
-                                </select>
-                            </div>
-                            <button onClick={addProduct} style={{backgroundColor: theme.btn}} className="w-full py-3 rounded-lg font-bold text-white flex justify-center gap-2 items-center">
-                                <i data-lucide="plus" size="18"></i> Добавить
-                            </button>
-                        </div>
-                    </section>
-
-                    {/* Список товаров (удаление) */}
-                    <section className="mb-8">
-                        <h3 className="font-bold mb-3 opacity-70 text-sm uppercase">Активные товары</h3>
-                        <div className="space-y-2">
-                            {products.map(p => (
-                                <div key={p.id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg">
-                                    <span className="text-sm font-medium">{p.title}</span>
-                                    <button onClick={() => removeProduct(p.id)} className="text-red-400 p-2">
-                                        <i data-lucide="trash-2" size="18"></i>
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Редактор темы */}
-                    <section>
-                        <div className="flex items-center gap-2 mb-3">
-                            <i data-lucide="palette" size="18"></i>
-                            <h3 className="font-bold">Редактор темы</h3>
-                        </div>
-                        <div style={{backgroundColor: theme.card}} className="p-4 rounded-xl space-y-3">
-                            <ThemeInput label="Фон" val={theme.bg} onChange={v => setTheme({...theme, bg: v})} />
-                            <ThemeInput label="Карточки" val={theme.card} onChange={v => setTheme({...theme, card: v})} />
-                            <ThemeInput label="Кнопки" val={theme.btn} onChange={v => setTheme({...theme, btn: v})} />
-                            <ThemeInput label="Текст" val={theme.text} onChange={v => setTheme({...theme, text: v})} />
-                        </div>
-                    </section>
-                </motion.div>
-            );
-        };
-
-        const ThemeInput = ({ label, val, onChange }) => (
-            <div className="flex justify-between items-center">
-                <span className="text-sm opacity-80">{label}</span>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono opacity-50">{val}</span>
-                    <input type="color" value={val} onChange={e => onChange(e.target.value)} className="w-8 h-8 rounded overflow-hidden cursor-pointer border-none p-0" />
-                </div>
-            </div>
+        const PaymentBtn = ({ active, onClick, icon, text, theme }) => (
+            <button onClick={onClick} className={`p-4 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all ${active ? 'border-white bg-white/10' : 'border-transparent bg-white/5 opacity-50'}`}>
+                {React.cloneElement(icon, { size: 24 })}
+                <span className="text-xs font-bold uppercase tracking-wider">{text}</span>
+            </button>
         );
 
-        // --- Профиль ---
-        const Profile = ({ stats, theme }) => (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="p-4">
-                <div className="flex items-center gap-4 mb-8 mt-4">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500 flex items-center justify-center text-3xl font-bold text-white">
-                        U
+        const Profile = ({ user, theme }) => (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 pb-24">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-black">
+                        {window.Telegram.WebApp.initDataUnsafe?.user?.first_name?.[0] || 'U'}
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold">User</h2>
-                        <p className="opacity-50">Customer</p>
+                        <h2 className="text-xl font-bold">{window.Telegram.WebApp.initDataUnsafe?.user?.first_name || 'Пользователь'}</h2>
+                        <p className="text-xs opacity-40 font-mono italic">ID: {window.Telegram.WebApp.initDataUnsafe?.user?.id || '000000'}</p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-8">
-                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl text-center border border-white/5">
-                        <div className="text-3xl font-bold mb-1">{stats.orders.length}</div>
-                        <div className="text-xs uppercase tracking-widest opacity-50">Заказов</div>
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                    <div className="glass p-5 rounded-3xl text-center">
+                        <p className="text-2xl font-black">{user.orders.length}</p>
+                        <p className="text-[10px] uppercase opacity-40 font-bold">Заказов</p>
                     </div>
-                    <div style={{backgroundColor: theme.card}} className="p-5 rounded-2xl text-center border border-white/5">
-                        <div className="text-3xl font-bold mb-1">{stats.spent}</div>
-                        <div className="text-xs uppercase tracking-widest opacity-50">Рублей</div>
+                    <div className="glass p-5 rounded-3xl text-center">
+                        <p className="text-2xl font-black">{user.totalSpent} ₽</p>
+                        <p className="text-[10px] uppercase opacity-40 font-bold">Потрачено</p>
                     </div>
                 </div>
 
-                <h3 className="font-bold mb-4 text-lg">История заказов</h3>
+                <h3 className="font-bold mb-4 flex items-center gap-2"><LayoutGrid size={18} /> История</h3>
                 <div className="space-y-3">
-                    {stats.orders.length === 0 ? (
-                        <div className="text-center opacity-30 py-10">История пуста</div>
-                    ) : (
-                        stats.orders.map(o => (
-                            <div key={o.id} style={{backgroundColor: theme.card}} className="p-4 rounded-xl flex justify-between items-center">
-                                <div>
-                                    <div className="font-bold">{o.title}</div>
-                                    <div className="text-xs opacity-50">{o.date}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-mono">{o.price} ₽</div>
-                                    <div className="text-xs text-yellow-500">{o.status}</div>
-                                </div>
+                    {user.orders.length === 0 ? <p className="opacity-20 text-center py-10 italic">Заказов пока нет</p> : 
+                        user.orders.map((o, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex justify-between">
+                                <div><p className="font-bold">{o.title}</p><p className="text-[10px] opacity-40">{o.date}</p></div>
+                                <p className="font-mono font-bold" style={{color: theme.accent}}>{o.price} ₽</p>
                             </div>
                         ))
-                    )}
+                    }
                 </div>
             </motion.div>
         );
 
-        // --- Навигация (Меню) ---
-        const Navigation = ({ view, setView, theme }) => {
-            const items = [
-                { id: 'shop', icon: 'shopping-bag', label: 'Магазин' },
-                { id: 'profile', icon: 'user', label: 'Профиль' },
-                { id: 'admin', icon: 'settings', label: 'Админ' },
-            ];
+        const Admin = ({ products, setProducts, theme, setTheme }) => {
+            const [newItem, setNewItem] = useState({ title: '', price: '', category: 'Accounts' });
 
             return (
-                <div className="fixed bottom-4 left-4 right-4 h-16 bg-black/80 backdrop-blur-md rounded-2xl flex justify-around items-center border border-white/10 shadow-2xl z-50">
-                    {items.map(item => {
-                        const isActive = view === item.id;
-                        return (
-                            <button 
-                                key={item.id} 
-                                onClick={() => setView(item.id)}
-                                className="relative p-2 w-12 h-12 flex items-center justify-center transition-all"
-                            >
-                                <i 
-                                    data-lucide={item.icon} 
-                                    style={{ color: isActive ? theme.btn : '#6b7280' }}
-                                    className={`transition-all duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}
-                                ></i>
-                                {isActive && (
-                                    <motion.div 
-                                        layoutId="dot" 
-                                        className="absolute bottom-1 w-1 h-1 rounded-full" 
-                                        style={{backgroundColor: theme.btn}}
-                                    />
-                                )}
-                            </button>
-                        )
-                    })}
-                </div>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 pb-24">
+                    <h2 className="text-2xl font-black mb-6">ADMIN PANEL</h2>
+                    
+                    <div className="glass p-5 rounded-3xl mb-8">
+                        <h3 className="text-sm font-bold mb-4 opacity-60 uppercase tracking-widest">Добавить товар</h3>
+                        <input className="w-full bg-white/5 p-3 rounded-xl mb-2 outline-none" placeholder="Название" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
+                        <input className="w-full bg-white/5 p-3 rounded-xl mb-4 outline-none font-mono" placeholder="Цена" type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} />
+                        <button onClick={() => { setProducts([...products, { ...newItem, id: Date.now(), price: Number(newItem.price) }]); setNewItem({title:'', price:'', category:'Accounts'}); }} 
+                            className="w-full py-3 rounded-xl font-bold shadow-lg" style={{backgroundColor: theme.accent}}>Добавить</button>
+                    </div>
+
+                    <div className="glass p-5 rounded-3xl mb-8">
+                        <h3 className="text-sm font-bold mb-4 opacity-60 uppercase tracking-widest">Цвета темы</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] opacity-40 uppercase font-bold">Фон</span>
+                                <input type="color" className="w-full h-10 rounded-lg border-none p-0" value={theme.bg} onChange={e => setTheme({...theme, bg: e.target.value})} />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] opacity-40 uppercase font-bold">Акцент</span>
+                                <input type="color" className="w-full h-10 rounded-lg border-none p-0" value={theme.accent} onChange={e => setTheme({...theme, accent: e.target.value})} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 className="font-bold mb-4 opacity-60">Удаление товаров:</h3>
+                    <div className="space-y-2">
+                        {products.map(p => (
+                            <div key={p.id} className="p-3 glass rounded-xl flex justify-between items-center">
+                                <span className="text-sm font-bold">{p.title}</span>
+                                <button onClick={() => setProducts(products.filter(i => i.id !== p.id))} className="text-red-500 p-2"><Trash2 size={16} /></button>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
             );
         };
 
-        // Рендер приложения и иконок
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
         
-        // Инициализация иконок Lucide после рендера React
-        setTimeout(() => {
-            window.lucide.createIcons();
-        }, 100);
-
-        // Хак для обновления иконок при смене страниц (так как мы используем lucide через CDN)
-        const observer = new MutationObserver(() => window.lucide.createIcons());
-        observer.observe(document.body, { childList: true, subtree: true });
-
+        // Рендер иконок
+        setTimeout(() => lucide.createIcons(), 500);
     </script>
 </body>
 </html>
