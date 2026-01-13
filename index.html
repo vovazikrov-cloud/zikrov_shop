@@ -1,455 +1,418 @@
-<?php
-/**
- * Telegram Mini App: Digital Store (All-in-One File)
- * PHP 7.4+ | SQLite3
- */
-
-// --- НАСТРОЙКИ (РЕДАКТИРУЙТЕ ЗДЕСЬ) ---
-$config = [
-    'admin_login'    => 'admin',
-    'admin_password' => 'admin123', // Смените перед использованием
-    'currency'       => '₽',
-    'payment_info'   => [
-        'card'   => '4444 0000 1111 2222 (Сбербанк)',
-        'crypto' => 'T-Address-Example-TRC20 (USDT)',
-        'other'  => '@z1krov (Написать менеджеру)'
-    ],
-    'db_name'        => 'store_database.db'
-];
-
-// --- ИНИЦИАЛИЗАЦИЯ БД ---
-try {
-    $db = new PDO("sqlite:" . $config['db_name']);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $db->exec("CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
-    $db->exec("CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, cat_id INTEGER, name TEXT, price REAL, description TEXT)");
-    $db->exec("CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, user_name TEXT, product_name TEXT, price REAL, status TEXT, created_at DATETIME)");
-} catch (PDOException $e) {
-    die("Database error: " . $e->getMessage());
-}
-
-session_start();
-$is_admin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'];
-
-// --- ОБРАБОТКА ДЕЙСТВИЙ ---
-if (isset($_GET['action'])) {
-    $action = $_GET['action'];
-
-    // Вход в админку
-    if ($action == 'login' && isset($_POST['login'], $_POST['password'])) {
-        if ($_POST['login'] === $config['admin_login'] && $_POST['password'] === $config['admin_password']) {
-            $_SESSION['is_admin'] = true;
-            header("Location: ?page=admin"); exit;
-        }
-    }
-
-    // Выход
-    if ($action == 'logout') {
-        unset($_SESSION['is_admin']);
-        header("Location: ?"); exit;
-    }
-
-    // Создание категории
-    if ($action == 'add_category' && $is_admin) {
-        $stmt = $db->prepare("INSERT INTO categories (name) VALUES (?)");
-        $stmt->execute([$_POST['name']]);
-        header("Location: ?page=admin"); exit;
-    }
-
-    // Удаление категории
-    if ($action == 'del_category' && $is_admin) {
-        $stmt = $db->prepare("DELETE FROM categories WHERE id = ?");
-        $stmt->execute([$_GET['id']]);
-        header("Location: ?page=admin"); exit;
-    }
-
-    // Добавление товара
-    if ($action == 'add_product' && $is_admin) {
-        $stmt = $db->prepare("INSERT INTO products (cat_id, name, price, description) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$_POST['cat_id'], $_POST['name'], $_POST['price'], $_POST['description']]);
-        header("Location: ?page=admin"); exit;
-    }
-
-    // Удаление товара
-    if ($action == 'del_product' && $is_admin) {
-        $stmt = $db->prepare("DELETE FROM products WHERE id = ?");
-        $stmt->execute([$_GET['id']]);
-        header("Location: ?page=admin"); exit;
-    }
-
-    // Смена статуса заказа
-    if ($action == 'set_status' && $is_admin) {
-        $stmt = $db->prepare("UPDATE orders SET status = ? WHERE id = ?");
-        $stmt->execute([$_GET['status'], $_GET['id']]);
-        header("Location: ?page=admin"); exit;
-    }
-
-    // Покупка (Создание заказа)
-    if ($action == 'buy') {
-        $stmt = $db->prepare("INSERT INTO orders (user_id, user_name, product_name, price, status, created_at) VALUES (?, ?, ?, ?, 'Ожидает оплаты', datetime('now'))");
-        $stmt->execute([$_POST['user_id'], $_POST['user_name'], $_POST['p_name'], $_POST['p_price']]);
-        $order_id = $db->lastInsertId();
-        header("Location: ?page=pay&order_id=" . $order_id); exit;
-    }
-}
-
-$page = $_GET['page'] ?? 'shop';
-?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Store</title>
+    <title>Digital Store Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Стили в стиле Telegram */
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-secondary-bg-color: #f0f0f0;
-            --tg-theme-text-color: #000000;
-            --tg-theme-hint-color: #999999;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
-            --accent: #007bff;
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --sec-bg-color: var(--tg-theme-secondary-bg-color, #f0f2f5);
+            --text-color: var(--tg-theme-text-color, #000000);
+            --hint-color: var(--tg-theme-hint-color, #999999);
+            --btn-color: var(--tg-theme-button-color, #2481cc);
+            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --accent: #31b545;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0; padding: 0;
-            line-height: 1.5;
-            user-select: none;
+            overflow-x: hidden;
         }
 
-        .container { padding: 15px; padding-bottom: 80px; }
-        
-        /* Typography */
-        h1, h2, h3 { margin-top: 0; }
-        .text-hint { color: var(--tg-theme-hint-color); font-size: 0.9em; }
+        .container { padding: 16px; padding-bottom: 100px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
 
-        /* Cards */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        h2 { font-size: 20px; margin-top: 0; }
+
+        /* Карточки */
         .card {
-            background: var(--tg-theme-secondary-bg-color);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background: var(--sec-bg-color);
+            border-radius: 15px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* Buttons */
+        /* Кнопки */
         .btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
+            background: var(--btn-color);
+            color: var(--btn-text);
             border: none;
-            border-radius: 10px;
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            font-weight: bold;
-            text-align: center;
-            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            width: 100%;
             cursor: pointer;
             font-size: 16px;
-            transition: opacity 0.2s;
+            transition: transform 0.1s;
         }
-        .btn:active { opacity: 0.7; }
-        .btn-secondary { background: #6c757d; }
-        .btn-outline { background: transparent; border: 1px solid var(--tg-theme-button-color); color: var(--tg-theme-button-color); }
-        .btn-sm { padding: 5px 10px; font-size: 12px; width: auto; display: inline-block; }
-        .btn-danger { background: #dc3545; }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; border: 2px solid var(--btn-color); color: var(--btn-color); }
+        .btn-danger { background: #e53935; }
+        .btn-sm { padding: 6px 12px; font-size: 14px; width: auto; }
 
-        /* Navigation Footer */
-        .nav-bar {
+        /* Сетка категорий */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .cat-card {
+            background: var(--btn-color);
+            color: var(--btn-text);
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        /* Формы */
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            border-radius: 10px;
+            border: 1px solid var(--hint-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        /* Навигация */
+        .nav {
             position: fixed;
             bottom: 0; width: 100%;
-            background: var(--tg-theme-secondary-bg-color);
+            background: var(--sec-bg-color);
             display: flex;
             justify-content: space-around;
             padding: 10px 0;
             border-top: 1px solid rgba(0,0,0,0.1);
-            z-index: 100;
+            backdrop-filter: blur(10px);
         }
-        .nav-item { text-decoration: none; color: var(--tg-theme-hint-color); font-size: 12px; text-align: center; }
-        .nav-item.active { color: var(--tg-theme-button-color); }
-
-        /* Grid */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        /* Category Item */
-        .cat-item {
-            background: var(--tg-theme-button-color);
-            color: #fff;
-            padding: 20px 10px;
-            border-radius: 12px;
+        .nav-item {
             text-align: center;
-            font-weight: bold;
+            color: var(--hint-color);
             text-decoration: none;
+            font-size: 12px;
+            flex: 1;
         }
+        .nav-item.active { color: var(--btn-color); }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
 
-        /* Badge */
+        /* Статусы */
         .badge {
-            padding: 3px 8px;
-            border-radius: 5px;
             font-size: 11px;
-            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-weight: bold;
+            text-transform: uppercase;
         }
-        .status-wait { background: #ffc107; color: #000; }
-        .status-paid { background: #17a2b8; color: #fff; }
-        .status-done { background: #28a745; color: #fff; }
+        .status-wait { background: #ffb300; color: #fff; }
+        .status-paid { background: #1e88e5; color: #fff; }
+        .status-done { background: #43a047; color: #fff; }
 
-        /* Inputs */
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-        }
-
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .admin-table th, .admin-table td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+        .price { font-size: 18px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <?php if ($page == 'shop'): ?>
+    <!-- Страница магазина -->
+    <div id="page-shop" class="page active">
         <h1>Магазин</h1>
-        <?php 
-        $cats = $db->query("SELECT * FROM categories")->fetchAll();
-        if (!$cats): echo "<p class='text-hint'>Категории пока пусты...</p>";
-        else: ?>
-            <div class="grid">
-                <?php foreach ($cats as $c): ?>
-                    <a href="?page=category&id=<?php echo $c['id']; ?>" class="cat-item">
-                        <?php echo htmlspecialchars($c['name']); ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <div id="categories-list" class="grid"></div>
+    </div>
 
-    <?php elseif ($page == 'category'): ?>
-        <?php 
-        $cat_id = (int)$_GET['id'];
-        $cat = $db->query("SELECT * FROM categories WHERE id = $cat_id")->fetch();
-        $prods = $db->query("SELECT * FROM products WHERE cat_id = $cat_id")->fetchAll();
-        ?>
-        <a href="?page=shop" class="text-hint" style="text-decoration:none">← Назад</a>
-        <h2><?php echo htmlspecialchars($cat['name']); ?></h2>
-        
-        <?php foreach ($prods as $p): ?>
-            <div class="card">
-                <div style="font-weight:bold; font-size: 1.1em;"><?php echo htmlspecialchars($p['name']); ?></div>
-                <div class="text-hint" style="margin: 5px 0;"><?php echo htmlspecialchars($p['description']); ?></div>
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                    <div style="font-weight:bold; color: var(--tg-theme-button-color); font-size: 1.2em;">
-                        <?php echo $p['price'] . ' ' . $config['currency']; ?>
-                    </div>
-                    <form action="?action=buy" method="POST" style="margin:0">
-                        <input type="hidden" name="p_name" value="<?php echo htmlspecialchars($p['name']); ?>">
-                        <input type="hidden" name="p_price" value="<?php echo $p['price']; ?>">
-                        <input type="hidden" name="user_id" class="tg_user_id">
-                        <input type="hidden" name="user_name" class="tg_user_name">
-                        <button type="submit" class="btn btn-sm">Купить</button>
-                    </form>
-                </div>
-            </div>
-        <?php endforeach; ?>
+    <!-- Страница категории -->
+    <div id="page-category" class="page">
+        <div onclick="showPage('shop')" style="cursor:pointer; color:var(--btn-color); margin-bottom:15px;">← Назад</div>
+        <h2 id="cat-title">Товары</h2>
+        <div id="products-list"></div>
+    </div>
 
-    <?php elseif ($page == 'pay'): ?>
-        <?php 
-        $order_id = (int)$_GET['order_id'];
-        $order = $db->query("SELECT * FROM orders WHERE id = $order_id")->fetch();
-        ?>
-        <div style="text-align:center">
-            <h2>Оплата заказа #<?php echo $order_id; ?></h2>
-            <p>Сумма к оплате: <b><?php echo $order['price'] . ' ' . $config['currency']; ?></b></p>
-        </div>
+    <!-- Страница оплаты -->
+    <div id="page-pay" class="page">
+        <h2>Оплата заказа</h2>
         <div class="card">
-            <p>Переведите указанную сумму по любым реквизитам ниже:</p>
-            <hr opacity="0.1">
-            <p><b>Карта:</b><br><?php echo $config['payment_info']['card']; ?></p>
-            <p><b>Крипто:</b><br><?php echo $config['payment_info']['crypto']; ?></p>
-            <p><b>Поддержка:</b><br><?php echo $config['payment_info']['other']; ?></p>
+            <p>Для получения товара переведите сумму:</p>
+            <div class="price" id="pay-amount">0 ₽</div>
+            <hr style="opacity:0.1; margin:15px 0;">
+            <p><strong>Реквизиты:</strong></p>
+            <div id="payment-details" style="white-space: pre-wrap;"></div>
         </div>
-        <div class="card" style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107;">
-            <small>После перевода нажмите кнопку ниже. Менеджер проверит поступление и статус заказа изменится в истории.</small>
-        </div>
-        <button onclick="tgNotify()" class="btn">Я оплатил</button>
-        <a href="?page=history" class="btn btn-outline" style="margin-top:10px">В историю заказов</a>
+        <button class="btn" onclick="confirmPayment()">Я оплатил</button>
+    </div>
 
-    <?php elseif ($page == 'history'): ?>
+    <!-- Страница истории -->
+    <div id="page-history" class="page">
         <h1>Мои заказы</h1>
-        <div id="history_list">
-            <p class="text-hint">Загрузка истории...</p>
-        </div>
-        <!-- AJAX content placeholder -->
+        <div id="orders-list"></div>
+    </div>
 
-    <?php elseif ($page == 'admin_login'): ?>
-        <h1>Вход в админку</h1>
-        <form action="?action=login" method="POST">
-            <input type="text" name="login" placeholder="Логин" required>
-            <input type="password" name="password" placeholder="Пароль" required>
-            <button type="submit" class="btn">Войти</button>
-        </form>
+    <!-- Страница админки (Вход) -->
+    <div id="page-admin-login" class="page">
+        <h2>Вход в панель</h2>
+        <input type="text" id="adm-login" placeholder="Логин">
+        <input type="password" id="adm-pass" placeholder="Пароль">
+        <button class="btn" onclick="adminLogin()">Войти</button>
+    </div>
 
-    <?php elseif ($page == 'admin' && $is_admin): ?>
-        <h1>Админ-панель</h1>
-        <a href="?action=logout" class="text-hint">Выйти</a>
-
-        <h3>Категории</h3>
-        <form action="?action=add_category" method="POST" style="display:flex; gap:5px">
-            <input type="text" name="name" placeholder="Название категории" required>
-            <button type="submit" class="btn btn-sm" style="margin-top:8px">Добавить</button>
-        </form>
-        <div style="margin-top:10px">
-            <?php foreach ($db->query("SELECT * FROM categories") as $c): ?>
-                <div style="display:flex; justify-content:space-between; background:#eee; padding:5px 10px; margin-bottom:4px; border-radius:5px; color:#000">
-                    <?php echo htmlspecialchars($c['name']); ?>
-                    <a href="?action=del_category&id=<?php echo $c['id']; ?>" style="color:red">удалить</a>
-                </div>
-            <?php endforeach; ?>
+    <!-- Панель управления -->
+    <div id="page-admin-panel" class="page">
+        <h2>Админ-панель</h2>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Выйти</button>
+        
+        <div class="card" style="margin-top:20px">
+            <h3>Добавить категорию</h3>
+            <input type="text" id="new-cat-name" placeholder="Название">
+            <button class="btn btn-sm" onclick="addCategory()">Добавить</button>
         </div>
 
-        <hr style="margin:20px 0; opacity:0.2">
-
-        <h3>Товары</h3>
-        <form action="?action=add_product" method="POST">
-            <select name="cat_id" required>
-                <?php foreach ($db->query("SELECT * FROM categories") as $c): ?>
-                    <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <input type="text" name="name" placeholder="Название товара" required>
-            <input type="number" step="0.01" name="price" placeholder="Цена" required>
-            <textarea name="description" placeholder="Описание"></textarea>
-            <button type="submit" class="btn btn-sm">Добавить товар</button>
-        </form>
-
-        <hr style="margin:20px 0; opacity:0.2">
-
-        <h3>Последние заказы</h3>
-        <div style="overflow-x:auto">
-            <table class="admin-table">
-                <tr>
-                    <th>ID</th>
-                    <th>Товар</th>
-                    <th>Юзер</th>
-                    <th>Статус</th>
-                    <th>Действие</th>
-                </tr>
-                <?php foreach ($db->query("SELECT * FROM orders ORDER BY id DESC LIMIT 50") as $o): ?>
-                    <tr>
-                        <td><?php echo $o['id']; ?></td>
-                        <td><?php echo htmlspecialchars($o['product_name']); ?><br><b><?php echo $o['price']; ?></b></td>
-                        <td><?php echo htmlspecialchars($o['user_name']); ?></td>
-                        <td><?php echo $o['status']; ?></td>
-                        <td>
-                            <a href="?action=set_status&status=Оплачен&id=<?php echo $o['id']; ?>" style="color:blue">Оплачен</a><br>
-                            <a href="?action=set_status&status=Выполнен&id=<?php echo $o['id']; ?>" style="color:green">Выдан</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
+        <div class="card">
+            <h3>Добавить товар</h3>
+            <select id="new-prod-cat"></select>
+            <input type="text" id="new-prod-name" placeholder="Название товара">
+            <input type="number" id="new-prod-price" placeholder="Цена">
+            <textarea id="new-prod-desc" placeholder="Описание/Ссылка на товар"></textarea>
+            <button class="btn btn-sm" onclick="addProduct()">Добавить товар</button>
         </div>
-    <?php endif; ?>
+
+        <h3>Все заказы</h3>
+        <div id="admin-orders-list"></div>
+    </div>
 </div>
 
-<div class="nav-bar">
-    <a href="?page=shop" class="nav-item <?php if($page=='shop'||$page=='category') echo 'active'; ?>">
-        <div style="font-size:20px">🛒</div>
+<!-- Нижнее меню -->
+<nav class="nav">
+    <a href="#" class="nav-item active" onclick="showPage('shop', event)">
+        <div class="nav-icon">🛍️</div>
         <div>Магазин</div>
     </a>
-    <a href="?page=history" class="nav-item <?php if($page=='history'||$page=='pay') echo 'active'; ?>">
-        <div style="font-size:20px">📋</div>
+    <a href="#" class="nav-item" onclick="showPage('history', event)">
+        <div class="nav-icon">📦</div>
         <div>Заказы</div>
     </a>
-    <a href="?page=admin" class="nav-item <?php if($page=='admin'||$page=='admin_login') echo 'active'; ?>">
-        <div style="font-size:20px">⚙️</div>
+    <a href="#" class="nav-item" onclick="showPage('admin', event)">
+        <div class="nav-icon">⚙️</div>
         <div>Админ</div>
     </a>
-</div>
+</nav>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Применяем цвета темы Telegram
-    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
-    document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
-    document.documentElement.style.setProperty('--tg-theme-button-color', tg.buttonColor);
-    document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.buttonTextColor);
-    document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.secondaryBackgroundColor);
+    // --- НАСТРОЙКИ ---
+    const CONFIG = {
+        adminLogin: 'admin',
+        adminPass: 'admin123',
+        currency: '₽',
+        paymentInfo: "💳 Карта: 4444 5555 6666 7777\n🪙 USDT (TRC20): TYourAddressHere\n💎 После оплаты прикрепите скриншот в чат."
+    };
 
-    // Сбор данных пользователя
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        const uId = user.id;
-        const uName = (user.first_name + ' ' + (user.last_name || '') + ' (@' + (user.username || 'n/a') + ')').trim();
-        
-        document.querySelectorAll('.tg_user_id').forEach(el => el.value = uId);
-        document.querySelectorAll('.tg_user_name').forEach(el => el.value = uName);
+    // --- ИНИЦИАЛИЗАЦИЯ ДАННЫХ (LOCALSTORAGE) ---
+    let db = JSON.parse(localStorage.getItem('store_db')) || {
+        categories: [{id: 1, name: 'Цифровые ключи'}, {id: 2, name: 'Аккаунты'}],
+        products: [
+            {id: 1, catId: 1, name: 'Windows 11 Pro', price: 450, desc: 'Лицензионный ключ'},
+            {id: 2, catId: 2, name: 'Telegram Premium (1 мес)', price: 300, desc: 'Активация на ваш аккаунт'}
+        ],
+        orders: []
+    };
 
-        // Загрузка истории специально для текущего юзера
-        if (window.location.search.includes('page=history')) {
-            fetchOrders(uId);
-        }
-    } else {
-        // Для тестов вне TG
-        if (window.location.search.includes('page=history')) {
-            document.getElementById('history_list').innerHTML = "<p class='text-hint'>Зайдите через Telegram для просмотра истории.</p>";
-        }
+    function saveDb() {
+        localStorage.setItem('store_db', JSON.stringify(db));
     }
 
-    function fetchOrders(userId) {
-        // Простой эмулятор получения данных
-        const list = document.getElementById('history_list');
-        // В реальном приложении тут был бы fetch к API. 
-        // В рамках одного файла мы просто берем данные из PHP через передачу в JS.
-        const orders = <?php 
-            $u_id = "0"; // Будет заменено на JS-логику или серверную проверку
-            $all_orders = $db->query("SELECT * FROM orders ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode($all_orders);
-        ?>;
-
-        const filtered = orders.filter(o => o.user_id == userId);
+    // --- РОУТИНГ ---
+    function showPage(pageId, event) {
+        if(event) event.preventDefault();
         
-        if (filtered.length === 0) {
-            list.innerHTML = "<p class='text-hint'>У вас еще нет заказов.</p>";
-            return;
+        // Спец-проверка для админки
+        if(pageId === 'admin') {
+            const isAuth = sessionStorage.getItem('isAdmin');
+            pageId = isAuth ? 'admin-panel' : 'admin-login';
         }
 
-        let html = '';
-        filtered.forEach(o => {
-            let statusClass = 'status-wait';
-            if(o.status === 'Оплачен') statusClass = 'status-paid';
-            if(o.status === 'Выполнен') statusClass = 'status-done';
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
 
-            html += `
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        if(['shop', 'category'].includes(pageId)) document.querySelectorAll('.nav-item')[0].classList.add('active');
+        if(['history', 'pay'].includes(pageId)) document.querySelectorAll('.nav-item')[1].classList.add('active');
+        if(['admin-login', 'admin-panel'].includes(pageId)) document.querySelectorAll('.nav-item')[2].classList.add('active');
+
+        renderData(pageId);
+    }
+
+    // --- РЕНДЕРИНГ ---
+    function renderData(pageId) {
+        if(pageId === 'shop') {
+            const list = document.getElementById('categories-list');
+            list.innerHTML = db.categories.map(c => `
+                <div class="cat-card" onclick="openCategory(${c.id})">${c.name}</div>
+            `).join('');
+        }
+
+        if(pageId === 'history') {
+            const list = document.getElementById('orders-list');
+            const userOrders = db.orders.filter(o => o.userId === (tg.initDataUnsafe.user?.id || 'guest'));
+            if(userOrders.length === 0) {
+                list.innerHTML = '<p style="color:var(--hint-color)">Заказов пока нет</p>';
+                return;
+            }
+            list.innerHTML = userOrders.map(o => `
                 <div class="card">
                     <div style="display:flex; justify-content:space-between">
-                        <b>Заказ #${o.id}</b>
-                        <span class="badge ${statusClass}">${o.status}</span>
+                        <strong>Заказ #${o.id}</strong>
+                        <span class="badge status-${getStatusClass(o.status)}">${o.status}</span>
                     </div>
-                    <div style="margin-top:8px">${o.product_name}</div>
-                    <div style="font-size:0.9em; margin-top:5px; color:var(--tg-theme-button-color)">${o.price} <?php echo $config['currency']; ?></div>
-                    <div class="text-hint" style="font-size:0.7em; margin-top:5px">${o.created_at}</div>
+                    <div style="margin-top:8px">${o.prodName}</div>
+                    <div class="price">${o.price} ${CONFIG.currency}</div>
+                    <div style="font-size:11px; color:var(--hint-color); margin-top:5px">${o.date}</div>
                 </div>
-            `;
-        });
-        list.innerHTML = html;
+            `).join('');
+        }
+
+        if(pageId === 'admin-panel') {
+            // Список категорий в селекте
+            const select = document.getElementById('new-prod-cat');
+            select.innerHTML = db.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            // Список заказов для админа
+            const list = document.getElementById('admin-orders-list');
+            list.innerHTML = db.orders.map(o => `
+                <div class="card" style="font-size:13px">
+                    <b>#${o.id} | ${o.prodName}</b><br>
+                    Юзер: ${o.userName} (${o.userId})<br>
+                    Статус: <b>${o.status}</b><br>
+                    <div style="margin-top:10px; display:flex; gap:5px">
+                        <button class="btn btn-sm" onclick="setOrderStatus(${o.id}, 'Оплачен')">Оплачен</button>
+                        <button class="btn btn-sm" style="background:#43a047" onclick="setOrderStatus(${o.id}, 'Выполнен')">Выдан</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteOrder(${o.id})">🗑️</button>
+                    </div>
+                </div>
+            `).reverse().join('');
+        }
     }
 
-    function tgNotify() {
-        tg.showAlert("Уведомление отправлено! Менеджер проверит оплату в ближайшее время.");
+    function openCategory(catId) {
+        const cat = db.categories.find(c => c.id === catId);
+        const products = db.products.filter(p => p.catId === catId);
+        document.getElementById('cat-title').innerText = cat.name;
+        
+        const list = document.getElementById('products-list');
+        list.innerHTML = products.map(p => `
+            <div class="card">
+                <div style="font-size:18px; font-weight:bold">${p.name}</div>
+                <div style="color:var(--hint-color); font-size:14px; margin:5px 0">${p.desc}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px">
+                    <div class="price">${p.price} ${CONFIG.currency}</div>
+                    <button class="btn btn-sm" onclick="createOrder(${p.id})">Купить</button>
+                </div>
+            </div>
+        `).join('');
+        showPage('category');
     }
+
+    // --- ЛОГИКА МАГАЗИНА ---
+    function createOrder(prodId) {
+        const p = db.products.find(x => x.id === prodId);
+        const newOrder = {
+            id: Date.now(),
+            userId: tg.initDataUnsafe.user?.id || 'guest',
+            userName: tg.initDataUnsafe.user?.first_name || 'Guest',
+            prodName: p.name,
+            price: p.price,
+            status: 'Ожидает оплаты',
+            date: new Date().toLocaleString()
+        };
+        db.orders.push(newOrder);
+        saveDb();
+        
+        document.getElementById('pay-amount').innerText = p.price + ' ' + CONFIG.currency;
+        document.getElementById('payment-details').innerText = CONFIG.paymentInfo;
+        showPage('pay');
+    }
+
+    function confirmPayment() {
+        tg.showAlert("Уведомление отправлено администратору! Проверка обычно занимает от 15 минут.");
+        showPage('history');
+    }
+
+    function getStatusClass(s) {
+        if(s === 'Оплачен') return 'paid';
+        if(s === 'Выполнен') return 'done';
+        return 'wait';
+    }
+
+    // --- АДМИНКА ---
+    function adminLogin() {
+        const l = document.getElementById('adm-login').value;
+        const p = document.getElementById('adm-pass').value;
+        if(l === CONFIG.adminLogin && p === CONFIG.adminPass) {
+            sessionStorage.setItem('isAdmin', 'true');
+            showPage('admin-panel');
+        } else {
+            alert('Неверный логин или пароль');
+        }
+    }
+
+    function logout() {
+        sessionStorage.removeItem('isAdmin');
+        showPage('shop');
+    }
+
+    function addCategory() {
+        const name = document.getElementById('new-cat-name').value;
+        if(!name) return;
+        db.categories.push({id: Date.now(), name: name});
+        saveDb();
+        renderData('admin-panel');
+        document.getElementById('new-cat-name').value = '';
+    }
+
+    function addProduct() {
+        const catId = parseInt(document.getElementById('new-prod-cat').value);
+        const name = document.getElementById('new-prod-name').value;
+        const price = document.getElementById('new-prod-price').value;
+        const desc = document.getElementById('new-prod-desc').value;
+
+        if(!name || !price) return;
+        db.products.push({id: Date.now(), catId, name, price, desc});
+        saveDb();
+        renderData('admin-panel');
+        alert('Товар добавлен!');
+    }
+
+    function setOrderStatus(id, status) {
+        const order = db.orders.find(o => o.id === id);
+        if(order) order.status = status;
+        saveDb();
+        renderData('admin-panel');
+    }
+
+    function deleteOrder(id) {
+        db.orders = db.orders.filter(o => o.id !== id);
+        saveDb();
+        renderData('admin-panel');
+    }
+
+    // Инициализация первой страницы
+    renderData('shop');
 </script>
+
 </body>
 </html>
 
