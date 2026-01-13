@@ -3,417 +3,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Store Mini App</title>
+    <title>Minimalist Digital Store</title>
+    <!-- Подключение Telegram WebApp API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стили в стиле Telegram */
+        /* ОСНОВНЫЕ ПЕРЕМЕННЫЕ И ТЕМА (ЧЕРНО-БЕЛАЯ) */
         :root {
-            --bg-color: var(--tg-theme-bg-color, #ffffff);
-            --sec-bg-color: var(--tg-theme-secondary-bg-color, #f0f2f5);
-            --text-color: var(--tg-theme-text-color, #000000);
-            --hint-color: var(--tg-theme-hint-color, #999999);
-            --btn-color: var(--tg-theme-button-color, #2481cc);
-            --btn-text: var(--tg-theme-button-text-color, #ffffff);
-            --accent: #31b545;
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --accent-color: #000000;
+            --secondary-bg: #f5f5f5;
+            --border-color: #e0e0e0;
+            --hint-color: #888888;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --user-font-color: #000000; /* Настраивается пользователем */
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0; padding: 0;
+            color: var(--user-font-color);
+            margin: 0;
+            padding: 0;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        .container { padding: 16px; padding-bottom: 100px; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        h2 { font-size: 20px; margin-top: 0; }
-
-        /* Карточки */
-        .card {
-            background: var(--sec-bg-color);
-            border-radius: 15px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-
-        /* Кнопки */
-        .btn {
-            background: var(--btn-color);
-            color: var(--btn-text);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 600;
+        /* КОНТЕЙНЕРЫ СТРАНИЦ */
+        .container {
+            padding: 20px 16px 100px 16px;
             width: 100%;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.1s;
+            max-width: 600px;
+            margin: 0 auto;
+            flex-grow: 1;
         }
-        .btn:active { transform: scale(0.98); }
-        .btn-outline { background: transparent; border: 2px solid var(--btn-color); color: var(--btn-color); }
-        .btn-danger { background: #e53935; }
-        .btn-sm { padding: 6px 12px; font-size: 14px; width: auto; }
 
-        /* Сетка категорий */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .cat-card {
-            background: var(--btn-color);
-            color: var(--btn-text);
-            height: 100px;
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ТИПОГРАФИКА */
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 24px; letter-spacing: -1px; }
+        h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+        .hint { color: var(--hint-color); font-size: 14px; }
+
+        /* КНОПКИ */
+        .btn {
+            background: var(--accent-color);
+            color: #ffffff;
+            border: 1px solid var(--accent-color);
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
-            padding: 10px;
+            gap: 8px;
         }
 
-        /* Формы */
-        input, textarea, select {
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+        }
+
+        .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; }
+
+        /* МАГАЗИН: КАТЕГОРИИ И ТОВАРЫ */
+        .category-section { margin-bottom: 32px; }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .product-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+        }
+
+        .product-card:active { border-color: var(--text-color); }
+
+        .product-info h3 { margin: 0 0 8px 0; font-size: 18px; }
+        .product-info p { margin: 0 0 16px 0; font-size: 14px; color: var(--hint-color); }
+        
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .price { font-size: 20px; font-weight: 800; }
+
+        /* ПРОФИЛЬ */
+        .profile-stat {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .stat-value { font-size: 32px; font-weight: 800; display: block; }
+        .stat-label { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .order-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        /* ФОРМЫ */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+        input, select, textarea {
             width: 100%;
             padding: 12px;
-            margin: 8px 0 16px 0;
             border-radius: 10px;
-            border: 1px solid var(--hint-color);
-            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
             color: var(--text-color);
-            box-sizing: border-box;
+            font-size: 16px;
+            outline: none;
         }
+        input:focus { border-color: var(--text-color); }
 
-        /* Навигация */
+        /* НАВИГАЦИЯ */
         .nav {
             position: fixed;
-            bottom: 0; width: 100%;
-            background: var(--sec-bg-color);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            padding: 12px 0 env(safe-area-inset-bottom);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
         }
+
         .nav-item {
-            text-align: center;
-            color: var(--hint-color);
-            text-decoration: none;
-            font-size: 12px;
             flex: 1;
-        }
-        .nav-item.active { color: var(--btn-color); }
-        .nav-icon { font-size: 20px; margin-bottom: 4px; }
-
-        /* Статусы */
-        .badge {
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-weight: bold;
+            text-align: center;
+            background: none;
+            border: none;
+            color: var(--hint-color);
+            font-size: 10px;
+            font-weight: 600;
             text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
-        .status-wait { background: #ffb300; color: #fff; }
-        .status-paid { background: #1e88e5; color: #fff; }
-        .status-done { background: #43a047; color: #fff; }
 
-        .price { font-size: 18px; font-weight: bold; color: var(--accent); }
+        .nav-item.active { color: var(--text-color); }
+        .nav-icon { font-size: 20px; }
+
+        /* АДМИНКА */
+        .admin-list-item {
+            background: var(--secondary-bg);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- Страница магазина -->
-    <div id="page-shop" class="page active">
-        <h1>Магазин</h1>
-        <div id="categories-list" class="grid"></div>
-    </div>
-
-    <!-- Страница категории -->
-    <div id="page-category" class="page">
-        <div onclick="showPage('shop')" style="cursor:pointer; color:var(--btn-color); margin-bottom:15px;">← Назад</div>
-        <h2 id="cat-title">Товары</h2>
-        <div id="products-list"></div>
-    </div>
-
-    <!-- Страница оплаты -->
-    <div id="page-pay" class="page">
-        <h2>Оплата заказа</h2>
-        <div class="card">
-            <p>Для получения товара переведите сумму:</p>
-            <div class="price" id="pay-amount">0 ₽</div>
-            <hr style="opacity:0.1; margin:15px 0;">
-            <p><strong>Реквизиты:</strong></p>
-            <div id="payment-details" style="white-space: pre-wrap;"></div>
-        </div>
-        <button class="btn" onclick="confirmPayment()">Я оплатил</button>
-    </div>
-
-    <!-- Страница истории -->
-    <div id="page-history" class="page">
-        <h1>Мои заказы</h1>
-        <div id="orders-list"></div>
-    </div>
-
-    <!-- Страница админки (Вход) -->
-    <div id="page-admin-login" class="page">
-        <h2>Вход в панель</h2>
-        <input type="text" id="adm-login" placeholder="Логин">
-        <input type="password" id="adm-pass" placeholder="Пароль">
-        <button class="btn" onclick="adminLogin()">Войти</button>
-    </div>
-
-    <!-- Панель управления -->
-    <div id="page-admin-panel" class="page">
-        <h2>Админ-панель</h2>
-        <button class="btn btn-outline btn-sm" onclick="logout()">Выйти</button>
-        
-        <div class="card" style="margin-top:20px">
-            <h3>Добавить категорию</h3>
-            <input type="text" id="new-cat-name" placeholder="Название">
-            <button class="btn btn-sm" onclick="addCategory()">Добавить</button>
+    <div class="container">
+        <!-- СТРАНИЦА: МАГАЗИН -->
+        <div id="shop-page" class="page active">
+            <h1>Магазин</h1>
+            <div id="shop-content">
+                <!-- Категории и товары загружаются через JS -->
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Добавить товар</h3>
-            <select id="new-prod-cat"></select>
-            <input type="text" id="new-prod-name" placeholder="Название товара">
-            <input type="number" id="new-prod-price" placeholder="Цена">
-            <textarea id="new-prod-desc" placeholder="Описание/Ссылка на товар"></textarea>
-            <button class="btn btn-sm" onclick="addProduct()">Добавить товар</button>
+        <!-- СТРАНИЦА: ПРОФИЛЬ -->
+        <div id="profile-page" class="page">
+            <h1>Профиль</h1>
+            <div class="profile-stat">
+                <span class="stat-label">Потрачено всего</span>
+                <span id="total-spent" class="stat-value">0 ₽</span>
+            </div>
+
+            <h2>Настройки темы</h2>
+            <div class="form-group">
+                <label>Цвет текста</label>
+                <input type="color" id="font-color-picker" onchange="changeFontColor(this.value)">
+            </div>
+
+            <h2>История заказов</h2>
+            <div id="order-history">
+                <!-- Заказы загружаются через JS -->
+            </div>
         </div>
 
-        <h3>Все заказы</h3>
-        <div id="admin-orders-list"></div>
+        <!-- СТРАНИЦА: ВХОД В АДМИНКУ -->
+        <div id="admin-login-page" class="page">
+            <h1>Админ-панель</h1>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="admin-password" placeholder="Введите пароль">
+            </div>
+            <button class="btn" onclick="tryAdminLogin()">Войти</button>
+        </div>
+
+        <!-- СТРАНИЦА: УПРАВЛЕНИЕ АДМИНКОЙ -->
+        <div id="admin-panel-page" class="page">
+            <h1>Управление</h1>
+            <button class="btn btn-outline btn-sm" onclick="adminLogout()" style="margin-bottom: 20px;">Выйти</button>
+
+            <div class="category-section">
+                <h2>Категории</h2>
+                <div class="form-group" style="display:flex; gap:8px;">
+                    <input type="text" id="new-cat-name" placeholder="Название категории">
+                    <button class="btn btn-sm" onclick="addCategory()">+</button>
+                </div>
+                <div id="admin-categories-list"></div>
+            </div>
+
+            <div class="category-section">
+                <h2>Добавить товар</h2>
+                <div class="form-group">
+                    <select id="prod-cat-select"></select>
+                    <input type="text" id="new-prod-name" placeholder="Название товара">
+                    <input type="number" id="new-prod-price" placeholder="Цена">
+                    <button class="btn btn-sm" style="margin-top:8px; width:100%" onclick="addProduct()">Добавить товар</button>
+                </div>
+                <h2>Товары</h2>
+                <div id="admin-products-list"></div>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Нижнее меню -->
-<nav class="nav">
-    <a href="#" class="nav-item active" onclick="showPage('shop', event)">
-        <div class="nav-icon">🛍️</div>
-        <div>Магазин</div>
-    </a>
-    <a href="#" class="nav-item" onclick="showPage('history', event)">
-        <div class="nav-icon">📦</div>
-        <div>Заказы</div>
-    </a>
-    <a href="#" class="nav-item" onclick="showPage('admin', event)">
-        <div class="nav-icon">⚙️</div>
-        <div>Админ</div>
-    </a>
-</nav>
+    <!-- НАВИГАЦИЯ -->
+    <nav class="nav">
+        <button class="nav-item active" onclick="navigate('shop')">
+            <span class="nav-icon">🛍️</span>
+            <span>Магазин</span>
+        </button>
+        <button class="nav-item" onclick="navigate('profile')">
+            <span class="nav-icon">👤</span>
+            <span>Профиль</span>
+        </button>
+        <button class="nav-item" onclick="navigate('admin')">
+            <span class="nav-icon">⚙️</span>
+            <span>Админ</span>
+        </button>
+    </nav>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    <script>
+        // --- ДАННЫЕ И ИНИЦИАЛИЗАЦИЯ ---
+        let state = {
+            categories: [],
+            products: [],
+            orders: [],
+            settings: {
+                fontColor: '#000000'
+            }
+        };
 
-    // --- НАСТРОЙКИ ---
-    const CONFIG = {
-        adminLogin: 'admin',
-        adminPass: 'admin123',
-        currency: '₽',
-        paymentInfo: "💳 Карта: 4444 5555 6666 7777\n🪙 USDT (TRC20): TYourAddressHere\n💎 После оплаты прикрепите скриншот в чат."
-    };
+        const ADMIN_PASSWORD = "admin12"; // Простой пароль для примера
 
-    // --- ИНИЦИАЛИЗАЦИЯ ДАННЫХ (LOCALSTORAGE) ---
-    let db = JSON.parse(localStorage.getItem('store_db')) || {
-        categories: [{id: 1, name: 'Цифровые ключи'}, {id: 2, name: 'Аккаунты'}],
-        products: [
-            {id: 1, catId: 1, name: 'Windows 11 Pro', price: 450, desc: 'Лицензионный ключ'},
-            {id: 2, catId: 2, name: 'Telegram Premium (1 мес)', price: 300, desc: 'Активация на ваш аккаунт'}
-        ],
-        orders: []
-    };
-
-    function saveDb() {
-        localStorage.setItem('store_db', JSON.stringify(db));
-    }
-
-    // --- РОУТИНГ ---
-    function showPage(pageId, event) {
-        if(event) event.preventDefault();
-        
-        // Спец-проверка для админки
-        if(pageId === 'admin') {
-            const isAuth = sessionStorage.getItem('isAdmin');
-            pageId = isAuth ? 'admin-panel' : 'admin-login';
+        // Загрузка данных из localStorage
+        function loadData() {
+            const saved = localStorage.getItem('tma_store_db');
+            if (saved) {
+                state = JSON.parse(saved);
+            } else {
+                // Дефолтные данные при первом запуске
+                state.categories = [{id: 1, name: 'Софт'}, {id: 2, name: 'Подписки'}];
+                state.products = [
+                    {id: 1, catId: 1, name: 'Antivirus 2024', price: 1200},
+                    {id: 2, catId: 2, name: 'Premium Pass', price: 500}
+                ];
+                saveData();
+            }
+            applySettings();
         }
 
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if(['shop', 'category'].includes(pageId)) document.querySelectorAll('.nav-item')[0].classList.add('active');
-        if(['history', 'pay'].includes(pageId)) document.querySelectorAll('.nav-item')[1].classList.add('active');
-        if(['admin-login', 'admin-panel'].includes(pageId)) document.querySelectorAll('.nav-item')[2].classList.add('active');
-
-        renderData(pageId);
-    }
-
-    // --- РЕНДЕРИНГ ---
-    function renderData(pageId) {
-        if(pageId === 'shop') {
-            const list = document.getElementById('categories-list');
-            list.innerHTML = db.categories.map(c => `
-                <div class="cat-card" onclick="openCategory(${c.id})">${c.name}</div>
-            `).join('');
+        function saveData() {
+            localStorage.setItem('tma_store_db', JSON.stringify(state));
         }
 
-        if(pageId === 'history') {
-            const list = document.getElementById('orders-list');
-            const userOrders = db.orders.filter(o => o.userId === (tg.initDataUnsafe.user?.id || 'guest'));
-            if(userOrders.length === 0) {
-                list.innerHTML = '<p style="color:var(--hint-color)">Заказов пока нет</p>';
+        function applySettings() {
+            document.documentElement.style.setProperty('--user-font-color', state.settings.fontColor);
+            document.getElementById('font-color-picker').value = state.settings.fontColor;
+        }
+
+        // --- РОУТИНГ ---
+        function navigate(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            if (page === 'shop') {
+                document.getElementById('shop-page').classList.add('active');
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                renderShop();
+            } else if (page === 'profile') {
+                document.getElementById('profile-page').classList.add('active');
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                renderProfile();
+            } else if (page === 'admin') {
+                const isAuth = sessionStorage.getItem('admin_auth');
+                const target = isAuth ? 'admin-panel-page' : 'admin-login-page';
+                document.getElementById(target).classList.add('active');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+                if (isAuth) renderAdmin();
+            }
+        }
+
+        // --- МАГАЗИН ---
+        function renderShop() {
+            const container = document.getElementById('shop-content');
+            container.innerHTML = '';
+
+            state.categories.forEach(cat => {
+                const catProds = state.products.filter(p => p.catId === cat.id);
+                if (catProds.length === 0) return;
+
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                section.innerHTML = `<h2>${cat.name}</h2>`;
+                
+                const grid = document.createElement('div');
+                grid.className = 'products-grid';
+
+                catProds.forEach(p => {
+                    grid.innerHTML += `
+                        <div class="product-card">
+                            <div class="product-info">
+                                <h3>${p.name}</h3>
+                                <p>Цифровой товар • Моментальная доставка</p>
+                            </div>
+                            <div class="product-footer">
+                                <span class="price">${p.price} ₽</span>
+                                <button class="btn btn-sm" onclick="buyProduct(${p.id})">Купить</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+        }
+
+        function buyProduct(id) {
+            const prod = state.products.find(p => p.id === id);
+            const order = {
+                id: Date.now(),
+                name: prod.name,
+                price: prod.price,
+                date: new Date().toLocaleDateString('ru-RU')
+            };
+            state.orders.push(order);
+            saveData();
+            
+            if (window.Telegram.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                window.Telegram.WebApp.showAlert(`Вы успешно приобрели ${prod.name}!`);
+            } else {
+                alert(`Куплено: ${prod.name}`);
+            }
+        }
+
+        // --- ПРОФИЛЬ ---
+        function renderProfile() {
+            const total = state.orders.reduce((sum, o) => sum + o.price, 0);
+            document.getElementById('total-spent').innerText = `${total} ₽`;
+
+            const history = document.getElementById('order-history');
+            history.innerHTML = '';
+            
+            if (state.orders.length === 0) {
+                history.innerHTML = '<p class="hint">У вас пока нет покупок</p>';
                 return;
             }
-            list.innerHTML = userOrders.map(o => `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between">
-                        <strong>Заказ #${o.id}</strong>
-                        <span class="badge status-${getStatusClass(o.status)}">${o.status}</span>
+
+            [...state.orders].reverse().forEach(o => {
+                history.innerHTML += `
+                    <div class="order-item">
+                        <span>${o.name}</span>
+                        <span><b>${o.price} ₽</b></span>
+                        <span class="hint">${o.date}</span>
                     </div>
-                    <div style="margin-top:8px">${o.prodName}</div>
-                    <div class="price">${o.price} ${CONFIG.currency}</div>
-                    <div style="font-size:11px; color:var(--hint-color); margin-top:5px">${o.date}</div>
+                `;
+            });
+        }
+
+        function changeFontColor(color) {
+            state.settings.fontColor = color;
+            saveData();
+            applySettings();
+        }
+
+        // --- АДМИНКА ---
+        function tryAdminLogin() {
+            const pass = document.getElementById('admin-password').value;
+            if (pass === ADMIN_PASSWORD) {
+                sessionStorage.setItem('admin_auth', 'true');
+                navigate('admin');
+            } else {
+                alert('Неверный пароль');
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('admin_auth');
+            navigate('admin');
+        }
+
+        function renderAdmin() {
+            // Список категорий для выбора в товаре
+            const select = document.getElementById('prod-cat-select');
+            select.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            // Управление категориями
+            const catList = document.getElementById('admin-categories-list');
+            catList.innerHTML = state.categories.map(c => `
+                <div class="admin-list-item">
+                    <span>${c.name}</span>
+                    <button class="btn btn-sm btn-outline" onclick="deleteCategory(${c.id})">Удалить</button>
+                </div>
+            `).join('');
+
+            // Управление товарами
+            const prodList = document.getElementById('admin-products-list');
+            prodList.innerHTML = state.products.map(p => `
+                <div class="admin-list-item">
+                    <div style="display:flex; flex-direction:column">
+                        <input type="text" value="${p.name}" onchange="editProduct(${p.id}, 'name', this.value)" style="padding:4px; font-size:12px; margin-bottom:4px">
+                        <input type="number" value="${p.price}" onchange="editProduct(${p.id}, 'price', this.value)" style="padding:4px; font-size:12px">
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="deleteProduct(${p.id})">❌</button>
                 </div>
             `).join('');
         }
 
-        if(pageId === 'admin-panel') {
-            // Список категорий в селекте
-            const select = document.getElementById('new-prod-cat');
-            select.innerHTML = db.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-
-            // Список заказов для админа
-            const list = document.getElementById('admin-orders-list');
-            list.innerHTML = db.orders.map(o => `
-                <div class="card" style="font-size:13px">
-                    <b>#${o.id} | ${o.prodName}</b><br>
-                    Юзер: ${o.userName} (${o.userId})<br>
-                    Статус: <b>${o.status}</b><br>
-                    <div style="margin-top:10px; display:flex; gap:5px">
-                        <button class="btn btn-sm" onclick="setOrderStatus(${o.id}, 'Оплачен')">Оплачен</button>
-                        <button class="btn btn-sm" style="background:#43a047" onclick="setOrderStatus(${o.id}, 'Выполнен')">Выдан</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteOrder(${o.id})">🗑️</button>
-                    </div>
-                </div>
-            `).reverse().join('');
+        function addCategory() {
+            const name = document.getElementById('new-cat-name').value;
+            if (!name) return;
+            state.categories.push({ id: Date.now(), name });
+            saveData();
+            renderAdmin();
+            document.getElementById('new-cat-name').value = '';
         }
-    }
 
-    function openCategory(catId) {
-        const cat = db.categories.find(c => c.id === catId);
-        const products = db.products.filter(p => p.catId === catId);
-        document.getElementById('cat-title').innerText = cat.name;
-        
-        const list = document.getElementById('products-list');
-        list.innerHTML = products.map(p => `
-            <div class="card">
-                <div style="font-size:18px; font-weight:bold">${p.name}</div>
-                <div style="color:var(--hint-color); font-size:14px; margin:5px 0">${p.desc}</div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px">
-                    <div class="price">${p.price} ${CONFIG.currency}</div>
-                    <button class="btn btn-sm" onclick="createOrder(${p.id})">Купить</button>
-                </div>
-            </div>
-        `).join('');
-        showPage('category');
-    }
+        function deleteCategory(id) {
+            state.categories = state.categories.filter(c => c.id !== id);
+            state.products = state.products.filter(p => p.catId !== id);
+            saveData();
+            renderAdmin();
+        }
 
-    // --- ЛОГИКА МАГАЗИНА ---
-    function createOrder(prodId) {
-        const p = db.products.find(x => x.id === prodId);
-        const newOrder = {
-            id: Date.now(),
-            userId: tg.initDataUnsafe.user?.id || 'guest',
-            userName: tg.initDataUnsafe.user?.first_name || 'Guest',
-            prodName: p.name,
-            price: p.price,
-            status: 'Ожидает оплаты',
-            date: new Date().toLocaleString()
+        function addProduct() {
+            const catId = parseInt(document.getElementById('prod-cat-select').value);
+            const name = document.getElementById('new-prod-name').value;
+            const price = parseInt(document.getElementById('new-prod-price').value);
+            
+            if (!name || !price) return;
+            
+            state.products.push({ id: Date.now(), catId, name, price });
+            saveData();
+            renderAdmin();
+            
+            document.getElementById('new-prod-name').value = '';
+            document.getElementById('new-prod-price').value = '';
+        }
+
+        function editProduct(id, field, value) {
+            const p = state.products.find(x => x.id === id);
+            if (field === 'price') value = parseInt(value);
+            p[field] = value;
+            saveData();
+        }
+
+        function deleteProduct(id) {
+            state.products = state.products.filter(p => p.id !== id);
+            saveData();
+            renderAdmin();
+        }
+
+        // Запуск приложения
+        window.onload = () => {
+            loadData();
+            renderShop();
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+            }
         };
-        db.orders.push(newOrder);
-        saveDb();
-        
-        document.getElementById('pay-amount').innerText = p.price + ' ' + CONFIG.currency;
-        document.getElementById('payment-details').innerText = CONFIG.paymentInfo;
-        showPage('pay');
-    }
-
-    function confirmPayment() {
-        tg.showAlert("Уведомление отправлено администратору! Проверка обычно занимает от 15 минут.");
-        showPage('history');
-    }
-
-    function getStatusClass(s) {
-        if(s === 'Оплачен') return 'paid';
-        if(s === 'Выполнен') return 'done';
-        return 'wait';
-    }
-
-    // --- АДМИНКА ---
-    function adminLogin() {
-        const l = document.getElementById('adm-login').value;
-        const p = document.getElementById('adm-pass').value;
-        if(l === CONFIG.adminLogin && p === CONFIG.adminPass) {
-            sessionStorage.setItem('isAdmin', 'true');
-            showPage('admin-panel');
-        } else {
-            alert('Неверный логин или пароль');
-        }
-    }
-
-    function logout() {
-        sessionStorage.removeItem('isAdmin');
-        showPage('shop');
-    }
-
-    function addCategory() {
-        const name = document.getElementById('new-cat-name').value;
-        if(!name) return;
-        db.categories.push({id: Date.now(), name: name});
-        saveDb();
-        renderData('admin-panel');
-        document.getElementById('new-cat-name').value = '';
-    }
-
-    function addProduct() {
-        const catId = parseInt(document.getElementById('new-prod-cat').value);
-        const name = document.getElementById('new-prod-name').value;
-        const price = document.getElementById('new-prod-price').value;
-        const desc = document.getElementById('new-prod-desc').value;
-
-        if(!name || !price) return;
-        db.products.push({id: Date.now(), catId, name, price, desc});
-        saveDb();
-        renderData('admin-panel');
-        alert('Товар добавлен!');
-    }
-
-    function setOrderStatus(id, status) {
-        const order = db.orders.find(o => o.id === id);
-        if(order) order.status = status;
-        saveDb();
-        renderData('admin-panel');
-    }
-
-    function deleteOrder(id) {
-        db.orders = db.orders.filter(o => o.id !== id);
-        saveDb();
-        renderData('admin-panel');
-    }
-
-    // Инициализация первой страницы
-    renderData('shop');
-</script>
-
+    </script>
 </body>
 </html>
-
-
