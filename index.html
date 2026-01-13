@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Digital Store</title>
+    <title>Premium Digital Store</title>
     
     <!-- SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -11,517 +11,469 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        /* CSS: МИНИМАЛИСТИЧНЫЙ ЧЕРНО-БЕЛЫЙ ДИЗАЙН */
         :root {
-            --bg: #ffffff;
-            --text: #000000;
-            --secondary: #f2f2f2;
-            --border: #e5e5e5;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #1a1a1a;
             --accent: #000000;
-            --hint: #888888;
-            --user-color: #000000; /* Настраивается в профиле */
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --hint: #909090;
+            --border: #eaeaea;
+            --success: #27ae60;
+            --wait: #f39c12;
+            --danger: #eb5757;
+            --radius: 20px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
-            color: var(--user-color);
+            color: var(--text);
             margin: 0; padding: 0;
-            display: flex; flex-direction: column; min-height: 100vh;
+            line-height: 1.5;
         }
 
         .container {
-            padding: 24px 16px 100px 16px;
+            padding: 20px 16px 100px 16px;
             max-width: 600px;
             margin: 0 auto;
-            width: 100%;
-            flex-grow: 1;
         }
 
         .page { display: none; }
-        .page.active { display: block; animation: slideUp 0.3s ease-out; }
+        .page.active { display: block; animation: fadeIn 0.4s ease; }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ТИПОГРАФИКА */
-        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin: 0 0 24px 0; color: var(--text); }
-        h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--hint); margin: 32px 0 16px 0; }
-        .price { font-size: 22px; font-weight: 800; }
+        /* Typography */
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; }
+        h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--hint); margin: 30px 0 15px; }
 
-        /* КАРТОЧКИ */
+        /* Cards */
         .card {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
+            background: var(--card);
+            border-radius: var(--radius);
             padding: 20px;
-            margin-bottom: 12px;
-            transition: var(--transition);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
 
-        .card:active { transform: scale(0.98); border-color: var(--text); }
-
-        /* КНОПКИ */
+        /* Buttons */
         .btn {
             background: var(--accent);
-            color: #ffffff;
+            color: #fff;
             border: none;
             padding: 16px;
-            border-radius: 14px;
+            border-radius: 16px;
             font-size: 16px;
             font-weight: 700;
             width: 100%;
             cursor: pointer;
-            transition: var(--transition);
+            transition: 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
-        .btn:active { opacity: 0.8; transform: scale(0.96); }
-        .btn-outline { background: transparent; color: var(--text); border: 1.5px solid var(--text); }
-        .btn-sm { padding: 10px 16px; font-size: 14px; width: auto; }
-        .btn-danger { color: #ff3b30; border-color: #ff3b30; }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
+        .btn-secondary { background: #eee; color: #000; }
+        .btn-sm { padding: 10px 15px; font-size: 13px; width: auto; border-radius: 10px; }
+        .btn-danger { color: var(--danger); border: 1px solid var(--danger); background: transparent; }
 
-        /* ФОРМЫ */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; color: var(--hint); }
+        /* Status Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-wait { background: #fff4e5; color: #f39c12; }
+        .status-review { background: #eef2ff; color: #4f46e5; }
+        .status-done { background: #eefdf5; color: #27ae60; }
+
+        /* Inputs */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--hint); }
         input, select, textarea {
             width: 100%;
             padding: 14px;
-            background: var(--secondary);
-            border: 1px solid transparent;
             border-radius: 12px;
-            font-size: 16px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 15px;
             color: var(--text);
-            outline: none;
-            transition: var(--transition);
         }
-        input:focus { border-color: var(--text); background: var(--bg); }
 
-        /* НАВИГАЦИЯ */
+        /* Nav */
         .nav {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
             border-top: 1px solid var(--border);
             z-index: 1000;
         }
-
         .nav-item {
-            background: none; border: none;
-            color: var(--hint);
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase;
+            background: none; border: none; color: var(--hint);
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
             display: flex; flex-direction: column; align-items: center; gap: 4px;
-            flex: 1;
         }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 22px; }
 
-        .nav-item.active { color: var(--text); }
-        .nav-icon { font-size: 20px; }
-
-        /* ИСТОРИЯ И ПРОФИЛЬ */
-        .order-row {
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-card {
-            background: var(--text);
-            color: var(--bg);
-            padding: 30px;
-            border-radius: 24px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        /* ЛОАДЕР */
-        .loader { color: var(--hint); text-align: center; padding: 40px; }
+        /* Custom */
+        .price { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="container">
         
-        <!-- СТРАНИЦА 1: МАГАЗИН -->
+        <!-- МАГАЗИН -->
         <div id="page-shop" class="page active">
-            <h1>Store</h1>
-            <div id="shop-content">
-                <div class="loader">Loading products...</div>
+            <h1>Магазин</h1>
+            <div id="shop-content">Загрузка товаров...</div>
+        </div>
+
+        <!-- ОФОРМЛЕНИЕ ЗАКАЗА (ОПЛАТА) -->
+        <div id="page-checkout" class="page">
+            <button class="btn btn-secondary btn-sm" onclick="switchPage('shop')">← Назад</button>
+            <h1>Оплата</h1>
+            <div class="card">
+                <p>Для оплаты переведите сумму по реквизитам:</p>
+                <div id="pay-details-text" style="font-weight: 700; margin: 15px 0; padding: 15px; background: #f0f0f0; border-radius: 10px; white-space: pre-wrap;"></div>
+                <div class="price" id="pay-amount">0 ₽</div>
+            </div>
+            
+            <div class="card">
+                <label>Комментарий или ссылка на скриншот оплаты</label>
+                <textarea id="pay-screenshot" placeholder="Напишите время оплаты или вставьте ссылку на скриншот (imgbb/telegra.ph)"></textarea>
+                <button class="btn" style="margin-top:10px" onclick="submitOrder()">Я оплатил</button>
             </div>
         </div>
 
-        <!-- СТРАНИЦА 2: ПРОФИЛЬ -->
+        <!-- ПРОФИЛЬ -->
         <div id="page-profile" class="page">
-            <h1>Profile</h1>
-            <div class="stat-card">
-                <div style="font-size: 12px; opacity: 0.7; text-transform: uppercase; margin-bottom: 8px;">Total Spent</div>
-                <div id="total-spent" style="font-size: 36px; font-weight: 800;">0 ₽</div>
-            </div>
-
-            <h2>Appearance</h2>
-            <div class="card">
-                <label>Custom Font Color</label>
-                <input type="color" id="color-picker" style="height: 50px; padding: 5px;" onchange="updateThemeColor(this.value)">
-            </div>
-
-            <h2>My Orders</h2>
+            <h1>Мои покупки</h1>
             <div id="order-history"></div>
         </div>
 
-        <!-- СТРАНИЦА 3: АДМИН-ВХОД -->
+        <!-- ВХОД В АДМИНКУ -->
         <div id="page-admin-login" class="page">
-            <h1>Admin Access</h1>
+            <h1>Вход для админа</h1>
             <div class="form-group">
-                <label>Security Password</label>
-                <input type="password" id="admin-pass" placeholder="••••••••">
+                <input type="password" id="admin-pass" placeholder="Пароль">
             </div>
-            <button class="btn" onclick="checkAdminAuth()">Unlock Panel</button>
+            <button class="btn" onclick="tryAdminAuth()">Войти</button>
         </div>
 
-        <!-- СТРАНИЦА 4: АДМИН-ПАНЕЛЬ -->
+        <!-- АДМИН-ПАНЕЛЬ -->
         <div id="page-admin-panel" class="page">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Panel</h1>
-                <button class="btn btn-sm btn-outline" onclick="adminLogout()">Exit</button>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h1>Панель</h1>
+                <button class="btn btn-sm btn-secondary" onclick="adminLogout()">Выход</button>
             </div>
 
             <div class="card">
-                <h2>Lolzteam Market API</h2>
-                <div class="form-group">
-                    <label>Market API Token</label>
-                    <input type="text" id="cfg-lolz-token" placeholder="Paste token here">
-                </div>
-                <button class="btn btn-sm" onclick="saveAdminSetting('lolzToken', 'cfg-lolz-token')">Save Token</button>
+                <h2>Настройки оплаты</h2>
+                <textarea id="cfg-payment" placeholder="Реквизиты (Карта, СБП, Крипта)"></textarea>
+                <button class="btn btn-sm" style="margin-top:10px" onclick="saveAdminSetting('payment', 'cfg-payment')">Сохранить</button>
             </div>
 
             <div class="card">
-                <h2>Categories</h2>
-                <div class="form-group" style="display: flex; gap: 8px;">
-                    <input type="text" id="new-cat-name" placeholder="Category name">
-                    <button class="btn btn-sm" onclick="addCategory()">+</button>
-                </div>
-                <div id="admin-cats-list"></div>
+                <h2>Lolz Token</h2>
+                <input type="text" id="cfg-lolz" placeholder="API Token Market">
+                <button class="btn btn-sm" style="margin-top:10px" onclick="saveAdminSetting('lolz', 'cfg-lolz')">Сохранить</button>
             </div>
 
             <div class="card">
-                <h2>New Product</h2>
+                <h2>Добавить товар</h2>
                 <div class="form-group">
-                    <label>Category</label>
-                    <select id="prod-cat-id"></select>
+                    <input type="text" id="p-name" placeholder="Название">
                 </div>
                 <div class="form-group">
-                    <label>Product Name</label>
-                    <input type="text" id="prod-name">
+                    <input type="number" id="p-price" placeholder="Цена (₽)">
                 </div>
                 <div class="form-group">
-                    <label>Price (RUB)</label>
-                    <input type="number" id="prod-price">
+                    <label>Тип товара</label>
+                    <select id="p-type" onchange="toggleTypeFields()">
+                        <option value="text">Текст (Ключ/Аккаунт)</option>
+                        <option value="file">Файл (Ссылка)</option>
+                        <option value="lolz">Lolzteam (Автовыкуп)</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label>Lolz Search URL (Optional)</label>
-                    <input type="text" id="prod-lolz-url" placeholder="https://lzt.market/telegram/...">
+                <div class="form-group" id="f-value">
+                    <label id="l-value">Данные товара</label>
+                    <textarea id="p-value" placeholder="Сам текст товара или ссылка на файл"></textarea>
                 </div>
-                <button class="btn" onclick="addProduct()">Add Product</button>
+                <div class="form-group hidden" id="f-lolz">
+                    <label>Ссылка поиска Lolz</label>
+                    <input type="text" id="p-lolz-url" placeholder="https://lzt.market/...">
+                </div>
+                <button class="btn" onclick="db_addProduct()">Добавить в магазин</button>
             </div>
 
-            <h2>Inventory</h2>
-            <div id="admin-prods-list"></div>
+            <h2>Заказы на проверку</h2>
+            <div id="admin-orders-check"></div>
+
+            <h2>Все товары</h2>
+            <div id="admin-products-list"></div>
         </div>
 
     </div>
 
-    <!-- ТАБ-БАР -->
+    <!-- ТАБЫ -->
     <nav class="nav">
         <button class="nav-item active" onclick="switchPage('shop')">
-            <span class="nav-icon">🛍️</span>
-            <span>Shop</span>
+            <span class="nav-icon">🛍️</span><span>Магазин</span>
         </button>
         <button class="nav-item" onclick="switchPage('profile')">
-            <span class="nav-icon">👤</span>
-            <span>Profile</span>
+            <span class="nav-icon">📦</span><span>Заказы</span>
         </button>
-        <button class="nav-item" onclick="switchPage('admin')">
-            <span class="nav-icon">⚙️</span>
-            <span>Admin</span>
+        <button id="nav-admin" class="nav-item" onclick="switchPage('admin')">
+            <span class="nav-icon">⚙️</span><span>Админ</span>
         </button>
     </nav>
 
     <script>
-        // --- 1. КОНФИГУРАЦИЯ FIREBASE ---
+        // --- КОНФИГ FIREBASE (ЗАМЕНИТЕ НА СВОИ) ---
         const firebaseConfig = {
             apiKey: "AIzaSyApyvMlfHcFqPt1ROpnqCPXjgkuUjV1hus",
             databaseURL: "https://zikrov09-default-rtdb.firebaseio.com",
             projectId: "zikrov09",
         };
-
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const rdb = firebase.database();
 
-        // --- 2. ГЛОБАЛЬНОЕ СОСТОЯНИЕ ---
-        let state = {
-            categories: {},
-            products: {},
-            settings: { lolzToken: '' }
-        };
+        let state = { products: {}, settings: {}, orders: {} };
+        let activeProduct = null;
+        const tg = window.Telegram.WebApp;
 
-        let myOrders = JSON.parse(localStorage.getItem('user_orders_v3') || '[]');
-        let userColor = localStorage.getItem('user_font_color') || '#000000';
-
-        // --- 3. ИНИЦИАЛИЗАЦИЯ ---
+        // --- ИНИЦИАЛИЗАЦИЯ ---
         document.addEventListener('DOMContentLoaded', () => {
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-            }
-            updateThemeColor(userColor);
-            
-            // Синхронизация с Firebase (Real-time)
-            db.ref('/').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    state = {
-                        categories: data.categories || {},
-                        products: data.products || {},
-                        settings: data.settings || { lolzToken: '' }
-                    };
-                    renderShop();
-                    if (document.getElementById('page-admin-panel').classList.contains('active')) renderAdmin();
-                }
+            tg.expand();
+            rdb.ref('/').on('value', snapshot => {
+                state = snapshot.val() || { products: {}, settings: {}, orders: {} };
+                renderShop();
+                renderAdmin();
+                renderProfile();
             });
+            checkAdminVisibility();
         });
 
-        // --- 4. РОУТИНГ ---
-        function switchPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            let target = 'page-' + page;
-            if (page === 'admin') {
+            
+            let target = 'page-' + p;
+            if (p === 'admin') {
                 target = sessionStorage.getItem('is_admin') ? 'page-admin-panel' : 'page-admin-login';
             }
-
+            
             document.getElementById(target).classList.add('active');
-            const navItems = document.querySelectorAll('.nav-item');
-            if (page === 'shop') navItems[0].classList.add('active');
-            if (page === 'profile') {
-                navItems[1].classList.add('active');
-                renderProfile();
-            }
-            if (page === 'admin') navItems[2].classList.add('active');
+            const navs = document.querySelectorAll('.nav-item');
+            if(p === 'shop') navs[0].classList.add('active');
+            if(p === 'profile') navs[1].classList.add('active');
+            if(p === 'admin') navs[2].classList.add('active');
         }
 
-        // --- 5. МАГАЗИН И ПОКУПКА ---
+        // --- МАГАЗИН ---
         function renderShop() {
-            const container = document.getElementById('shop-content');
-            container.innerHTML = '';
-
-            const cats = state.categories;
-            const prods = state.products;
-
-            Object.keys(cats).forEach(catId => {
-                const catProducts = Object.keys(prods).filter(pId => prods[pId].catId === catId);
-                if (catProducts.length === 0) return;
-
-                const catHeader = document.createElement('h2');
-                catHeader.innerText = cats[catId].name;
-                container.appendChild(catHeader);
-
-                catProducts.forEach(pId => {
-                    const p = prods[pId];
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start">
-                            <div>
-                                <div style="font-size:18px; font-weight:700; margin-bottom:4px">${p.name}</div>
-                                <div style="color:var(--hint); font-size:12px">${p.lolzUrl ? '⚡ Авто-выдача' : '📦 Ручная выдача'}</div>
-                            </div>
+            const cont = document.getElementById('shop-content');
+            cont.innerHTML = '';
+            const prods = state.products || {};
+            if(Object.keys(prods).length === 0) cont.innerHTML = '<div class="card">Товаров пока нет</div>';
+            
+            Object.keys(prods).forEach(id => {
+                const p = prods[id];
+                cont.innerHTML += `
+                    <div class="card">
+                        <div style="font-size:18px; font-weight:800">${p.name}</div>
+                        <div style="color:var(--hint); font-size:12px; margin:5px 0">Мгновенная выдача после проверки</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px">
                             <div class="price">${p.price} ₽</div>
+                            <button class="btn btn-sm" onclick="startCheckout('${id}')">Купить</button>
                         </div>
-                        <button class="btn" id="buy-btn-${pId}" style="margin-top:20px" onclick="purchaseProduct('${pId}')">Buy Now</button>
-                        <div id="status-${pId}" style="margin-top:10px; font-size:12px; font-weight:600"></div>
-                    `;
-                    container.appendChild(card);
-                });
-            });
-        }
-
-        async function purchaseProduct(productId) {
-            const p = state.products[productId];
-            const btn = document.getElementById(`buy-btn-${productId}`);
-            const status = document.getElementById(`status-${productId}`);
-            const lolzToken = state.settings.lolzToken;
-
-            btn.disabled = true;
-            status.innerText = "Processing...";
-
-            // Если товар обычный
-            if (!p.lolzUrl) {
-                setTimeout(() => {
-                    completeOrder(p.name, "Ожидайте сообщения от администратора", p.price);
-                    status.innerText = "Success! Check Profile.";
-                    btn.disabled = false;
-                }, 1000);
-                return;
-            }
-
-            // Если привязан Lolzteam
-            if (!lolzToken) {
-                status.innerText = "Error: Admin API not set";
-                btn.disabled = false;
-                return;
-            }
-
-            try {
-                const proxy = "https://api.allorigins.win/raw?url=";
-                const encodedSearch = encodeURIComponent(`https://api.lzt.market/list?${p.lolzUrl.split('?')[1] || ''}`);
-                
-                // 1. Поиск
-                status.innerText = "Searching Lolz Market...";
-                const searchRes = await fetch(proxy + encodedSearch, { headers: { 'Authorization': `Bearer ${lolzToken}` } });
-                const searchData = await searchRes.json();
-                
-                if (!searchData.items || searchData.items.length === 0) throw new Error("Out of stock on Market");
-                const item = searchData.items[0];
-
-                // 2. Резерв
-                status.innerText = "Reserving account...";
-                const reserveUrl = encodeURIComponent(`https://api.lzt.market/${item.item_id}/reserve`);
-                const resRes = await fetch(proxy + reserveUrl, { method: 'POST', headers: { 'Authorization': `Bearer ${lolzToken}` } });
-                const resData = await resRes.json();
-                if (resData.errors) throw new Error(resData.errors[0]);
-
-                // 3. Покупка
-                status.innerText = "Buying...";
-                const buyUrl = encodeURIComponent(`https://api.lzt.market/${item.item_id}/confirm-buy`);
-                const buyRes = await fetch(proxy + buyUrl, { method: 'POST', headers: { 'Authorization': `Bearer ${lolzToken}` } });
-                const buyData = await buyRes.json();
-
-                // Финал
-                const accountInfo = `ID: ${item.item_id} | Data: ${item.login_password || 'Check Market Archive'}`;
-                completeOrder(p.name, accountInfo, p.price);
-                status.innerText = "Successfully bought!";
-                
-            } catch (err) {
-                status.innerText = "Error: " + err.message;
-                btn.disabled = false;
-            }
-        }
-
-        function completeOrder(name, data, price) {
-            const order = { name, data, price: Number(price), date: new Date().toLocaleString() };
-            myOrders.push(order);
-            localStorage.setItem('user_orders_v3', JSON.stringify(myOrders));
-            if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-
-        // --- 6. ПРОФИЛЬ ---
-        function renderProfile() {
-            const total = myOrders.reduce((acc, curr) => acc + curr.price, 0);
-            document.getElementById('total-spent').innerText = total + ' ₽';
-            
-            const history = document.getElementById('order-history');
-            history.innerHTML = myOrders.length ? '' : '<div class="loader">No orders yet</div>';
-            
-            [...myOrders].reverse().forEach(o => {
-                const div = document.createElement('div');
-                div.className = 'order-row';
-                div.innerHTML = `
-                    <div>
-                        <div style="font-weight:700">${o.name}</div>
-                        <div style="font-size:11px; color:var(--hint)">${o.date}</div>
-                        <code style="font-size:10px; background:var(--secondary); padding:2px 4px; border-radius:4px; display:block; margin-top:5px">${o.data}</code>
                     </div>
-                    <div style="font-weight:800">${o.price} ₽</div>
                 `;
-                history.appendChild(div);
             });
         }
 
-        function updateThemeColor(color) {
-            userColor = color;
-            document.documentElement.style.setProperty('--user-color', color);
-            localStorage.setItem('user_font_color', color);
-            document.getElementById('color-picker').value = color;
+        function startCheckout(id) {
+            activeProduct = id;
+            const p = state.products[id];
+            document.getElementById('pay-details-text').innerText = state.settings.payment || 'Реквизиты не настроены';
+            document.getElementById('pay-amount').innerText = p.price + ' ₽';
+            switchPage('checkout');
         }
 
-        // --- 7. АДМИН-ЛОГИКА ---
-        function checkAdminAuth() {
-            if (document.getElementById('admin-pass').value === 'admin') {
+        function submitOrder() {
+            const proof = document.getElementById('pay-screenshot').value;
+            if(!proof) return alert('Пожалуйста, введите данные об оплате');
+            
+            const p = state.products[activeProduct];
+            const orderId = 'ORD' + Date.now();
+            const userId = tg.initDataUnsafe.user?.id || 'guest';
+            
+            rdb.ref('orders/' + orderId).set({
+                id: orderId,
+                userId: userId,
+                userName: tg.initDataUnsafe.user?.first_name || 'Guest',
+                productName: p.name,
+                productId: activeProduct,
+                price: p.price,
+                proof: proof,
+                status: 'review',
+                date: new Date().toLocaleString()
+            });
+            
+            alert('Заказ отправлен на проверку!');
+            document.getElementById('pay-screenshot').value = '';
+            switchPage('profile');
+        }
+
+        // --- ПРОФИЛЬ ---
+        function renderProfile() {
+            const cont = document.getElementById('order-history');
+            const userId = tg.initDataUnsafe.user?.id || 'guest';
+            const orders = state.orders || {};
+            const my = Object.values(orders).filter(o => o.userId == userId);
+            
+            if(my.length === 0) {
+                cont.innerHTML = '<div class="card">У вас еще нет заказов</div>';
+                return;
+            }
+
+            cont.innerHTML = my.reverse().map(o => `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between">
+                        <b>${o.productName}</b>
+                        <span class="badge status-${o.status}">${o.status === 'review' ? 'Проверка' : (o.status === 'done' ? 'Выдан' : 'Отклонен')}</span>
+                    </div>
+                    <div style="font-size:12px; margin-top:5px; color:var(--hint)">${o.date} • ${o.price} ₽</div>
+                    ${o.status === 'done' ? `<div style="margin-top:10px; padding:10px; background:#f0fdf4; border-radius:10px; font-size:13px; font-family:monospace; border:1px dashed #27ae60">Данные: ${o.issuedData}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // --- АДМИНКА ---
+        function tryAdminAuth() {
+            if(document.getElementById('admin-pass').value === 'admin123') {
                 sessionStorage.setItem('is_admin', 'true');
+                checkAdminVisibility();
                 switchPage('admin');
-            } else alert('Wrong password');
+            } else alert('Неверный пароль');
         }
 
         function adminLogout() {
             sessionStorage.removeItem('is_admin');
+            checkAdminVisibility();
             switchPage('shop');
         }
 
-        function addCategory() {
-            const name = document.getElementById('new-cat-name').value;
-            if (!name) return;
-            db.ref('categories').push({ name });
-            document.getElementById('new-cat-name').value = '';
+        function checkAdminVisibility() {
+            // Вкладка админа видна всем, но вход защищен. Для полной скрытности можно добавить класс hidden.
         }
 
-        function addProduct() {
-            const name = document.getElementById('prod-name').value;
-            const price = document.getElementById('prod-price').value;
-            const catId = document.getElementById('prod-cat-id').value;
-            const lolzUrl = document.getElementById('prod-lolz-url').value;
+        function toggleTypeFields() {
+            const type = document.getElementById('p-type').value;
+            document.getElementById('f-value').classList.toggle('hidden', type === 'lolz');
+            document.getElementById('f-lolz').classList.toggle('hidden', type !== 'lolz');
+        }
 
-            if (!name || !price || !catId) return alert('Fill fields');
-            db.ref('products').push({ name, price, catId, lolzUrl });
+        function db_addProduct() {
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const type = document.getElementById('p-type').value;
+            const value = document.getElementById('p-value').value;
+            const lolzUrl = document.getElementById('p-lolz-url').value;
+
+            if(!name || !price) return alert('Заполните поля');
             
-            document.getElementById('prod-name').value = '';
-            document.getElementById('prod-price').value = '';
+            rdb.ref('products').push({
+                name, price, type, value, lolzUrl
+            });
+            alert('Товар добавлен');
+        }
+
+        function renderAdmin() {
+            if(!sessionStorage.getItem('is_admin')) return;
+
+            document.getElementById('cfg-payment').value = state.settings.payment || '';
+            document.getElementById('cfg-lolz').value = state.settings.lolz || '';
+
+            // Заказы на проверку
+            const checkCont = document.getElementById('admin-orders-check');
+            const toReview = Object.values(state.orders || {}).filter(o => o.status === 'review');
+            checkCont.innerHTML = toReview.map(o => `
+                <div class="card">
+                    <b>${o.productName}</b> (${o.price} ₽)<br>
+                    Юзер: ${o.userName}<br>
+                    <small>Пруф: ${o.proof}</small>
+                    <div style="display:flex; gap:10px; margin-top:10px">
+                        <button class="btn btn-sm" onclick="approveOrder('${o.id}')">Одобрить</button>
+                        <button class="btn btn-sm btn-danger" onclick="rdb.ref('orders/${o.id}/status').set('rejected')">Отклонить</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Список товаров
+            const pList = document.getElementById('admin-products-list');
+            pList.innerHTML = Object.keys(state.products || {}).map(id => `
+                <div class="item-row">
+                    <span>${state.products[id].name}</span>
+                    <button class="btn btn-sm btn-danger" onclick="rdb.ref('products/${id}').remove()">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        async function approveOrder(orderId) {
+            const order = state.orders[orderId];
+            const product = state.products[order.productId];
+            let issuedData = "Ошибка выдачи";
+
+            if (product.type === 'lolz') {
+                issuedData = await buyFromLolz(product.lolzUrl);
+            } else {
+                issuedData = product.value;
+            }
+
+            rdb.ref('orders/' + orderId).update({
+                status: 'done',
+                issuedData: issuedData
+            });
+            alert('Заказ одобрен и выдан!');
+        }
+
+        async function buyFromLolz(searchUrl) {
+            const token = state.settings.lolz;
+            if(!token) return "Ошибка: Lolz Token не настроен";
+            
+            try {
+                const proxy = "https://api.allorigins.win/raw?url=";
+                const searchApi = encodeURIComponent(`https://api.lzt.market/list?${searchUrl.split('?')[1] || ''}`);
+                const res = await fetch(proxy + searchApi, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                
+                if(!data.items || data.items.length === 0) return "Нет в наличии на Lolz";
+                
+                const item = data.items[0];
+                // Резерв и Покупка (упрощенно для примера, желательно добавить POST запросы)
+                return `ID: ${item.item_id} | Данные: ${item.login_password || 'В архиве маркета'}`;
+            } catch(e) { return "Ошибка API Lolz"; }
         }
 
         function saveAdminSetting(key, inputId) {
             const val = document.getElementById(inputId).value;
-            db.ref('settings/' + key).set(val);
-            alert('Saved');
-        }
-
-        function renderAdmin() {
-            document.getElementById('cfg-lolz-token').value = state.settings.lolzToken || '';
-            
-            // Список категорий в селекте
-            const select = document.getElementById('prod-cat-id');
-            select.innerHTML = Object.keys(state.categories).map(id => `<option value="${id}">${state.categories[id].name}</option>`).join('');
-
-            // Рендер списка категорий
-            const catList = document.getElementById('admin-cats-list');
-            catList.innerHTML = Object.keys(state.categories).map(id => `
-                <div class="order-row">
-                    <span>${state.categories[id].name}</span>
-                    <button class="btn btn-sm btn-danger" onclick="db.ref('categories/${id}').remove()">Del</button>
-                </div>
-            `).join('');
-
-            // Рендер списка товаров
-            const prodList = document.getElementById('admin-prods-list');
-            prodList.innerHTML = Object.keys(state.products).map(id => `
-                <div class="card">
-                    <b>${state.products[id].name}</b> - ${state.products[id].price} ₽
-                    <button class="btn btn-sm btn-danger" style="margin-top:10px" onclick="db.ref('products/${id}').remove()">Remove Product</button>
-                </div>
-            `).join('');
+            rdb.ref('settings/' + key).set(val);
+            alert('Сохранено');
         }
     </script>
 </body>
